@@ -3,9 +3,9 @@ import seedrandom from 'seedrandom';
 /* -------------- SPECIFICATIONS -------------- */
 
 // NOTE: rooms will probably break if less than 2
-const normalWidth = [ 2, 4 ]; // these are ranges (min, max)
+const normalWidth = [ 3, 5 ]; // these are ranges (min, max)
 const normalDepth = [ 2, 3 ];
-const hallWidth = [ 2, 3 ];
+const hallWidth = [ 2, 2 ];
 const entranceWidth = [ 4, 6 ];
 const entranceDepth = [ 2, 3 ];
 
@@ -14,7 +14,7 @@ const entranceDepth = [ 2, 3 ];
 //---------------------------------------------------------////
 
 export const buildMapFromSeed = (seed) => {
-
+	console.log('seed', seed);
 	let rand = seedrandom(seed);
 
 	/* -------------- UTILITY -------------- */
@@ -254,8 +254,8 @@ export const buildMapFromSeed = (seed) => {
 		});
 		coordsX = Array.from(coordsX).sort((a,b)=>a-b);
 		return {
-			x: [ coordsX[0], coordsX[coordsX.length-1] ],
-			y: [ coordsY[0], coordsY[coordsY.length-1] ],
+			x: [ coordsX[0], coordsX.slice(-1)[0] ],
+			y: [ coordsY[0], coordsY.slice(-1)[0] ],
 		};
 	};
 	Object.keys(mapFloorPlanInfo).forEach(roomName=>{
@@ -264,6 +264,18 @@ export const buildMapFromSeed = (seed) => {
 		});
 		const corners = getCornerCords(roomName, doubledMap);
 		mapFloorPlanInfo[roomName].cornerCoords = corners;
+		
+	});
+	Object.keys(mapFloorPlanInfo).forEach(roomName=>{
+		if (
+			roomName === 'b'
+			&& mapFloorPlanInfo.a.cornerCoords.y[0] - mapFloorPlanInfo.b.cornerCoords.y[1] === 3
+		) {
+			mapFloorPlanInfo.b.cornerCoords.y[1] += 2;
+		}
+		let b = mapFloorPlanInfo.b;
+		b.depth = b.cornerCoords.y[1] - b.cornerCoords.y[0] + 1;
+		let corners = mapFloorPlanInfo[roomName].cornerCoords;
 		mapFloorPlanInfo[roomName].x = corners.x[0] + (corners.x[1] - corners.x[0]) / 2;
 		mapFloorPlanInfo[roomName].y = corners.y[0] + (corners.y[1] - corners.y[0]) / 2;
 		let doorCoords = [];
@@ -310,5 +322,5 @@ export const buildMapFromSeed = (seed) => {
 	};
 };
 
-console.log(buildMapFromSeed(1).printMap);
+console.log(buildMapFromSeed(1234).printMap);
 console.log('break');
