@@ -36,7 +36,7 @@ export class LevelBuilder {
 		const base = new Mesh('House', scene);
 		rooms.forEach((room) => {
 			const floor = CreateBox(
-				'floor',
+				'floor-' + room.name,
 				{
 					width: room.width,
 					height: 0.01,

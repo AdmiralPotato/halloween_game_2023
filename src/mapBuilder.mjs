@@ -283,8 +283,8 @@ export const buildMapFromSeed = (seed) => {
 	mapFloorPlanInfo.a.name = 'livingRoom';
 	mapFloorPlanInfo.a.label = 'a';
 	
-	mapFloorPlanInfo.a.name = 'hallway';
-	mapFloorPlanInfo.a.label = 'b';
+	mapFloorPlanInfo.b.name = 'hallway';
+	mapFloorPlanInfo.b.label = 'b';
 
 	let remainder = scrambleArray([
 		'bedroom',
