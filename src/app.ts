@@ -11,6 +11,9 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import '@babylonjs/core/Loading/loadingScreen';
 import '@babylonjs/core/Helpers/sceneHelpers';
 import '@babylonjs/loaders/glTF/2.0/glTFLoader';
+import '@babylonjs/core/Rendering/outlineRenderer';
+
+import { firstLevelRooms, LevelBuilder } from './LevelBuilder';
 
 import './styles.css';
 
@@ -53,7 +56,7 @@ class App {
 		// hide/show the Inspector
 		window.addEventListener('keydown', async (ev) => {
 			// Shift+Ctrl+Alt+I
-			if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.keyCode === 73) {
+			if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.key === 'I') {
 				await pullInDevTools();
 				if (scene.debugLayer.isVisible()) {
 					scene.debugLayer.hide();
@@ -64,7 +67,10 @@ class App {
 		});
 
 		SceneLoader.Append('/assets/', 'mage.glb', scene, function (scene) {
+			console.log('What is the scene I get from the SceneLoader?', scene);
 			// Create a default arc rotate camera and light.
+			const level = LevelBuilder.build(firstLevelRooms, scene);
+			scene.addMesh(level);
 			scene.createDefaultCameraOrLight(true, true, true);
 		});
 

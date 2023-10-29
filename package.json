@@ -4,18 +4,17 @@
   "description": "Making a \"Luigi's Mansion\" inspired Halloween Game in Babylon.js",
   "main": "index.js",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --host",
     "build": "vite build",
     "format": "prettier --write src/"
   },
   "author": "",
   "license": "CC-BY-NC-SA-4.0",
   "dependencies": {
-    "babylonjs": "^6.27.1",
-    "babylonjs-loaders": "^6.27.1"
+    "@babylonjs/core": "^6.27.1",
+    "@babylonjs/loaders": "^6.27.1"
   },
   "devDependencies": {
-    "@babylonjs/core": "^6.27.1",
     "@babylonjs/inspector": "^6.27.1",
     "@typescript-eslint/eslint-plugin": "^6.9.0",
     "@typescript-eslint/parser": "^6.9.0",
