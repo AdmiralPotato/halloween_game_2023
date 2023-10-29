@@ -50,6 +50,47 @@ export class LevelBuilder {
 			floor.outlineColor = new Color3(0, 1, 0);
 			floor.outlineWidth = 0.01;
 			base.addChild(floor);
+			const furnishings = [
+				{
+					name: 'couch',
+					x: 3,
+					y: 3,
+					w: 2,
+					d: 1,
+					h: 1,
+					rot: 1,
+					hasCandy: true,
+				},
+				{
+					name: 'candelabra',
+					x: 5,
+					y: 3,
+					w: 1,
+					d: 1,
+					h: 2,
+					rot: 0,
+					hasCandy: false,
+				},
+			] as Furnishing[];
+			furnishings.forEach((furnishing) => {
+				const doodad = CreateBox(
+					room.name + '-floor-' + furnishing.name,
+					{
+						width: furnishing.w,
+						height: furnishing.h,
+						depth: furnishing.d,
+					},
+					scene,
+				);
+				floor.addChild(doodad);
+				doodad.position.x = furnishing.x;
+				doodad.position.z = furnishing.y;
+				doodad.renderOutline = true;
+				doodad.outlineColor = furnishing.hasCandy
+					? new Color3(1, 0, 0)
+					: new Color3(0, 0, 1);
+				doodad.outlineWidth = 0.01;
+			});
 		});
 		return base;
 	}
