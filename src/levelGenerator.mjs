@@ -1,4 +1,5 @@
 import seedrandom from 'seedrandom';
+import buildMapFromSeed from 'roomBuilder';
 
 let rand = seedrandom(1);
 
@@ -9,15 +10,15 @@ export const setSeed = (seed) => {
 const randomIndex = (max) => {
 	return Math.floor(rand() * max);
 };
-const randomFromRange = (min, max) => {
-	const variation = randomIndex(max - min + 1);
-	return variation + min;
-};
-const randomFromArray = (array) => {
-	if (array.length === 0) return null;
-	const i = randomIndex(array.length);
-	return array[i];
-};
+// const randomFromRange = (min, max) => {
+// 	const variation = randomIndex(max - min + 1);
+// 	return variation + min;
+// };
+// const randomFromArray = (array) => {
+// 	if (array.length === 0) return null;
+// 	const i = randomIndex(array.length);
+// 	return array[i];
+// };
 const DIRECTIONS = ['N','E','S','W'];
 const getRandomDir = () => DIRECTIONS[randomIndex(4)];
 const getOppositeDir = (dir) => {
@@ -268,8 +269,8 @@ export const FURNISHINGS = {
 	endTable: { position: 'freeStanding', size: { w:1, d:1, h:1 } },
 };
 
-//-----------------------------------------//
-// ------- THE REST OF THE OWL???? ------- //
+////-----------------------------------------//
+/// ------- THE REST OF THE OWL???? ------- //
 //-----------------------------------------//
 
 // const getRoomInfo = (roomName) => {
@@ -297,224 +298,8 @@ export const FURNISHINGS = {
 // 	}
 // };
 
-//------------------------------------//
-// ------- BUILDING ASCII MAP ------- //
-//------------------------------------//
-
-/* ---------- GET SIZES ---------- */
-
-let getRandomSize = (width, height) => { // width first
-	return {
-		width: randomFromRange(...width),
-		height: randomFromRange(...height),
-	};
-};
-
-// ROOM DEFAULT SIZES -> ranges; will roll one between min and max inclusive
-// NOTE: all these things are going to be doubled eventually
-const normalWidth = [ 2, 4 ];
-const normalHeight = [ 2, 3 ];
-const hallWidth = [ 2, 3 ];
-const entranceWidth = [ 4, 6 ];
-const entranceHeight = [ 2, 3 ];
-const wallWidth = 0;
-
-const mapFloorPlanInfo = {
-	// four normal roomes
-	e: getRandomSize(normalWidth, normalHeight),
-	f: getRandomSize(normalWidth, normalHeight),
-	c: getRandomSize(normalWidth, normalHeight),
-	d: getRandomSize(normalWidth, normalHeight),
-	// hallway
-	b: { width: randomFromRange(...hallWidth), height: null, }, // will populate height later
-	// entrance room (living room)
-	a: getRandomSize(entranceWidth, entranceHeight),
-};
-
-/* ---------- HORIZONTAL ASCII ---------- */
-
-// making the default ASCII row for each room
-Object.entries(mapFloorPlanInfo).forEach(([key,entry])=>{
-	mapFloorPlanInfo[key].line = key.repeat(entry.width);
-});
-
-// alight the leftmost rooms to the right, and the rightmost rooms to the left
-const padRoomToAlignOn = (r1, r2, side) => {
-	const room = mapFloorPlanInfo[r1];
-	const padWidth = mapFloorPlanInfo[r2].width;
-	const method = side === 'right' ? 'padStart' : 'padEnd';
-	room.line = room.line[method](padWidth, ' ');
-};
-padRoomToAlignOn('e', 'd', 'right');
-padRoomToAlignOn('d', 'e', 'right');
-padRoomToAlignOn('c', 'f', 'left');
-padRoomToAlignOn('f', 'c', 'left');
-
-// padding the central room horizontally with the rest
-
-const totalMapWidth = mapFloorPlanInfo.e.line.length // one of the leftmost rooms
-	+ mapFloorPlanInfo.f.line.length // one of the rightmost rooms
-	+ mapFloorPlanInfo.b.line.length // hallway
-	+ wallWidth*2; // wall thickness, if a doorway is to take up a tile
-
-const padLineToWidth = (r, width) => {
-	const room = mapFloorPlanInfo[r];
-	const diff = Math.max(width - room.width, 0);
-	const padCount = Math.floor(diff/2);
-	let ret = ' '.repeat(padCount) + room.line + ' '.repeat(padCount);
-	const method = randomIndex(2) === 0 ? 'padEnd' : 'padStart';
-	ret = ret[method](1, ' ');
-	return ret;
-};
-mapFloorPlanInfo.a.line = padLineToWidth('a', totalMapWidth);
-
-/* ---------- VERTICAL ASCII ---------- */
-
-['e','f'].forEach((roomName, index, arr) => {
-	const room = mapFloorPlanInfo[roomName];
-	const padToHeight = Math.max(
-		room.height,
-		mapFloorPlanInfo[arr[(index+1)%2]].height
-	);
-	const ret = [];
-	for (let i = 0; i < padToHeight; i++) {
-		ret.push(
-			padToHeight - room.height > i ? ' '.repeat(room.line.length) : room.line
-		);
-	}
-	room.lines = ret;
-});
-
-['d','c'].forEach((roomName, index, arr) => {
-	const room = mapFloorPlanInfo[roomName];
-	const padToHeight = Math.max(
-		room.height,
-		mapFloorPlanInfo[arr[(index+1)%2]].height
-	);
-	const ret = [];
-	const blank = ' '.repeat(room.line.length);
-	// blank lines, equally on top or bottom (randomly)
-	let diffCount = padToHeight - room.height;
-	for (let i = 0; i < diffCount; i++) {
-		const method = rand() < 0.5 ? 'push' : 'unshift';
-		ret[method](blank);
-	}
-	// the actual lines
-	for (let i = 0; i < room.height; i++) {
-		ret.push(room.line);
-	}
-	room.lines = ret;
-});
-
-['a'].forEach((roomName) => {
-	const room = mapFloorPlanInfo[roomName];
-	const ret = [];
-	for (let i = 0; i < room.height; i++) {
-		ret.push(room.line);
-	}
-	room.lines = ret;
-});
-
-const mapASCII = [];
-
-for (let i = 0; i < mapFloorPlanInfo.e.lines.length; i++) {
-	mapASCII.push(
-		mapFloorPlanInfo.e.lines[i]
-		+ ' '.repeat(wallWidth) + mapFloorPlanInfo.b.line
-		+ ' '.repeat(wallWidth) + mapFloorPlanInfo.f.lines[i]
-	);
-}
-for (let i = 0; i < wallWidth; i++) {
-	mapASCII.push(padLineToWidth('b', totalMapWidth));
-}
-
-for (let i = 0; i < mapFloorPlanInfo.d.lines.length; i++) {
-	mapASCII.push(
-		mapFloorPlanInfo.d.lines[i]
-		+ ' '.repeat(wallWidth) + mapFloorPlanInfo.b.line
-		+ ' '.repeat(wallWidth) + mapFloorPlanInfo.c.lines[i]
-	);
-}
-// quickie: make a door between hallway and entrance
-
-// find horiz coordinate
-let bottommostRow = mapASCII[mapASCII.length-1].split('');
-let topOfLivingRoom = mapFloorPlanInfo.a.line.split('');
-let potentialDoorIndices = [];
-bottommostRow.forEach((c,i)=>{
-	if (c=='b' && topOfLivingRoom[i]!==' ') { potentialDoorIndices.push(i); }
-});
-if (potentialDoorIndices.length > 3) {
-	potentialDoorIndices.pop();
-	potentialDoorIndices.shift();
-}
-let doorIndex = randomFromArray(potentialDoorIndices);
-
-// for later
-let bottomOfHallWayIndex = mapASCII.length-1;
-
-// put in front room
-for (let i = 0; i < mapFloorPlanInfo.a.lines.length; i++) {
-	mapASCII.push(mapFloorPlanInfo.a.lines[i]);
-}
-// it's later now
-[bottomOfHallWayIndex, bottomOfHallWayIndex+1].forEach(index=>{
-	mapASCII[index] = mapASCII[index].split('').map((c,i)=>{
-		return doorIndex === i ? '#' : c;
-	}).join('');
-});
-
-/* ---------- ADD DOORS ---------- */
-
-const getRowsWithPotentialDoor = (r1, r2) => {
-	return mapASCII.map((line, i)=>{
-		return line.includes(r1+r2) ? i : null;
-	}).filter(i=>i!==null);
-};
-
-['ef','dc'].forEach(pair=>{
-	const [left, right] = pair.split('');
-	let indicesL = getRowsWithPotentialDoor(left, 'b');
-	let indicesR = getRowsWithPotentialDoor('b', right);
-	[indicesL, indicesR].forEach(list=> {
-		if (list.length >= 3) { list.pop(), list.shift(); }
-	});
-	if (indicesL.length <= indicesR.length) {
-		let firstDoorIndex = randomFromArray(indicesL);
-		mapASCII[firstDoorIndex] = mapASCII[firstDoorIndex].replace(left+'b', '##');
-		indicesR = indicesR.filter(n=>n!==firstDoorIndex);
-		let secondDoorIndex = indicesR.length > 0 ? randomFromArray(indicesR) : firstDoorIndex;
-		mapASCII[secondDoorIndex] = mapASCII[secondDoorIndex].replace('b'+right, '##');
-	} else {
-		let firstDoorIndex = randomFromArray(indicesR);
-		mapASCII[firstDoorIndex] = mapASCII[firstDoorIndex].replace('b'+right, '##');
-		indicesL = indicesL.filter(n=>n!==firstDoorIndex);
-		let secondDoorIndex = indicesL.length > 0 ? randomFromArray(indicesL) : firstDoorIndex;
-		mapASCII[secondDoorIndex] = mapASCII[secondDoorIndex].replace(left+'b', '##');
-	}
-});
-
-/* ---------- TRIM HALLWAY ---------- */
-
-const topmostDoorIndex = mapASCII.findIndex(line=>line.includes('#'));
-for (let i = 0; i < topmostDoorIndex - 1; i++) {
-	mapASCII[i] = mapASCII[i].replace(/b/g,' ');
-}
-
-/* ---------- ROOMS ARE DONE ---------- */
-const doubleArray = arr =>{
-	let ret = [];
-	arr.forEach(item=>{ret.push(item); ret.push(item);});
-	return ret;
-};
-let printMap = doubleArray(mapASCII.map(line=>{
-	return doubleArray(line.split('')).join('');
-})).join('\n');
-
-
-console.log(printMap);
-
 export const makeRoomsWithSeed = (seed) => {
+	const floorPlan = buildMapFromSeed(seed);
 	setSeed(seed);
 	// now draw the rest of the owl
 	return [
