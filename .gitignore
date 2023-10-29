@@ -3,3 +3,6 @@
 node_modules
 dist
 src/scratch*
+*~
+*.blend1
+*kra-autosave.kra
