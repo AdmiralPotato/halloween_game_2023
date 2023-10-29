@@ -1,14 +1,21 @@
+/*
 import '@babylonjs/core/Debug/debugLayer';
 import '@babylonjs/inspector';
-import {
-	Engine,
-	Scene,
-	ArcRotateCamera,
-	Vector3,
-	HemisphericLight,
-	Mesh,
-	MeshBuilder,
-} from '@babylonjs/core';
+*/
+
+// if you don't pull in packages piecemeal, bundle size go boom
+import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
+import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
+import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
+import { Engine } from '@babylonjs/core/Engines/engine';
+import { Scene } from '@babylonjs/core/scene';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
+
+import '@babylonjs/core/Loading/loadingScreen';
+import '@babylonjs/core/Helpers/sceneHelpers';
+import '@babylonjs/loaders/glTF/2.0';
 
 import './styles.css';
 
@@ -44,6 +51,7 @@ class App {
 		console.log('Yo look at these things', { light1, sphere });
 
 		// hide/show the Inspector
+		/*
 		window.addEventListener('keydown', (ev) => {
 			// Shift+Ctrl+Alt+I
 			if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.keyCode === 73) {
@@ -53,6 +61,12 @@ class App {
 					scene.debugLayer.show();
 				}
 			}
+		});
+		*/
+
+		SceneLoader.Append('/assets/', 'mage.glb', scene, function (scene) {
+			// Create a default arc rotate camera and light.
+			scene.createDefaultCameraOrLight(true, true, true);
 		});
 
 		// run the main render loop

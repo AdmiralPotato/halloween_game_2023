@@ -79,7 +79,12 @@
     // "noUnusedLocals": false, // usually raises an error for any unused local variables, but we'll need this disabled for our example code
     "noUnusedParameters": true, // raises an error for unused parameters
     // "noImplicitReturns": true, // raises an error for functions that return nothing
-    "skipLibCheck": true // skip type-checking of .d.ts files (it speeds up transpiling)
+    "skipLibCheck": true, // skip type-checking of .d.ts files (it speeds up transpiling)
+    "types": [
+      "babylonjs",
+      "babylonjs-gui",
+      "babylonjs-materials"
+    ]
   },
   "include": ["src"] // specify location(s) of .ts files
 }
