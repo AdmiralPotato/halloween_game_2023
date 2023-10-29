@@ -269,7 +269,7 @@ export const buildMapFromSeed = (seed) => {
 		let doorCoords = [];
 		for (let y = corners.y[0]; y <= corners.y[1]; y++) {
 			for (let x = corners.x[0]; x <= corners.x[1]; x++) {
-				console.log(`${x}, ${y} = ${doubledMap[y][x]}`);
+				// console.log(`${x}, ${y} = ${doubledMap[y][x]}`);
 				if (doubledMap[y][x] === '#') {
 					doorCoords.push([x, y]);
 				}

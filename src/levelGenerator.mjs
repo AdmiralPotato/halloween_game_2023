@@ -1,5 +1,5 @@
 import seedrandom from 'seedrandom';
-import buildMapFromSeed from 'roomBuilder';
+import {buildMapFromSeed} from './mapBuilder.mjs';
 
 let rand = seedrandom(1);
 
