@@ -14,7 +14,7 @@ import '@babylonjs/loaders/glTF/2.0/glTFLoader';
 import '@babylonjs/core/Rendering/outlineRenderer';
 
 import { Room, LevelBuilder } from './LevelBuilder';
-import { makeRoomsWithSeed } from './levelGenerator';
+import { makeRoomsWithSeed } from './levelGenerator.mjs';
 
 import './styles.css';
 
