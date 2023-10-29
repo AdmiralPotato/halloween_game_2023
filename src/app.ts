@@ -10,6 +10,8 @@ import {
 	MeshBuilder,
 } from '@babylonjs/core';
 
+import './styles.css';
+
 class App {
 	constructor() {
 		// create the canvas html element and attach it to the webpage
@@ -55,6 +57,7 @@ class App {
 
 		// run the main render loop
 		engine.runRenderLoop(() => {
+			engine.resize();
 			scene.render();
 		});
 	}
