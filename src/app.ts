@@ -13,7 +13,8 @@ import '@babylonjs/core/Helpers/sceneHelpers';
 import '@babylonjs/loaders/glTF/2.0/glTFLoader';
 import '@babylonjs/core/Rendering/outlineRenderer';
 
-import { firstLevelRooms, LevelBuilder } from './LevelBuilder';
+import { Room, LevelBuilder } from './LevelBuilder';
+import { makeRoomsWithSeed } from './levelGenerator';
 
 import './styles.css';
 
@@ -69,7 +70,8 @@ class App {
 		SceneLoader.Append('/assets/', 'mage.glb', scene, function (scene) {
 			console.log('What is the scene I get from the SceneLoader?', scene);
 			// Create a default arc rotate camera and light.
-			const level = LevelBuilder.build(firstLevelRooms, scene);
+			const rooms = makeRoomsWithSeed(1234) as Room[];
+			const level = LevelBuilder.build(rooms, scene);
 			scene.addMesh(level);
 			scene.createDefaultCameraOrLight(true, true, true);
 		});

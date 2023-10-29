@@ -12,7 +12,8 @@
   "license": "CC-BY-NC-SA-4.0",
   "dependencies": {
     "@babylonjs/core": "^6.27.1",
-    "@babylonjs/loaders": "^6.27.1"
+    "@babylonjs/loaders": "^6.27.1",
+    "seedrandom": "^3.0.5"
   },
   "devDependencies": {
     "@babylonjs/inspector": "^6.27.1",
