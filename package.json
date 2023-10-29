@@ -1,0 +1,26 @@
+{
+  "name": "halloween_game_2023",
+  "version": "1.0.0",
+  "description": "Making a \"Luigi's Mansion\" inspired Halloween Game in Babylon.js",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "format": "prettier --write src/"
+  },
+  "author": "",
+  "license": "CC-BY-NC-SA-4.0",
+  "dependencies": {
+    "babylonjs": "^6.27.1"
+  },
+  "devDependencies": {
+    "@babylonjs/core": "^6.27.1",
+    "@babylonjs/inspector": "^6.27.1",
+    "@typescript-eslint/eslint-plugin": "^6.9.0",
+    "@typescript-eslint/parser": "^6.9.0",
+    "eslint": "^8.52.0",
+    "eslint-plugin-react": "^7.33.2",
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2",
+    "vite": "^4.5.0"
+  }
+}
