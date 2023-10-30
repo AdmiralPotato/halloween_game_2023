@@ -83,7 +83,7 @@ class App {
 				}
 			}
 		});
-		const magePromise = SceneLoader.ImportMeshAsync(null, '/assets/', 'mage.glb', scene).then(
+		const magePromise = SceneLoader.ImportMeshAsync(null, './assets/', 'mage.glb', scene).then(
 			(imported) => {
 				const mage = imported.meshes[0];
 				console.log('What is a MAGE?!?', imported);
@@ -126,13 +126,13 @@ class App {
 		};
 		const environmentPromise = SceneLoader.ImportMeshAsync(
 			null,
-			'/assets/',
+			'./assets/',
 			'enviro.glb',
 			scene,
 		).then(addImportedToMeshMap);
 		const doodadsPromise = SceneLoader.ImportMeshAsync(
 			null,
-			'/assets/',
+			'./assets/',
 			'doodads.glb',
 			scene,
 		).then(addImportedToMeshMap);
