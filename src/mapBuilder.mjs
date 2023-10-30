@@ -311,8 +311,6 @@ export const buildMapFromSeed = (seed) => {
 
 	/* -------------- FLOOR ARRAY FOR EACH ROOM -------------- */
 
-	//TODO: determine which wall the corner doors belong to
-
 	const rotMap = {
 		a: { tile: 'wall', variant: 'edge', rot: 3 },
 		q: { tile: 'wall', variant: 'corner', rot: 0 },
@@ -371,8 +369,7 @@ export const buildMapFromSeed = (seed) => {
 				}
 				const tileInfo = rotMap[value];
 				floorTiles.push({
-					name: (x+0.5)+','
-						+(y+0.5)+':'
+					name: roomName
 						+ tileInfo.tile + '-'
 						+ tileInfo.variant +'-'+
 						`(${value})`,
@@ -407,25 +404,38 @@ export const buildMapFromSeed = (seed) => {
 			targetDoor.doorDir = roomName === 'a' ? 'up' : 'left-or-right';
 		}
 	});
-	Object.keys(mapFloorPlanInfo).forEach(roomName=>{
-		mapFloorPlanInfo[roomName].floors = mapFloorPlanInfo[roomName].floorTiles.filter(item=>!item.destination);
-		mapFloorPlanInfo[roomName].doors = mapFloorPlanInfo[roomName].floorTiles.filter(item=>item.destination);
-		delete mapFloorPlanInfo[roomName].floorTiles;
-	});
 
 	/* -------------- CLEANUP -------------- */
 
 	Object.keys(mapFloorPlanInfo).forEach(roomName=>{
-		delete mapFloorPlanInfo[roomName].line;
-		delete mapFloorPlanInfo[roomName].lines;
-		delete mapFloorPlanInfo[roomName].cornerCoords;
-		delete mapFloorPlanInfo[roomName].doorCoords;
+		const room = mapFloorPlanInfo[roomName];
+
+		// all floor tiles now local coords
+		room.floors = room.floorTiles.map(item=>{
+			item.x -= room.x;
+			item.y -= room.y;
+			item.name = `${item.x},${item.y}:${item.name}`;
+			return item;
+		});
+
+		// splitting floors and doors into floors and doors
+		room.floors = room.floorTiles.filter(item=>!item.destination);
+		room.doors = room.floorTiles.filter(item=>item.destination);
+
+		// remove properties no one wants anymore
+		delete room.floorTiles;
+		delete room.line;
+		delete room.lines;
+		delete room.cornerCoords;
+		delete room.doorCoords;
 	});
 
+	// package everything up all nice
 	let result = {
 		rooms: mapFloorPlanInfo,
 		printMap: doubledMap.join('\n'),
 	};
+
 	console.log('mapFloorPlanInfo',mapFloorPlanInfo);
 	return result;
 };
