@@ -285,7 +285,7 @@ export const makeRoomsWithSeed = (seed) => {
 			}
 			requiredItems.shift();
 			let compositeInsertInfo = Object.assign({name: insertName}, FURNISHINGS[insertName]);
-			let insertWidth = compositeInsertInfo.size.w;
+			let insertWidth = compositeInsertInfo.w;
 			let insertInfo = insertItemIntoWall(targetWall, insertWidth);
 			if (!insertInfo) { continue; }
 			doodads.push({
@@ -303,13 +303,13 @@ export const makeRoomsWithSeed = (seed) => {
 			let y = wallTiles.reduce((acc,entry)=>acc+(entry?.y||0),0)/wallTiles.length;
 			let wallType = wallTiles[0].name.split('(')[1][0];
 			let rot = doodad.wallTiles[0].rot;
-			if (rot === 0 && doodad.furniture.size.d === 2) { 
+			if (rot === 0 && doodad.furniture.d === 2) { 
 				y += 0.5;
 			}
-			if (rot === 1 && doodad.furniture.size.d === 2) { 
+			if (rot === 1 && doodad.furniture.d === 2) { 
 				x -= 0.5;
 			}
-			if (rot === 3 && doodad.furniture.size.d === 2) { 
+			if (rot === 3 && doodad.furniture.d === 2) { 
 				x += 0.5;
 			}
 			return {
@@ -317,9 +317,9 @@ export const makeRoomsWithSeed = (seed) => {
 				name: doodad.furniture.name,
 				x,
 				y,
-				w: doodad.furniture.size.w,
-				d: doodad.furniture.size.d,
-				h: doodad.furniture.size.h,
+				w: doodad.furniture.w,
+				d: doodad.furniture.d,
+				h: doodad.furniture.h,
 				rot: rot,
 				hasCandy: rand() < 0.3,
 			};
