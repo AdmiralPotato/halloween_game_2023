@@ -12,12 +12,16 @@ import '@babylonjs/core/Helpers/sceneHelpers';
 import '@babylonjs/loaders/glTF/2.0/glTFLoader';
 import '@babylonjs/core/Rendering/outlineRenderer';
 
+import * as UI from './UserInterface';
 import { Room, LevelBuilder } from './LevelBuilder';
 import { makeRoomsWithSeed } from './levelGenerator.mjs';
 
 import './styles.css';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
+import { Skeleton } from '@babylonjs/core';
+// @ts-ignore // doesn't have a d.ts, is function that takes an ArrayBuffer and returns Number
+import crc32 from 'crc32';
 
 class App {
 	constructor() {
@@ -31,6 +35,12 @@ class App {
 		// initialize babylon scene and engine
 		const engine = new Engine(canvas, true);
 		const scene = new Scene(engine);
+		const material = scene.defaultMaterial as StandardMaterial;
+		material.diffuseColor.set(0.2, 0.2, 0.2);
+		material.specularColor.set(0, 0, 0);
+		let level: Mesh | null = null;
+		let firstRoom: Room | null = null;
+		const playerCharacterHolder = new Mesh('playerCharacterHolder', scene);
 
 		const camera: ArcRotateCamera = new ArcRotateCamera(
 			'Camera',
@@ -66,28 +76,57 @@ class App {
 				}
 			}
 		});
+		const magePromise = SceneLoader.ImportMeshAsync(null, '/assets/', 'mage.glb', scene).then(
+			(imported) => {
+				console.log('What is mage imported?', imported);
+				const mage = imported.meshes[0];
+				const mageTransformNode = scene.getTransformNodeById('mage_bones');
+				mageTransformNode?.position.set(0, 0, 0);
+				mageTransformNode?.scaling.set(4, 4, 4);
+				playerCharacterHolder.addChild(mage);
+				return mage;
+			},
+		);
 
-		SceneLoader.Append('/assets/', 'mage.glb', scene, () => {
-			console.log('mage should now be loaded', scene);
-		});
-
-		SceneLoader.ImportMeshAsync(null, '/assets/', 'enviro.glb', scene).then((imported) => {
-			const meshMap: Record<string, Mesh> = {};
+		const meshMap: Record<string, Mesh> = {};
+		const makeLevelFromRooms = (rooms: Room[]) => {
+			if (level) {
+				level.dispose();
+			}
+			firstRoom = rooms[5];
+			playerCharacterHolder.position.set(firstRoom.x, 0, firstRoom.y);
+			level = LevelBuilder.build(rooms, meshMap, scene);
+			scene.addMesh(level);
+		};
+		const respawnLevelFromStringSeed = () => {
+			const seedString = window.prompt('GIVE SEED') || '';
+			const buffer = new TextEncoder().encode(seedString);
+			const seed: number = crc32(buffer);
+			const rooms = makeRoomsWithSeed(seed) as Room[];
+			makeLevelFromRooms(rooms);
+		};
+		const environmentPromise = SceneLoader.ImportMeshAsync(
+			null,
+			'/assets/',
+			'enviro.glb',
+			scene,
+		).then((imported) => {
 			imported.meshes.forEach((mesh, index) => {
 				console.log(`What is meshes[${index}]?`, mesh);
 				meshMap[mesh.name] = mesh as Mesh;
 				// loader auto-attaches the meshes, but I don't want that, so I have to undo that
 				scene.removeMesh(mesh);
 			});
+		});
+
+		Promise.all([magePromise, environmentPromise]).then(() => {
 			const rooms = makeRoomsWithSeed(1234) as Room[];
-			const level = LevelBuilder.build(rooms, meshMap, scene);
-			scene.addMesh(level);
+			makeLevelFromRooms(rooms);
 			scene.createDefaultCameraOrLight(true, true, true);
 		});
 
-		const material = scene.defaultMaterial as StandardMaterial;
-		material.diffuseColor.set(0.2, 0.2, 0.2);
-		material.specularColor.set(0, 0, 0);
+		const { seedButton } = UI.init();
+		seedButton.onPointerUpObservable.add(respawnLevelFromStringSeed);
 		engine.runRenderLoop(() => {
 			engine.resize();
 			scene.render();
