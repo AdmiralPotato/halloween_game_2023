@@ -331,8 +331,17 @@ export const makeRoomsWithSeed = (seed) => {
 			};
 			const adjust = adjustMap[wallDir];
 			ret[wallDir].forEach(item=>{
-				item.x+=adjust[1];
+				let rot = 0;
+				if (wallDir === 'w') { rot = 3; }
+				else if (wallDir === 'e') { rot = 1; }
+				item.rot = rot;
+				item.x+=adjust[0];
 				item.y+=adjust[1];
+			});
+			ret[wallDir] = ret[wallDir].sort((a,b) => {
+				return a.x - b.x; 
+			}).sort((a,b) => {
+				return a.y - b.y; 
 			});
 		});
 
@@ -421,6 +430,16 @@ export const makeRoomsWithSeed = (seed) => {
 			let x = wallTiles.reduce((acc,entry)=>acc+(entry?.x||0),0)/wallTiles.length;
 			let y = wallTiles.reduce((acc,entry)=>acc+(entry?.y||0),0)/wallTiles.length;
 			let wallType = wallTiles[0].name.split('(')[1][0];
+			let rot = doodad.wallTiles[0].rot;
+			if (rot === 0 && doodad.furniture.size.d === 2) { 
+				y += 0.5;
+			}
+			if (rot === 1 && doodad.furniture.size.d === 2) { 
+				x -= 0.5;
+			}
+			if (rot === 3 && doodad.furniture.size.d === 2) { 
+				x += 0.5;
+			}
 			return {
 				label: `${x},${y}:${doodad.furniture.name}-(${wallType})`,
 				name: doodad.furniture.name,
@@ -429,7 +448,7 @@ export const makeRoomsWithSeed = (seed) => {
 				w: doodad.furniture.size.w,
 				d: doodad.furniture.size.d,
 				h: doodad.furniture.size.h,
-				rot: doodad.wallTiles[0].rot,
+				rot: rot,
 				hasCandy: rand() < 0.3,
 			};
 		});
