@@ -4,10 +4,10 @@ import seedrandom from 'seedrandom';
 
 // NOTE: rooms will probably break if less than 2
 const normalWidth = [ 4, 7 ]; // these are ranges (min, max)
-const normalDepth = [ 2, 4 ];
+const normalDepth = [ 3, 4 ];
 const hallWidth = [ 2, 2 ];
 const entranceWidth = [ 6, 9 ];
-const entranceDepth = [ 3, 5 ];
+const entranceDepth = [ 4, 6 ];
 
 ////---------------------------------------------------------//
 ///---------------------- THE OWL???? ----------------------///

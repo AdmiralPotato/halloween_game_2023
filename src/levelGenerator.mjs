@@ -141,7 +141,7 @@ export const makeRoomsWithSeed = (seed) => {
 		bookcaseShor: { position: 'wallEdge', size: { w:2, d:1, h:2 }, },
 		// dresserShort: { position: 'wallEdge', size: { w:2, d:1, h:1 }, },
 		// dresserTall: { position: 'wallEdge', size: { w:2, d:1, h:2 }, },
-		chest: { position: 'wallEdge', size: { w:2, d:1, h:1 }, },
+		chest: { position: 'wallEdge', size: { w:1, d:1, h:1 }, },
 		pottedPlant: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
 		candelabra: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
 		gargoyle: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
@@ -235,6 +235,7 @@ export const makeRoomsWithSeed = (seed) => {
 			{ item: 'wardrobe', count: 1},
 			{ item: 'fireplace', count: 1},
 			{ item: 'chest', weight: 3},
+			{ item: 'chair', weight: 2},
 			{ item: 'armchair', weight: 1},
 			{ item: 'squareTable', weight: 1},
 			{ item: 'roundTable', weight: 1},
@@ -292,6 +293,19 @@ export const makeRoomsWithSeed = (seed) => {
 	};
 	*/
 
+	const padWall = (wallArr) => {
+		let ret = [];
+		let prop = wallArr[0].y - wallArr[wallArr.length-1].y === 0 ? 'x' : 'y';
+		wallArr.forEach(tile=>{
+			[ -0.5, 0.5 ].forEach(margin=>{
+				let insert = JSON.parse(JSON.stringify(tile));
+				insert[prop] += margin;
+				insert.name = insert.x+','+insert.y +':'+ insert.name.split(':')[1];
+				ret.push(insert);
+			});
+		});
+		return ret;
+	};
 	const getWalls = (floors) =>{
 		let ret = {
 			n: floors.filter(item=>item.name.includes('(w)')),
@@ -306,6 +320,11 @@ export const makeRoomsWithSeed = (seed) => {
 		if (e.length) {
 			ret[rand()<0.5?'n':'e'].push(e[0]);
 		}
+		Object.keys(ret).forEach(wallDir=>{
+			if (ret[wallDir] && ret[wallDir].length > 0) {
+				ret[wallDir] = padWall(ret[wallDir]);
+			}
+		});
 
 		return ret;
 	};
