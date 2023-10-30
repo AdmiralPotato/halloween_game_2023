@@ -71,18 +71,6 @@ class App {
 			await import('@babylonjs/inspector');
 		};
 
-		// hide/show the Inspector
-		window.addEventListener('keydown', async (ev) => {
-			// Shift+Ctrl+Alt+I
-			if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.key === 'I') {
-				await pullInDevTools();
-				if (scene.debugLayer.isVisible()) {
-					scene.debugLayer.hide();
-				} else {
-					await scene.debugLayer.show();
-				}
-			}
-		});
 		const magePromise = SceneLoader.ImportMeshAsync(null, './assets/', 'mage.glb', scene).then(
 			(imported) => {
 				const mage = imported.meshes[0];
@@ -145,13 +133,92 @@ class App {
 			// scene.createDefaultCamera(true, true, true);
 		});
 
-		const { seedButton } = UI.init();
+		const { seedButton, buttonMap } = UI.init();
+		const keyButtonMap: Record<string, string | undefined> = {
+			a: 'left',
+			w: 'up',
+			s: 'down',
+			d: 'right',
+			ArrowLeft: 'left',
+			ArrowUp: 'up',
+			ArrowDown: 'down',
+			ArrowRight: 'right',
+			' ': 'action',
+			Enter: 'action',
+		};
+		const buttonStateMap: Record<string, boolean | undefined> = {
+			left: false,
+			up: false,
+			down: false,
+			right: false,
+			action: false,
+		};
+		window.addEventListener('keydown', async (keydownEvent) => {
+			// hide/show the Inspector
+			// Shift+Ctrl+Alt+I
+			if (
+				keydownEvent.shiftKey &&
+				keydownEvent.ctrlKey &&
+				keydownEvent.altKey &&
+				keydownEvent.key === 'I'
+			) {
+				await pullInDevTools();
+				if (scene.debugLayer.isVisible()) {
+					scene.debugLayer.hide();
+				} else {
+					await scene.debugLayer.show();
+				}
+			}
+			// console.log('keydownEvent', keydownEvent);
+			const buttonName = keyButtonMap[keydownEvent.key];
+			if (buttonName) {
+				buttonStateMap[buttonName] = true;
+			}
+		});
+		window.addEventListener('keyup', (keydownEvent) => {
+			// console.log('keydownEvent', keydownEvent);
+			const buttonName = keyButtonMap[keydownEvent.key];
+			if (buttonName) {
+				buttonStateMap[buttonName] = false;
+			}
+		});
+		const buttonStateOn = (buttonName: string) => {
+			if (buttonName) {
+				buttonStateMap[buttonName] = true;
+			}
+		};
+		const buttonStateOff = (buttonName: string) => {
+			if (buttonName) {
+				buttonStateMap[buttonName] = false;
+			}
+		};
 		seedButton.onPointerUpObservable.add(respawnLevelFromStringSeed);
+		Object.entries(buttonMap).forEach(([key, button]) => {
+			button?.onPointerDownObservable.add(() => buttonStateOn(key));
+			button?.onPointerUpObservable.add(() => buttonStateOff(key));
+		});
+
 		engine.runRenderLoop(() => {
 			engine.resize();
 			scene.render();
-			playerCharacterHolder.position.x +=
-				Math.sin((window.performance.now() * Math.PI) / 5000) / 25;
+			const { position } = playerCharacterHolder;
+			position.x += Math.sin((window.performance.now() * Math.PI) / 5000) / 100;
+			// console.log('buttonStateMap', buttonStateMap);
+			if (buttonStateMap.up) {
+				position.z -= 0.25;
+			}
+			if (buttonStateMap.down) {
+				position.z += 0.25;
+			}
+			if (buttonStateMap.left) {
+				position.x += 0.25;
+			}
+			if (buttonStateMap.right) {
+				position.x -= 0.25;
+			}
+			if (buttonStateMap.action) {
+				position.y += 0.25;
+			}
 		});
 	}
 }
