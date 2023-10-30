@@ -21,6 +21,7 @@ interface Floor {
 
 interface Furnishing {
 	name: string;
+	assetName: string;
 	x: number;
 	y: number;
 	w: number;
@@ -60,45 +61,14 @@ export class LevelBuilder {
 			floor.outlineColor = new Color3(0, 1, 0);
 			floor.outlineWidth = 0.01;
 			base.addChild(floor);
-			const furnishings = [
-				{
-					name: 'couch',
-					x: room.width / 2 - 1.5,
-					y: -room.depth / 2 + 0.5,
-					w: 2,
-					d: 1,
-					h: 1,
-					rot: 1,
-					hasCandy: true,
-				},
-				{
-					name: 'candelabra',
-					x: -room.width / 2 + 0.5,
-					y: -room.depth / 2 + 0.5,
-					w: 1,
-					d: 1,
-					h: 2,
-					rot: 0,
-					hasCandy: false,
-				},
-				{
-					name: 'gargoyle',
-					x: 0,
-					y: -room.depth / 2 + 0.5,
-					w: 1,
-					d: 1,
-					h: 1,
-					rot: 0,
-					hasCandy: true,
-				},
-			] as Furnishing[];
-			furnishings.forEach((furnishing, index) => {
+			room.furnishings.forEach((furnishing, index) => {
 				const doodad = meshMap[furnishing.name].createInstance(
 					`${room.name}-furnishing-${index}-${furnishing.name}`,
 				);
 				floor.addChild(doodad);
 				doodad.position.x = furnishing.x;
 				doodad.position.z = furnishing.y;
+				doodad.rotate(Axis.Y, furnishing.rot * -RIGHT_ANGLE);
 				doodad.renderOutline = true;
 				doodad.outlineColor = furnishing.hasCandy
 					? new Color3(1, 0, 0)

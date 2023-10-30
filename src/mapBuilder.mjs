@@ -3,18 +3,17 @@ import seedrandom from 'seedrandom';
 /* -------------- SPECIFICATIONS -------------- */
 
 // NOTE: rooms will probably break if less than 2
-const normalWidth = [ 3, 5 ]; // these are ranges (min, max)
-const normalDepth = [ 2, 3 ];
+const normalWidth = [ 4, 7 ]; // these are ranges (min, max)
+const normalDepth = [ 2, 4 ];
 const hallWidth = [ 2, 2 ];
-const entranceWidth = [ 4, 6 ];
-const entranceDepth = [ 2, 3 ];
+const entranceWidth = [ 6, 9 ];
+const entranceDepth = [ 3, 5 ];
 
 ////---------------------------------------------------------//
 ///---------------------- THE OWL???? ----------------------///
 //---------------------------------------------------------////
 
 export const buildMapFromSeed = (seed) => {
-	console.log('seed', seed);
 	let rand = seedrandom(seed);
 
 	/* -------------- UTILITY -------------- */
@@ -430,14 +429,10 @@ export const buildMapFromSeed = (seed) => {
 		delete room.doorCoords;
 	});
 
-	// package everything up all nice
-	let result = {
+	return {
 		rooms: mapFloorPlanInfo,
 		printMap: doubledMap.join('\n'),
 	};
-
-	console.log('mapFloorPlanInfo',mapFloorPlanInfo);
-	return result;
 };
 
-console.log(buildMapFromSeed(1234).printMap);
+// console.log(buildMapFromSeed(1234).printMap);
