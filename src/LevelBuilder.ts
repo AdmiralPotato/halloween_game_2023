@@ -63,8 +63,8 @@ export class LevelBuilder {
 			const furnishings = [
 				{
 					name: 'couch',
-					x: 3,
-					y: 3,
+					x: room.width / 2 - 1.5,
+					y: -room.depth / 2 + 0.5,
 					w: 2,
 					d: 1,
 					h: 1,
@@ -73,29 +73,32 @@ export class LevelBuilder {
 				},
 				{
 					name: 'candelabra',
-					x: 5,
-					y: 3,
+					x: -room.width / 2 + 0.5,
+					y: -room.depth / 2 + 0.5,
 					w: 1,
 					d: 1,
 					h: 2,
 					rot: 0,
 					hasCandy: false,
 				},
+				{
+					name: 'gargoyle',
+					x: 0,
+					y: -room.depth / 2 + 0.5,
+					w: 1,
+					d: 1,
+					h: 1,
+					rot: 0,
+					hasCandy: true,
+				},
 			] as Furnishing[];
-			furnishings.forEach((furnishing) => {
-				const doodad = CreateBox(
-					room.name + '-floor-' + furnishing.name,
-					{
-						width: furnishing.w,
-						height: furnishing.h,
-						depth: furnishing.d,
-					},
-					scene,
+			furnishings.forEach((furnishing, index) => {
+				const doodad = meshMap[furnishing.name].createInstance(
+					`${room.name}-furnishing-${index}-${furnishing.name}`,
 				);
 				floor.addChild(doodad);
 				doodad.position.x = furnishing.x;
 				doodad.position.z = furnishing.y;
-				doodad.position.y = furnishing.h / 2;
 				doodad.renderOutline = true;
 				doodad.outlineColor = furnishing.hasCandy
 					? new Color3(1, 0, 0)

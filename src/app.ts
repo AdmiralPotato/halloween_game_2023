@@ -1,5 +1,5 @@
 // if you don't pull in packages piecemeal, bundle size go boom
-import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
+import { ISceneLoaderAsyncResult, SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
@@ -105,21 +105,29 @@ class App {
 			const rooms = makeRoomsWithSeed(seed) as Room[];
 			makeLevelFromRooms(rooms);
 		};
-		const environmentPromise = SceneLoader.ImportMeshAsync(
-			null,
-			'/assets/',
-			'enviro.glb',
-			scene,
-		).then((imported) => {
+		const addImportedToMeshMap = (imported: ISceneLoaderAsyncResult) => {
 			imported.meshes.forEach((mesh, index) => {
 				console.log(`What is meshes[${index}]?`, mesh);
 				meshMap[mesh.name] = mesh as Mesh;
 				// loader auto-attaches the meshes, but I don't want that, so I have to undo that
 				scene.removeMesh(mesh);
 			});
-		});
+		};
+		const environmentPromise = SceneLoader.ImportMeshAsync(
+			null,
+			'/assets/',
+			'enviro.glb',
+			scene,
+		).then(addImportedToMeshMap);
+		const doodadsPromise = SceneLoader.ImportMeshAsync(
+			null,
+			'/assets/',
+			'doodads.glb',
+			scene,
+		).then(addImportedToMeshMap);
 
-		Promise.all([magePromise, environmentPromise]).then(() => {
+		const assetLoadingPromises = [magePromise, environmentPromise, doodadsPromise];
+		Promise.all(assetLoadingPromises).then(() => {
 			const rooms = makeRoomsWithSeed(1234) as Room[];
 			makeLevelFromRooms(rooms);
 			scene.createDefaultCameraOrLight(true, true, true);
