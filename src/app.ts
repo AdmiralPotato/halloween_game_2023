@@ -1,12 +1,11 @@
 // if you don't pull in packages piecemeal, bundle size go boom
-import { MeshBuilder } from '@babylonjs/core/Meshes/meshBuilder';
 import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
 import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
-import { Mesh } from '@babylonjs/core/Meshes/mesh';
 
 import '@babylonjs/core/Loading/loadingScreen';
 import '@babylonjs/core/Helpers/sceneHelpers';
@@ -17,6 +16,8 @@ import { Room, LevelBuilder } from './LevelBuilder';
 import { makeRoomsWithSeed } from './levelGenerator.mjs';
 
 import './styles.css';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 
 class App {
 	constructor() {
@@ -45,9 +46,8 @@ class App {
 			new Vector3(1, 1, 0),
 			scene,
 		);
-		const sphere: Mesh = MeshBuilder.CreateSphere('sphere', { diameter: 1 }, scene);
 
-		console.log('Yo look at these things', { light1, sphere });
+		console.log('Yo look at these things', { light1 });
 
 		const pullInDevTools = async () => {
 			await import('@babylonjs/core/Debug/debugLayer');
@@ -62,21 +62,35 @@ class App {
 				if (scene.debugLayer.isVisible()) {
 					scene.debugLayer.hide();
 				} else {
-					scene.debugLayer.show();
+					await scene.debugLayer.show();
 				}
 			}
 		});
 
 		SceneLoader.Append('/assets/', 'mage.glb', scene, function (scene) {
 			console.log('What is the scene I get from the SceneLoader?', scene);
-			// Create a default arc rotate camera and light.
+		});
+		/*
+		SceneLoader.Append('/assets/', 'enviro.glb', scene, function () {
+			const doorway = scene.getMeshByName('doorway_00');
+			console.log('what is doorway?', doorway);
+		});
+		*/
+		SceneLoader.ImportMeshAsync(null, '/assets/', 'enviro.glb', scene).then(function (enviro) {
+			console.log('what are args after enviro.glb?', arguments);
+			const meshMap: Record<string, Mesh> = {};
+			enviro.meshes.forEach((mesh, index) => {
+				console.log(`What is meshes[${index}]?`, mesh);
+				meshMap[mesh.name] = mesh as Mesh;
+			});
 			const rooms = makeRoomsWithSeed(1234) as Room[];
-			const level = LevelBuilder.build(rooms, scene);
+			const level = LevelBuilder.build(rooms, meshMap, scene);
 			scene.addMesh(level);
 			scene.createDefaultCameraOrLight(true, true, true);
 		});
-
-		// run the main render loop
+		const material = scene.defaultMaterial as StandardMaterial;
+		material.diffuseColor.set(0.2, 0.2, 0.2);
+		material.specularColor.set(0, 0, 0);
 		engine.runRenderLoop(() => {
 			engine.resize();
 			scene.render();

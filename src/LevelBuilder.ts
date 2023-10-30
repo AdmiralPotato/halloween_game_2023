@@ -2,6 +2,7 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
+import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 
 interface Door {
 	x: number;
@@ -32,7 +33,7 @@ export interface Room {
 }
 
 export class LevelBuilder {
-	static build(rooms: Room[], scene: Scene): Mesh {
+	static build(rooms: Room[], meshMap: Record<string, Mesh>, scene: Scene): Mesh {
 		const base = new Mesh('House', scene);
 		rooms.forEach((room) => {
 			const floor = CreateBox(
@@ -85,10 +86,27 @@ export class LevelBuilder {
 				floor.addChild(doodad);
 				doodad.position.x = furnishing.x;
 				doodad.position.z = furnishing.y;
+				doodad.position.y = furnishing.h / 2;
 				doodad.renderOutline = true;
 				doodad.outlineColor = furnishing.hasCandy
 					? new Color3(1, 0, 0)
 					: new Color3(0, 0, 1);
+				doodad.outlineWidth = 0.01;
+			});
+			const doors = [
+				{
+					x: 0,
+					y: -room.depth / 2,
+					rot: 0,
+				},
+			] as Door[];
+			doors.forEach((door) => {
+				const doodad = meshMap['doorway_00'].createInstance(Math.random().toString());
+				floor.addChild(doodad);
+				doodad.position.x = door.x;
+				doodad.position.z = door.y;
+				doodad.renderOutline = true;
+				doodad.outlineColor = new Color3(0, 1, 1);
 				doodad.outlineWidth = 0.01;
 			});
 		});
