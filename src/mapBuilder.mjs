@@ -184,7 +184,7 @@ export const buildMapFromSeed = (seed) => {
 	// it's later now
 	[bottomOfHallWayIndex, bottomOfHallWayIndex+1].forEach(index=>{
 		mapASCII[index] = mapASCII[index].split('').map((c,i)=>{
-			return doorIndex === i ? '#' : c;
+			return doorIndex === i ? 'z' : c;
 		}).join('');
 	});
 
@@ -205,23 +205,23 @@ export const buildMapFromSeed = (seed) => {
 		});
 		if (indicesL.length <= indicesR.length) {
 			let firstDoorIndex = randomFromArray(indicesL);
-			mapASCII[firstDoorIndex] = mapASCII[firstDoorIndex].replace(left+'b', '##');
+			mapASCII[firstDoorIndex] = mapASCII[firstDoorIndex].replace(left+'b', 'zz');
 			indicesR = indicesR.filter(n=>n!==firstDoorIndex);
 			let secondDoorIndex = indicesR.length > 0 ? randomFromArray(indicesR) : firstDoorIndex;
-			mapASCII[secondDoorIndex] = mapASCII[secondDoorIndex].replace('b'+right, '##');
+			mapASCII[secondDoorIndex] = mapASCII[secondDoorIndex].replace('b'+right, 'zz');
 		} else {
 			let firstDoorIndex = randomFromArray(indicesR);
-			mapASCII[firstDoorIndex] = mapASCII[firstDoorIndex].replace('b'+right, '##');
+			mapASCII[firstDoorIndex] = mapASCII[firstDoorIndex].replace('b'+right, 'zz');
 			indicesL = indicesL.filter(n=>n!==firstDoorIndex);
 			let secondDoorIndex = indicesL.length > 0 ? randomFromArray(indicesL) : firstDoorIndex;
-			mapASCII[secondDoorIndex] = mapASCII[secondDoorIndex].replace(left+'b', '##');
+			mapASCII[secondDoorIndex] = mapASCII[secondDoorIndex].replace(left+'b', 'zz');
 		}
 	});
 
 	/* -------------- HALLWAY CLEANUP -------------- */
 
 	// Trim hallway
-	const topmostDoorIndex = mapASCII.findIndex(line=>line.includes('#'));
+	const topmostDoorIndex = mapASCII.findIndex(line=>line.includes('z'));
 	for (let i = 0; i < topmostDoorIndex - 1; i++) {
 		mapASCII[i] = mapASCII[i].replace(/b/g,' ');
 	}
@@ -282,7 +282,7 @@ export const buildMapFromSeed = (seed) => {
 		for (let y = corners.y[0]; y <= corners.y[1]; y++) {
 			for (let x = corners.x[0]; x <= corners.x[1]; x++) {
 				// console.log(`${x}, ${y} = ${doubledMap[y][x]}`);
-				if (doubledMap[y][x] === '#') {
+				if (doubledMap[y][x] === 'z') {
 					doorCoords.push([x, y]);
 				}
 			}
@@ -309,18 +309,125 @@ export const buildMapFromSeed = (seed) => {
 		mapFloorPlanInfo[floorName].label = floorName;
 	});
 
+	/* -------------- FLOOR ARRAY FOR EACH ROOM -------------- */
+
+	//TODO: determine which wall the corner doors belong to
+
+	const rotMap = {
+		a: { tile: 'wall', variant: 'edge', rot: 3 },
+		q: { tile: 'wall', variant: 'corner', rot: 0 },
+		w: { tile: 'wall', variant: 'edge', rot: 0 },
+		e: { tile: 'wall', variant: 'corner', rot: 1 },
+		d: { tile: 'wall', variant: 'edge', rot: 1 },
+		s: { tile: 'wall', variant: 'floor', rot: 0 },
+
+		A: { tile: 'door', variant: 'edge', rot: 3 },
+		Q: { tile: 'door', variant: 'corner', rot: null },
+		W: { tile: 'door', variant: 'edge', rot: 0 },
+		E: { tile: 'door', variant: 'corner', rot: null },
+		D: { tile: 'door', variant: 'edge', rot: 1 },
+		S: { tile: 'door', variant: 'floor', rot: 0 },
+	};
+
+	Object.keys(mapFloorPlanInfo).forEach(roomName=>{
+		let corners = mapFloorPlanInfo[roomName].cornerCoords;
+		let floorTiles = [];
+		for (let y = corners.y[0]; y <= corners.y[1]; y+=2) {
+			for (let x = corners.x[0]; x <= corners.x[1]; x+=2) {
+				let value = 's';
+				if (y===corners.y[0]) {
+					if (x===corners.x[0]) { value = 'q'; }
+					else if (x===corners.x[1] - 1) { value = 'e'; }
+					else { value = 'w'; }
+				} else {
+					if (x===corners.x[0]) { value = 'a'; }
+					else if (x===corners.x[1] - 1) { value = 'd'; }
+				}
+				let destination = undefined;
+				let doorDir = undefined;
+				if (doubledMap[y][x] === 'z') {
+					value = value.toUpperCase();
+					if (roomName !== 'b') {
+						destination = 'b';
+						doorDir = roomName === 'a' ? 'down' : 'left-or-right';
+					} else {
+						if ( x < mapFloorPlanInfo.x) { // walk left
+							for (let i = corners.x[0]; i >= 0; i--) {
+								const checkedValue = doubledMap[y][i];
+								if (/[^A-Z]/.test(checkedValue)) {
+									destination = checkedValue;
+								}
+							}
+						} else { // walk right
+							for (let i = corners.x[1]; i < totalMapWidth; i++) {
+								const checkedValue = doubledMap[y][i];
+								if (/[^A-Z]/.test(checkedValue)) {
+									destination = checkedValue;
+								}
+								
+							}
+						}
+					}
+				}
+				const tileInfo = rotMap[value];
+				floorTiles.push({
+					name: (x+0.5)+','
+						+(y+0.5)+':'
+						+ tileInfo.tile + '-'
+						+ tileInfo.variant +'-'+
+						`(${value})`,
+					x: x+0.5,
+					y: y+0.5,
+					rot: tileInfo.rot,
+					destination,
+					doorDir,
+				});
+			}
+		}
+		mapFloorPlanInfo[roomName].floorTiles = floorTiles;
+	});
+	Object.keys(mapFloorPlanInfo).forEach(roomName=>{
+		if (roomName !== 'b') {
+			let doorCornerCoords = mapFloorPlanInfo[roomName].doorCoords;
+			let compositeDoorCoords = [
+				doorCornerCoords.reduce((acc,pair)=>acc+pair[0], 0)/4,
+				doorCornerCoords.reduce((acc,pair)=>acc+pair[1], 0)/4
+			];
+			if (roomName === 'a') {
+				compositeDoorCoords[1] -= 2;
+			} else {
+				compositeDoorCoords[0] += roomName==='c' || roomName==='f' ? -2 : 2;
+			}
+			let bFloorTiles = mapFloorPlanInfo.b.floorTiles;
+			let targetDoor = bFloorTiles.filter(item=>{
+				return item.x === compositeDoorCoords[0]
+				&& item.y === compositeDoorCoords[1];
+			})[0];
+			targetDoor.destination = roomName;
+			targetDoor.doorDir = roomName === 'a' ? 'up' : 'left-or-right';
+		}
+	});
+	Object.keys(mapFloorPlanInfo).forEach(roomName=>{
+		mapFloorPlanInfo[roomName].floors = mapFloorPlanInfo[roomName].floorTiles.filter(item=>!item.destination);
+		mapFloorPlanInfo[roomName].doors = mapFloorPlanInfo[roomName].floorTiles.filter(item=>item.destination);
+		delete mapFloorPlanInfo[roomName].floorTiles;
+	});
+
 	/* -------------- CLEANUP -------------- */
 
 	Object.keys(mapFloorPlanInfo).forEach(roomName=>{
 		delete mapFloorPlanInfo[roomName].line;
 		delete mapFloorPlanInfo[roomName].lines;
+		delete mapFloorPlanInfo[roomName].cornerCoords;
+		delete mapFloorPlanInfo[roomName].doorCoords;
 	});
 
-	return {
+	let result = {
 		rooms: mapFloorPlanInfo,
 		printMap: doubledMap.join('\n'),
 	};
+	console.log('mapFloorPlanInfo',mapFloorPlanInfo);
+	return result;
 };
 
 console.log(buildMapFromSeed(1234).printMap);
-console.log('break');

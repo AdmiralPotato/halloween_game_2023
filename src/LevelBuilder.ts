@@ -4,10 +4,17 @@ import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 
 interface Door {
+	name: string;
 	x: number;
 	y: number;
 	rot: number;
 	destination: string;
+}
+interface Floor {
+	name: string;
+	x: number;
+	y: number;
+	rot: number;
 }
 
 interface Furnishing {
@@ -28,6 +35,7 @@ export interface Room {
 	x: number;
 	y: number;
 	doors: Door[];
+	floors: Floor[];
 	furnishings: Furnishing[];
 }
 
