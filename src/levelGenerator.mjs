@@ -64,36 +64,41 @@ export const makeRoomsWithSeed = (seed) => {
 	// position = wallHanging, wallEdge, freeStanding,
 	const shortWallStuff = [
 		// wallHanging
-		{ item: 'curtainsShort', weight: 1},
+		{ item: 'curtainShort', weight: 1},
 		{ item: 'mirrorShort', weight: 1},
-		{ item: 'paintingShort', weight: 4},
+		{ item: 'paintingSml', weight: 1},
 	];
 	const tallWallStuff = [
 		// wallHanging
-		{ item: 'curtainsTall', weight: 1},
+		{ item: 'curtain', weight: 1},
 		{ item: 'mirrorTall', weight: 1},
-		{ item: 'paintingTall', weight: 4},
+		{ item: 'paintingTall', weight: 1},
 	];
 	const everyRoomStuff = [
 		{ item: 'cobwebEdge', weight: 4},
 		{ item: 'pottedPlant', weight: 2},
 		{ item: 'gargoyle', weight: 1},
 		{ item: 'grandfatherClock', weight: 1},
+		{ item: 'candelabra', weight: 2},
+		{ item: 'endtable_primitive0', weight: 1},
+		{ item: 'EMPTY', weight: 6},
 	];
 	const FURNISHINGS = {
-		// curtainsShort: { position: 'wallHanging', size: { w:1, d:0, h:1 }, },
-		curtainsTall: { position: 'wallHanging', size: { w:2, d:0, h:2 }, },
-		mirrorShort: { position: 'wallHanging', size: { w:1, d:0, h:1 }, },
-		// mirrorTall: { position: 'wallHanging', size: { w:1, d:0, h:2 }, },
-		paintingShort: { position: 'wallHanging', size: { w:1, d:0, h:1 }, }, // todo: wide
-		paintingTall: { position: 'wallHanging', size: { w:1, d:0, h:2 }, }, // todo: narrow
-		door: { position: 'wallHanging', size: { w:1, d:0, h:2 }, },
+		// THESE WERE 'wallHanging'
+		// curtainShort: { position: 'wallEdge', size: { w:1, d:0, h:1 }, },
+		curtain: { position: 'wallEdge', size: { w:2, d:0, h:2 }, },
+		// mirrorShort: { position: 'wallEdge', size: { w:1, d:0, h:1 }, },
+		// mirrorTall: { position: 'wallEdge', size: { w:1, d:0, h:2 }, },
+		paintingSml: { position: 'wallEdge', size: { w:1, d:0, h:1 }, }, // todo: wide
+		// paintingTall: { position: 'wallEdge', size: { w:1, d:0, h:2 }, }, // todo: narrow
+		// door: { position: 'wallEdge', size: { w:1, d:0, h:2 }, },
+		// END 'wallHanging'
 		couch: {
 			position: 'wallEdge',
 			size: { w:2, d:1, h:1 },
 			getChildren: () => {
 				let weight = {
-					'endTable': 5,
+					'endtable_primitive0': 5,
 					'candelabra': 1,
 					'pottedPlant': 2,
 					'EMPTY': 3
@@ -109,7 +114,7 @@ export const makeRoomsWithSeed = (seed) => {
 			size: { w:1, d:1, h:1 },
 			getChildren: () => {
 				let weight = {
-					'endTable': 3,
+					'endtable_primitive0': 3,
 					'candelabra': 1,
 					'pottedPlant': 2,
 					'EMPTY': 2
@@ -127,8 +132,8 @@ export const makeRoomsWithSeed = (seed) => {
 			// 100% of the time, end table on W or E; 30% of the time, another end table on the other side
 				let roll = rand();
 				return [
-					{ item: 'endTable', pos: [ roll > 0.5 ? 'W' : 'E' ] },
-					{ item: rand() < 0.3 ? 'endTable' : 'EMPTY', pos: [ roll <= 0.5 ? 'W' : 'E' ] },
+					{ item: 'endtable_primitive0', pos: [ roll > 0.5 ? 'W' : 'E' ] },
+					{ item: rand() < 0.3 ? 'endtable_primitive0' : 'EMPTY', pos: [ roll <= 0.5 ? 'W' : 'E' ] },
 				];
 			},
 		},
@@ -202,7 +207,7 @@ export const makeRoomsWithSeed = (seed) => {
 				});
 			},
 		},
-		endTable: { position: 'freeStanding', size: { w:1, d:1, h:1 } },
+		endtable_primitive0: { position: 'freeStanding', size: { w:1, d:1, h:1 } },
 	};
 
 	const ROOMS = {
@@ -456,8 +461,8 @@ export const makeRoomsWithSeed = (seed) => {
 	return Object.values(rooms);
 };
 
-let seed = 1234;
-const mapWithRooms = makeRoomsWithSeed(seed);
+// let seed = 1234;
+// const mapWithRooms = makeRoomsWithSeed(seed);
 
-console.log(JSON.stringify(mapWithRooms, null, '\t'));
-console.log('breakme');
+// console.log(JSON.stringify(mapWithRooms, null, '\t'));
+// console.log('breakme');
