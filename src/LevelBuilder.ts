@@ -2,7 +2,8 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
-import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
+import { Axis } from '@babylonjs/core/Maths/math.axis';
+const RIGHT_ANGLE = Math.PI / 2;
 
 interface Door {
 	name: string;
@@ -101,18 +102,12 @@ export class LevelBuilder {
 					: new Color3(0, 0, 1);
 				doodad.outlineWidth = 0.01;
 			});
-			const doors = [
-				{
-					x: 0,
-					y: -room.depth / 2,
-					rot: 0,
-				},
-			] as Door[];
-			doors.forEach((door) => {
+			room.doors.forEach((door) => {
 				const doodad = meshMap['doorway_00'].createInstance(Math.random().toString());
 				floor.addChild(doodad);
 				doodad.position.x = door.x;
 				doodad.position.z = door.y;
+				doodad.rotate(Axis.Y, door.rot * -RIGHT_ANGLE);
 				doodad.renderOutline = true;
 				doodad.outlineColor = new Color3(0, 1, 1);
 				doodad.outlineWidth = 0.01;

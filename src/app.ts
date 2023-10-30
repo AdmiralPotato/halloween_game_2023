@@ -67,27 +67,24 @@ class App {
 			}
 		});
 
-		SceneLoader.Append('/assets/', 'mage.glb', scene, function (scene) {
-			console.log('What is the scene I get from the SceneLoader?', scene);
+		SceneLoader.Append('/assets/', 'mage.glb', scene, () => {
+			console.log('mage should now be loaded', scene);
 		});
-		/*
-		SceneLoader.Append('/assets/', 'enviro.glb', scene, function () {
-			const doorway = scene.getMeshByName('doorway_00');
-			console.log('what is doorway?', doorway);
-		});
-		*/
-		SceneLoader.ImportMeshAsync(null, '/assets/', 'enviro.glb', scene).then(function (enviro) {
-			console.log('what are args after enviro.glb?', arguments);
+
+		SceneLoader.ImportMeshAsync(null, '/assets/', 'enviro.glb', scene).then((imported) => {
 			const meshMap: Record<string, Mesh> = {};
-			enviro.meshes.forEach((mesh, index) => {
+			imported.meshes.forEach((mesh, index) => {
 				console.log(`What is meshes[${index}]?`, mesh);
 				meshMap[mesh.name] = mesh as Mesh;
+				// loader auto-attaches the meshes, but I don't want that, so I have to undo that
+				scene.removeMesh(mesh);
 			});
 			const rooms = makeRoomsWithSeed(1234) as Room[];
 			const level = LevelBuilder.build(rooms, meshMap, scene);
 			scene.addMesh(level);
 			scene.createDefaultCameraOrLight(true, true, true);
 		});
+
 		const material = scene.defaultMaterial as StandardMaterial;
 		material.diffuseColor.set(0.2, 0.2, 0.2);
 		material.specularColor.set(0, 0, 0);
