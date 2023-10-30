@@ -15,6 +15,7 @@ interface Door {
 }
 interface Floor {
 	name: string;
+	asset: string;
 	x: number;
 	y: number;
 	rot: number;

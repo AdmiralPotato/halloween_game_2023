@@ -311,12 +311,12 @@ export const buildMapFromSeed = (seed) => {
 	/* -------------- FLOOR ARRAY FOR EACH ROOM -------------- */
 
 	const rotMap = {
-		a: { tile: 'wall', variant: 'edge', rot: 3 },
+		a: { tile: 'wall', variant: 'edge', rot: 3, asset: 'wall_00' },
 		q: { tile: 'wall', variant: 'corner', rot: 0 },
-		w: { tile: 'wall', variant: 'edge', rot: 0 },
+		w: { tile: 'wall', variant: 'edge', rot: 0, asset: 'wall_00' },
 		e: { tile: 'wall', variant: 'corner', rot: 1 },
-		d: { tile: 'wall', variant: 'edge', rot: 1 },
-		s: { tile: 'wall', variant: 'floor', rot: 0 },
+		d: { tile: 'wall', variant: 'edge', rot: 1, asset: 'wall_00' },
+		s: { tile: 'wall', variant: 'floor', rot: 0, asset: 'floor_00.001' },
 
 		A: { tile: 'door', variant: 'edge', rot: 3 },
 		Q: { tile: 'door', variant: 'corner', rot: null },
@@ -368,6 +368,7 @@ export const buildMapFromSeed = (seed) => {
 				}
 				const tileInfo = rotMap[value];
 				floorTiles.push({
+					asset: tileInfo.asset || '',
 					name: roomName
 						+ tileInfo.tile + '-'
 						+ tileInfo.variant +'-'+
