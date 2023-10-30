@@ -45,6 +45,7 @@ class App {
 		const playerCharacterHolder = new Mesh('playerCharacterHolder', scene);
 
 		const camera = new FollowCamera('Camera', Vector3.Zero(), scene, playerCharacterHolder);
+		camera.heightOffset = 9;
 		console.log('Camera', camera);
 		const hemisphereLight: HemisphericLight = new HemisphericLight(
 			'hemisphereLight',
@@ -149,6 +150,8 @@ class App {
 		engine.runRenderLoop(() => {
 			engine.resize();
 			scene.render();
+			playerCharacterHolder.position.x +=
+				Math.sin((window.performance.now() * Math.PI) / 5000) / 25;
 		});
 	}
 }
