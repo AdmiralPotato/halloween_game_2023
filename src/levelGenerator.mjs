@@ -1,5 +1,6 @@
 import seedrandom from 'seedrandom';
 import {buildMapFromSeed} from './mapBuilder.mjs';
+import {FURNISHINGS} from './furnishings.mjs';
 
 const DIRECTIONS = ['N','E','S','W'];
 const getOppositeDir = (dir) => {
@@ -41,12 +42,6 @@ export const makeRoomsWithSeed = (seed) => {
 		return ret;
 	};
 	const getRandomDir = () => DIRECTIONS[randomIndex(4)];
-	const getRandomDiningTable = () => {
-		return rand() < 0.5
-			? { item: 'diningTable3', count: 1}
-			: { item: 'diningTable4', count: 1};
-	};
-
 	const getRandomWithWeight = input => {
 		const pickFrom = [];
 		if (Array.isArray(input)) {
@@ -90,132 +85,68 @@ export const makeRoomsWithSeed = (seed) => {
 		{ item: 'endtable_primitive0', weight: 1},
 		{ item: 'EMPTY', weight: 2},
 	];
-	const FURNISHINGS = {
-		EMPTY: { position: 'wallEdge', size: { w:1, d:1, h:2 } },
-		// THESE WERE 'wallHanging'
-		// curtainShort: { position: 'wallEdge', size: { w:1, d:1, h:1 }, },
-		curtain: { position: 'wallEdge', size: { w:2, d:1, h:2 }, placement: 'exteriorWall' },
-		// mirrorShort: { position: 'wallEdge', size: { w:1, d:1, h:1 }, },
-		// mirrorTall: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
-		paintingSml: { position: 'wallEdge', size: { w:1, d:1, h:1 }, }, // todo: wide
-		// paintingTall: { position: 'wallEdge', size: { w:1, d:1, h:2 }, }, // todo: narrow
-		// door: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
-		// END 'wallHanging'
-		couch: {
-			position: 'wallEdge',
-			size: { w:2, d:1, h:1 },
-			getChildren: () => {
-				let weight = {
-					'endtable_primitive0': 5,
-					'candelabra': 1,
-					'pottedPlant': 2,
-					'EMPTY': 3
-				};
-				return [
-					{ item: getRandomWithWeight(weight), pos: 'W' },
-					{ item: getRandomWithWeight(weight), pos: 'E' },
-				];
-			}
+	const getChildren = {
+		couch: () => {
+			let weight = {
+				'endtable_primitive0': 5,
+				'candelabra': 1,
+				'pottedPlant': 2,
+				'EMPTY': 3
+			};
+			return [
+				{ item: getRandomWithWeight(weight), pos: 'w' },
+				{ item: getRandomWithWeight(weight), pos: 'e' },
+			];
 		},
-		armchair: {
-			position: 'wallEdge',
-			size: { w:1, d:1, h:1 },
-			getChildren: () => {
-				let weight = {
-					'endtable_primitive0': 3,
-					'candelabra': 1,
-					'pottedPlant': 2,
-					'EMPTY': 2
-				};
-				return [
-					{ item: getRandomWithWeight(weight), pos: 'W' },
-					{ item: getRandomWithWeight(weight), pos: 'E' },
-				];
-			}
+		armchair: () => {
+			let weight = {
+				'endtable_primitive0': 3,
+				'candelabra': 1,
+				'pottedPlant': 2,
+				'EMPTY': 2
+			};
+			return [
+				{ item: getRandomWithWeight(weight), pos: 'w' },
+				{ item: getRandomWithWeight(weight), pos: 'e' },
+			];
 		},
-		bed: {
-			position: 'wallEdge',
-			size: { w:2, d:2, h:1 },
-			getChildren: () => {
+		bed: () => {
 			// 100% of the time, end table on W or E; 30% of the time, another end table on the other side
-				let roll = rand();
-				return [
-					{ item: 'endtable_primitive0', pos: [ roll > 0.5 ? 'W' : 'E' ] },
-					{ item: rand() < 0.3 ? 'endtable_primitive0' : 'EMPTY', pos: [ roll <= 0.5 ? 'W' : 'E' ] },
-				];
-			},
+			let roll = rand();
+			return [
+				{ item: 'endtable_primitive0', pos: roll > 0.5 ? 'e' : 'w' },
+				{ item: rand() < 0.3 ? 'endtable_primitive0' : 'EMPTY', pos: roll <= 0.5 ? 'w' : 'e' },
+			];
 		},
-		cobwebEdgeEdge: { position: 'wallEdge', size: { w:1, d:1, h:1 } },
-		wardrobe: { position: 'wallEdge', size: { w:2, d:1, h:2 } },
-		fireplace: { position: 'wallEdge', size: { w:2, d:1, h:2 }, },
-		bookcaseNarr: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
-		bookcaseShNr: { position: 'wallEdge', size: { w:1, d:1, h:1 }, },
-		bookcaseWide: { position: 'wallEdge', size: { w:2, d:1, h:2 }, },
-		bookcaseShor: { position: 'wallEdge', size: { w:2, d:1, h:2 }, },
-		// dresserShort: { position: 'wallEdge', size: { w:2, d:1, h:1 }, },
-		// dresserTall: { position: 'wallEdge', size: { w:2, d:1, h:2 }, },
-		chest: { position: 'wallEdge', size: { w:1, d:1, h:1 }, },
-		pottedPlant: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
-		candelabra: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
-		gargoyle: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
-		// grandfatherClock: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
-		chair: { position: 'wallEdge', size: { w:1, d:1, h:1 }, },
-		couchCenter: {
-			position: 'freeStanding',
-			size: { w:2, d:1, h:1 }, // width first (in "default" top-down position)
-			getChildren: () => {
-				return rand() < 0.7 ? [] : [{ item: 'tableLong', pos: [ 'N' ] }];
-			},
+		couchCenter: () => {
+			return rand() < 0.7 ? [] : [{ item: 'tableLong', pos: 'n' }];
 		},
-		squareTable: {
-			position: 'freeStanding',
-			size: { w:1, d:1, h:1 },
-			getChildren: () => {
-			// 1 chair minimum; 2 chairs sometimes (edges chosen is random)
-				const dir = getRandomDir();
-				const ret = [{ item: 'chair', pos: dir }];
-				if (rand() < 0.3) {
-					const opposite = getOppositeDir(dir);
-					ret.push({ item: 'chair', pos: opposite});
+		squareTable: () => {
+		// 1 chair minimum; 2 chairs sometimes (edges chosen is random)
+			const dir = getRandomDir();
+			const ret = [{ item: 'chair', pos: dir }];
+			if (rand() < 0.3) {
+				const opposite = getOppositeDir(dir);
+				ret.push({ item: 'chair', pos: opposite});
+			}
+			return ret;
+		},
+		tableRound: () => {
+			let dirs = scrambleArray(['n','e','s','w']);
+			let ret = [{ item: 'chair', pos: dirs.pop() }];
+			for (let i = 0; i < 3; i++) {
+				if (rand() < 0.6) {
+					ret.push({ item: 'chair', pos: dirs.pop() });
 				}
-				return ret;
-			},
+			}
+			return ret;
 		},
-		roundTable: {
-			position: 'freeStanding',
-			size: { w:2, d:2, h:1 },
-			getChildren: () => {
-				let dirs = scrambleArray(['n','e','s','w']);
-				let ret = [{ item: 'chair', pos: dirs.pop() }];
-				for (let i = 0; i < 3; i++) {
-					if (rand() < 0.6) {
-						ret.push({ item: 'chair', pos: dirs.pop() });
-					}
-				}
-				return ret;
-			},
+		diningTable4: () => {
+			const missing = 0.05;
+			return [ 'n0', 'n1', 'n2', 'n3', 's1', 's2', 's2', 'n4', ].map(pos=>{
+				return { item: rand() < missing ? 'EMPTY' :'chair', pos: pos };
+			});
 		},
-		diningTable3: {
-			position: 'freeStanding',
-			size: { w:4, d:1, h:1 },
-			getChildren: () => {
-				const missing = 0.05;
-				return [ 'N1', 'N2', 'N3', 'S1', 'S2', 'S3', ].map(pos=>{
-					return { item: rand() < missing ? 'EMPTY' :'chair', pos: pos };
-				});
-			},
-		},
-		diningTable4: {
-			position: 'freeStanding',
-			size: { w:3, d:1, h:1 },
-			getChildren: () => {
-				const missing = 0.05;
-				return [ 'N1', 'N2', 'N3', 'N4', 'S1', 'S2', 'S3', 'S4', ].map(pos=>{
-					return { item: rand() < missing ? 'EMPTY' :'chair', pos: pos };
-				});
-			},
-		},
-		endtable_primitive0: { position: 'freeStanding', size: { w:1, d:1, h:1 } },
 	};
 
 	const ROOMS = {
@@ -225,7 +156,7 @@ export const makeRoomsWithSeed = (seed) => {
 			{ item: 'couch', weight: 1},
 			{ item: 'armchair', weight: 2},
 			{ item: 'squareTable', weight: 4},
-			{ item: 'roundTable', weight: 4},
+			{ item: 'tableRound', weight: 4},
 			{ item: 'bookcaseWide', weight: 1},
 			{ item: 'bookcaseNarr', weight: 2},
 		].concat(tallWallStuff).concat(everyRoomStuff),
@@ -236,11 +167,11 @@ export const makeRoomsWithSeed = (seed) => {
 			{ item: 'bookcaseShor', weight: 3},
 			{ item: 'bookcaseShNr', weight: 1},
 			{ item: 'squareTable', weight: 4},
-			{ item: 'roundTable', weight: 4},
+			{ item: 'tableRound', weight: 4},
 			{ item: 'door', weight: 5},
 		].concat(shortWallStuff).concat(everyRoomStuff),
 		diningRoom: [
-			getRandomDiningTable(),
+			{ item: 'diningTable4', count: 1},
 			{ item: 'armchair', weight: 4},
 		].concat(tallWallStuff).concat(everyRoomStuff),
 		bedroom: [
@@ -251,7 +182,7 @@ export const makeRoomsWithSeed = (seed) => {
 			{ item: 'chair', weight: 2},
 			{ item: 'armchair', weight: 1},
 			{ item: 'squareTable', weight: 1},
-			{ item: 'roundTable', weight: 1},
+			{ item: 'tableRound', weight: 1},
 			{ item: 'bookcaseShNr', weight: 1},
 			{ item: 'dresserShort', count: 1},
 			{ item: 'dresserTall', count: 1},
@@ -262,7 +193,7 @@ export const makeRoomsWithSeed = (seed) => {
 			{ item: 'couch', weight: 1},
 			{ item: 'armchair', weight: 2},
 			{ item: 'squareTable', weight: 4},
-			{ item: 'roundTable', weight: 4},
+			{ item: 'tableRound', weight: 4},
 			{ item: 'bookcaseShor', weight: 3},
 			{ item: 'bookcaseShNr', weight: 3},
 			{ item: 'bookcaseWide', weight: 10},
@@ -286,25 +217,6 @@ export const makeRoomsWithSeed = (seed) => {
 			}),
 		};
 	};
-	/*
-	const getItemAndChildren = itemName => {
-		let itemInfo = Object.assign({name: itemName}, FURNISHINGS[itemName]);
-		if (!itemInfo.getChildren) {
-			return {item: itemInfo};
-		}
-		let children = itemInfo.getChildren().filter(x=>x.item !== 'EMPTY');
-		let coords = {};
-		for (let y = 0; y < itemInfo.size.d; y++) {
-			for (let x = 0; x < itemInfo.size.w; x++) {
-				coords[`${x},${y}`] = 'A0';
-			}
-		}
-		return {
-			item: itemInfo,
-			children
-		};
-	};
-	*/
 
 	const padWall = (wallArr) => {
 		let ret = [];
@@ -425,7 +337,7 @@ export const makeRoomsWithSeed = (seed) => {
 				return Object.assign({ wallDir }, item);
 			});
 		});
-		// while we can place more furniture...
+		// while we can place more wall furniture...
 		while (remainingWalls.length) {
 			// info for the furniture we want
 			let insertName = requiredItems.length

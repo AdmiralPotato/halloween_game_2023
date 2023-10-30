@@ -1,0 +1,36 @@
+export const FURNISHINGS = {
+	EMPTY: { position: 'wallEdge', size: { w:1, d:1, h:2 } },
+	// THESE WERE 'wallHanging'
+	// curtainShort: { position: 'wallEdge', size: { w:1, d:1, h:1 }, },
+	curtain: { position: 'wallEdge', size: { w:2, d:1, h:2 }, placement: 'exteriorWall' },
+	// mirrorShort: { position: 'wallEdge', size: { w:1, d:1, h:1 }, },
+	// mirrorTall: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
+	paintingSml: { position: 'wallEdge', size: { w:1, d:1, h:1 }, }, // todo: wide
+	// paintingTall: { position: 'wallEdge', size: { w:1, d:1, h:2 }, }, // todo: narrow
+	// door: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
+	// END 'wallHanging'
+	couch: { position: 'wallEdge', size: { w:2, d:1, h:1 }, },
+	armchair: { position: 'wallEdge', size: { w:1, d:1, h:1 }, },
+	bed: { position: 'wallEdge', size: { w:2, d:2, h:1 }, },
+	cobwebEdgeEdge: { position: 'wallEdge', size: { w:1, d:1, h:1 } },
+	wardrobe: { position: 'wallEdge', size: { w:2, d:1, h:2 } },
+	fireplace: { position: 'wallEdge', size: { w:2, d:1, h:2 }, },
+	bookcaseNarr: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
+	bookcaseShNr: { position: 'wallEdge', size: { w:1, d:1, h:1 }, },
+	bookcaseWide: { position: 'wallEdge', size: { w:2, d:1, h:2 }, },
+	bookcaseShor: { position: 'wallEdge', size: { w:2, d:1, h:2 }, },
+	// dresserShort: { position: 'wallEdge', size: { w:2, d:1, h:1 }, },
+	// dresserTall: { position: 'wallEdge', size: { w:2, d:1, h:2 }, },
+	chest: { position: 'wallEdge', size: { w:1, d:1, h:1 }, },
+	pottedPlant: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
+	candelabra: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
+	gargoyle: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
+	// grandfatherClock: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
+	chair: { position: 'wallEdge', size: { w:1, d:1, h:1 }, },
+	couchCenter: { position: 'freeStanding', size: { w:2, d:1, h:1 }, },
+	squareTable: { position: 'freeStanding', size: { w:1, d:1, h:1 }, },
+	tableRound: { position: 'freeStanding', size: { w:2, d:2, h:1 }, },
+	diningTable3: { position: 'freeStanding', size: { w:4, d:1, h:1 }, },
+	diningTable4: { position: 'freeStanding', size: { w:3, d:1, h:1 }, },
+	endtable_primitive0: { position: 'freeStanding', size: { w:1, d:1, h:1 } },
+};
