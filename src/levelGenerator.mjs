@@ -324,6 +324,16 @@ export const makeRoomsWithSeed = (seed) => {
 			if (ret[wallDir] && ret[wallDir].length > 0) {
 				ret[wallDir] = padWall(ret[wallDir]);
 			}
+			const adjustMap = {
+				n: [0,-0.5],
+				w: [-0.5,0],
+				e: [0.5,0],
+			};
+			const adjust = adjustMap[wallDir];
+			ret[wallDir].forEach(item=>{
+				item.x+=adjust[1];
+				item.y+=adjust[1];
+			});
 		});
 
 		return ret;
