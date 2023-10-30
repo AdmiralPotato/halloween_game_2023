@@ -5,6 +5,13 @@ const DIRECTIONS = ['N','E','S','W'];
 const getOppositeDir = (dir) => {
 	return DIRECTIONS[(DIRECTIONS.indexOf(dir) + 2) % 4];
 };
+const exteriorWalls = {
+	'a': ['w','e'],
+	'd': ['w'],
+	'c': ['e'],
+	'e': ['w', 'n' ],
+	'f': ['e', 'n' ],
+};
 
 export const makeRoomsWithSeed = (seed) => {
 	const mapInfo = buildMapFromSeed(seed);
@@ -86,7 +93,7 @@ export const makeRoomsWithSeed = (seed) => {
 	const FURNISHINGS = {
 		// THESE WERE 'wallHanging'
 		// curtainShort: { position: 'wallEdge', size: { w:1, d:0, h:1 }, },
-		curtain: { position: 'wallEdge', size: { w:2, d:0, h:2 }, },
+		curtain: { position: 'wallEdge', size: { w:2, d:0, h:2 }, placement: 'exteriorWall' },
 		// mirrorShort: { position: 'wallEdge', size: { w:1, d:0, h:1 }, },
 		// mirrorTall: { position: 'wallEdge', size: { w:1, d:0, h:2 }, },
 		paintingSml: { position: 'wallEdge', size: { w:1, d:0, h:1 }, }, // todo: wide
@@ -353,9 +360,9 @@ export const makeRoomsWithSeed = (seed) => {
 		return ret;
 	};
 	
-	////-----------------------------------------//
-	/// ------- THE REST OF THE OWL???? ------- ///
-	//-----------------------------------------////
+	////---------------------------------------------------//
+	/// ------------ THE REST OF THE OWL???? ------------ ///
+	//---------------------------------------------------////
 
 	const insertItemIntoWall = (targetWall, insertWidth) => {
 		if (insertWidth === targetWall.length) return { usedWall: targetWall, remainingWalls: [] };
@@ -403,10 +410,19 @@ export const makeRoomsWithSeed = (seed) => {
 		let requiredWallFurnishings = wallFurnishings.filter(item=>item.count);
 		const walls = getWalls(rooms[roomName].floors);
 		let doodads = [];
-		let remainingWalls = Object.values(walls);
+		let remainingWalls = Object.entries(walls).map(([wallDir, arr])=>{
+			return arr.map(item=>{
+				return Object.assign({ wallDir }, item);
+			});
+		});
 		// while we can place more furniture...
 		while (remainingWalls.length) {
-			let insertName; // the type of object we want to place somewhere on the three walls
+			// info for the walls we are working with
+			let targetWallIndex = randomIndex(remainingWalls.length);
+			let targetWall = remainingWalls.splice(targetWallIndex, 1)[0];
+			let wallDir = targetWall[0].wallDir;
+			// info for the furniture we want
+			let insertName;
 			if (requiredWallFurnishings.length) {
 				let insertIndex = randomIndex(requiredWallFurnishings.length);
 				let insertInfo = requiredWallFurnishings.splice(insertIndex,1);
@@ -418,10 +434,14 @@ export const makeRoomsWithSeed = (seed) => {
 			} else {
 				insertName = getRandomWithWeight(wallFurnishings);
 			}
+			if ( // if it can only go on an exterior wall, reroll
+				FURNISHINGS[insertName].placement === 'exteriorWall'
+				&& !exteriorWalls[roomName].includes(wallDir)
+			) {
+				continue;
+			}
 			let compositeInsertInfo = Object.assign({name: insertName}, FURNISHINGS[insertName]);
 			let insertWidth = compositeInsertInfo.size.w;
-			let targetWallIndex = randomIndex(remainingWalls.length);
-			let targetWall = remainingWalls.splice(targetWallIndex, 1)[0];
 			let insertInfo = insertItemIntoWall(targetWall, insertWidth);
 			if (!insertInfo) { continue; }
 			doodads.push({
@@ -461,8 +481,8 @@ export const makeRoomsWithSeed = (seed) => {
 	return Object.values(rooms);
 };
 
-// let seed = 1234;
-// const mapWithRooms = makeRoomsWithSeed(seed);
+let seed = 1234;
+const mapWithRooms = makeRoomsWithSeed(seed);
 
-// console.log(JSON.stringify(mapWithRooms, null, '\t'));
-// console.log('breakme');
+console.log(JSON.stringify(mapWithRooms, null, '\t'));
+console.log('breakme');
