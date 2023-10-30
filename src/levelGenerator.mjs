@@ -88,17 +88,18 @@ export const makeRoomsWithSeed = (seed) => {
 		{ item: 'grandfatherClock', weight: 1},
 		{ item: 'candelabra', weight: 2},
 		{ item: 'endtable_primitive0', weight: 1},
-		{ item: 'EMPTY', weight: 6},
+		{ item: 'EMPTY', weight: 2},
 	];
 	const FURNISHINGS = {
+		EMPTY: { position: 'wallEdge', size: { w:1, d:1, h:2 } },
 		// THESE WERE 'wallHanging'
-		// curtainShort: { position: 'wallEdge', size: { w:1, d:0, h:1 }, },
-		curtain: { position: 'wallEdge', size: { w:2, d:0, h:2 }, placement: 'exteriorWall' },
-		// mirrorShort: { position: 'wallEdge', size: { w:1, d:0, h:1 }, },
-		// mirrorTall: { position: 'wallEdge', size: { w:1, d:0, h:2 }, },
-		paintingSml: { position: 'wallEdge', size: { w:1, d:0, h:1 }, }, // todo: wide
-		// paintingTall: { position: 'wallEdge', size: { w:1, d:0, h:2 }, }, // todo: narrow
-		// door: { position: 'wallEdge', size: { w:1, d:0, h:2 }, },
+		// curtainShort: { position: 'wallEdge', size: { w:1, d:1, h:1 }, },
+		curtain: { position: 'wallEdge', size: { w:2, d:1, h:2 }, placement: 'exteriorWall' },
+		// mirrorShort: { position: 'wallEdge', size: { w:1, d:1, h:1 }, },
+		// mirrorTall: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
+		paintingSml: { position: 'wallEdge', size: { w:1, d:1, h:1 }, }, // todo: wide
+		// paintingTall: { position: 'wallEdge', size: { w:1, d:1, h:2 }, }, // todo: narrow
+		// door: { position: 'wallEdge', size: { w:1, d:1, h:2 }, },
 		// END 'wallHanging'
 		couch: {
 			position: 'wallEdge',
@@ -265,7 +266,7 @@ export const makeRoomsWithSeed = (seed) => {
 			{ item: 'bookcaseShor', weight: 3},
 			{ item: 'bookcaseShNr', weight: 3},
 			{ item: 'bookcaseWide', weight: 10},
-			{ item: 'bookcaseNarr', weight: 3},
+			{ item: 'bookcaseNarr', weight: 8},
 		].concat(shortWallStuff).concat(everyRoomStuff),
 	};
 
@@ -406,9 +407,18 @@ export const makeRoomsWithSeed = (seed) => {
 	Object.keys(rooms).forEach(roomName => {
 		// getting room info for this room
 		const roomType = rooms[roomName].name;
-		const wallFurnishings = getFurnishings(roomType).wallEdge;
-		let requiredWallFurnishings = wallFurnishings.filter(item=>item.count);
+		const itemPool = getFurnishings(roomType).wallEdge;
+		// get required items first
+		let requiredItems = [];
+		itemPool.filter(item=>item.count).forEach(item=>{
+			for (let i = 0; i < item.count; i++) {
+				requiredItems.push(item.item);
+			}
+		});
+		requiredItems = scrambleArray(requiredItems);
+		// get wall info for this room
 		const walls = getWalls(rooms[roomName].floors);
+		// state stuff
 		let doodads = [];
 		let remainingWalls = Object.entries(walls).map(([wallDir, arr])=>{
 			return arr.map(item=>{
@@ -417,29 +427,25 @@ export const makeRoomsWithSeed = (seed) => {
 		});
 		// while we can place more furniture...
 		while (remainingWalls.length) {
+			// info for the furniture we want
+			let insertName = requiredItems.length
+				? requiredItems[0]
+				: getRandomWithWeight(itemPool);
 			// info for the walls we are working with
 			let targetWallIndex = randomIndex(remainingWalls.length);
 			let targetWall = remainingWalls.splice(targetWallIndex, 1)[0];
 			let wallDir = targetWall[0].wallDir;
-			// info for the furniture we want
-			let insertName;
-			if (requiredWallFurnishings.length) {
-				let insertIndex = randomIndex(requiredWallFurnishings.length);
-				let insertInfo = requiredWallFurnishings.splice(insertIndex,1);
-				insertName = insertInfo[0].item;
-				if (insertInfo.count > 1) {
-					insertInfo.count -= 1;
-					requiredWallFurnishings.push(JSON.parse(JSON.stringify(insertInfo)));
-				}
-			} else {
-				insertName = getRandomWithWeight(wallFurnishings);
-			}
-			if ( // if it can only go on an exterior wall, reroll
+			if ( // if it can only go on an exterior wall, reroll (might infinite loop; TODO: FIX THIS)
 				FURNISHINGS[insertName].placement === 'exteriorWall'
 				&& !exteriorWalls[roomName].includes(wallDir)
 			) {
+				remainingWalls.push(targetWall);
+				if (requiredItems.length) { // put furniture back at the bottom of the queue
+					requiredItems.push(requiredItems.unshift());
+				}
 				continue;
 			}
+			requiredItems.shift();
 			let compositeInsertInfo = Object.assign({name: insertName}, FURNISHINGS[insertName]);
 			let insertWidth = compositeInsertInfo.size.w;
 			let insertInfo = insertItemIntoWall(targetWall, insertWidth);
@@ -450,6 +456,9 @@ export const makeRoomsWithSeed = (seed) => {
 			});
 			remainingWalls = remainingWalls.concat(insertInfo.remainingWalls);
 		}
+		doodads = doodads.filter(doodad=>{
+			return doodad.furniture.name !== 'EMPTY';
+		});
 		rooms[roomName].furnishings = doodads.map(doodad=> {
 			const wallTiles = doodad.wallTiles;
 			let x = wallTiles.reduce((acc,entry)=>acc+(entry?.x||0),0)/wallTiles.length;
