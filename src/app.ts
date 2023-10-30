@@ -1,11 +1,12 @@
 // if you don't pull in packages piecemeal, bundle size go boom
 import { ISceneLoaderAsyncResult, SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
-import { ArcRotateCamera } from '@babylonjs/core/Cameras/arcRotateCamera';
+import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
+import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
 
 import '@babylonjs/core/Loading/loadingScreen';
 import '@babylonjs/core/Helpers/sceneHelpers';
@@ -18,10 +19,10 @@ import { makeRoomsWithSeed } from './levelGenerator.mjs';
 
 import './styles.css';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
-import { Skeleton } from '@babylonjs/core';
+import { ShadowGenerator } from '@babylonjs/core';
 // @ts-ignore // doesn't have a d.ts, is function that takes an ArrayBuffer and returns Number
 import crc32 from 'crc32';
+import { Color3 } from '@babylonjs/core/Maths/math.color';
 
 class App {
 	constructor() {
@@ -35,6 +36,7 @@ class App {
 		// initialize babylon scene and engine
 		const engine = new Engine(canvas, true);
 		const scene = new Scene(engine);
+		scene.clearColor.set(0.2, 0.0, 0.3, 1.0);
 		const material = scene.defaultMaterial as StandardMaterial;
 		material.diffuseColor.set(0.2, 0.2, 0.2);
 		material.specularColor.set(0, 0, 0);
@@ -42,23 +44,27 @@ class App {
 		let firstRoom: Room | null = null;
 		const playerCharacterHolder = new Mesh('playerCharacterHolder', scene);
 
-		const camera: ArcRotateCamera = new ArcRotateCamera(
-			'Camera',
-			Math.PI / 2,
-			Math.PI / 2,
-			2,
-			Vector3.Zero(),
-			scene,
-		);
-		camera.attachControl(canvas, true);
-		const light1: HemisphericLight = new HemisphericLight(
-			'light1',
+		const camera = new FollowCamera('Camera', Vector3.Zero(), scene, playerCharacterHolder);
+		console.log('Camera', camera);
+		const hemisphereLight: HemisphericLight = new HemisphericLight(
+			'hemisphereLight',
 			new Vector3(1, 1, 0),
 			scene,
 		);
-
-		console.log('Yo look at these things', { light1 });
-
+		hemisphereLight.diffuse = new Color3(0.2, 0.0, 0.3);
+		const directionalLight: DirectionalLight = new DirectionalLight(
+			'directionalLight',
+			new Vector3(1, -2, -1),
+			scene,
+		);
+		directionalLight.shadowMinZ = -10;
+		directionalLight.shadowMaxZ = 1000;
+		const shadowGenerator = new ShadowGenerator(2048, directionalLight);
+		shadowGenerator.usePercentageCloserFiltering = true;
+		// shadowGenerator.blurScale = 5;
+		// shadowGenerator.frustumEdgeFalloff = 0;
+		// shadowGenerator.usePoissonSampling = true;
+		console.log('Some lights, eh?', { hemisphereLight, directionalLight });
 		const pullInDevTools = async () => {
 			await import('@babylonjs/core/Debug/debugLayer');
 			await import('@babylonjs/inspector');
@@ -78,11 +84,13 @@ class App {
 		});
 		const magePromise = SceneLoader.ImportMeshAsync(null, '/assets/', 'mage.glb', scene).then(
 			(imported) => {
-				console.log('What is mage imported?', imported);
 				const mage = imported.meshes[0];
+				console.log('What is a MAGE?!?', imported);
 				const mageTransformNode = scene.getTransformNodeById('mage_bones');
 				mageTransformNode?.position.set(0, 0, 0);
 				mageTransformNode?.scaling.set(4, 4, 4);
+				mage.receiveShadows = true;
+				shadowGenerator.addShadowCaster(mage);
 				playerCharacterHolder.addChild(mage);
 				return mage;
 			},
@@ -95,7 +103,7 @@ class App {
 			}
 			firstRoom = rooms[5];
 			playerCharacterHolder.position.set(firstRoom.x, 0, firstRoom.y);
-			level = LevelBuilder.build(rooms, meshMap, scene);
+			level = LevelBuilder.build(rooms, meshMap, scene, shadowGenerator);
 			scene.addMesh(level);
 		};
 		const respawnLevelFromStringSeed = () => {
@@ -106,11 +114,13 @@ class App {
 			makeLevelFromRooms(rooms);
 		};
 		const addImportedToMeshMap = (imported: ISceneLoaderAsyncResult) => {
-			imported.meshes.forEach((mesh, index) => {
-				console.log(`What is meshes[${index}]?`, mesh);
+			imported.meshes.forEach((mesh) => {
+				// console.log(`What is meshes[${index}]?`, mesh);
 				meshMap[mesh.name] = mesh as Mesh;
 				// loader auto-attaches the meshes, but I don't want that, so I have to undo that
 				scene.removeMesh(mesh);
+				mesh.receiveShadows = true;
+				shadowGenerator.addShadowCaster(mesh);
 			});
 		};
 		const environmentPromise = SceneLoader.ImportMeshAsync(
@@ -128,9 +138,10 @@ class App {
 
 		const assetLoadingPromises = [magePromise, environmentPromise, doodadsPromise];
 		Promise.all(assetLoadingPromises).then(() => {
+			console.log('What is meshMap after all is loaded?', meshMap);
 			const rooms = makeRoomsWithSeed(1234) as Room[];
 			makeLevelFromRooms(rooms);
-			scene.createDefaultCameraOrLight(true, true, true);
+			// scene.createDefaultCamera(true, true, true);
 		});
 
 		const { seedButton } = UI.init();
