@@ -1,6 +1,9 @@
+import { defineConfig } from 'vite';
 import visualizer from 'rollup-plugin-visualizer';
 
-export default {
+// https://vitejs.dev/config/
+export default defineConfig({
+	base: './',
 	build: {
 		sourcemap: true,
 	},
@@ -10,4 +13,4 @@ export default {
 			template: 'sunburst',
 		}),
 	],
-};
+});
