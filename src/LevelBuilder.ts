@@ -21,7 +21,8 @@ interface Floor {
 	rot: number;
 }
 
-interface Furnishing {
+export interface Furnishing {
+	label: string;
 	name: string;
 	assetName: string;
 	x: number;

@@ -1,4 +1,12 @@
-export const FURNISHINGS = {
+export interface FurnishingInfo {
+	position: string,
+	w: number,
+	d: number,
+	h: number,
+	placement?: string
+};
+
+export const FURNISHINGS: Record<string, FurnishingInfo> = {
 	// curtainShort: { position: 'wallEdge', w:1, d:1, h:1 },
 	// mirrorShort: { position: 'wallEdge', w:1, d:1, h:1 },
 	// mirrorTall: { position: 'wallEdge', w:1, d:1, h:2 },
