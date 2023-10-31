@@ -6,11 +6,12 @@ import {
 	scrambleArray,
 	XYRange,
 	XYCoord,
-	averageXYPairs as getXYCoordsAverage,
 	translateXY,
+	compareXY,
+	getCenterForXYRange,
+	DIRECTIONS
 } from './utilities';
 import {
-	rotMap,
 	ROOMS,
 	buildRoom,
 	RoomWorkingData,
@@ -44,8 +45,8 @@ export const buildMapFromSeed = (seed: string) => {
 	const padRoomToAlignOn = (leftRoomID: string, rightRoomID: string, alignmentDir: string) => {
 		const padWidth = roomLineMap[rightRoomID].length;
 		const method = alignmentDir === 'right' ? 'padStart' : 'padEnd';
-		let room = roomLineMap[leftRoomID];
-		room = room[method](padWidth, ' ');
+		let line = roomLineMap[leftRoomID];
+		roomLineMap[leftRoomID] = line[method](padWidth, ' ');
 	};
 	padRoomToAlignOn('e', 'd', 'right');
 	padRoomToAlignOn('d', 'e', 'right');
@@ -88,18 +89,18 @@ export const buildMapFromSeed = (seed: string) => {
 	['d', 'c'].forEach((roomID, index, arr) => {
 		const line = roomLineMap[roomID];
 		const roomInfo = roomWorkingData[roomID];
-		const maxSie = Math.max(roomInfo.depth, roomWorkingData[arr[(index + 1) % 2]].depth);
+		const maxSize = Math.max(roomInfo.depth, roomWorkingData[arr[(index + 1) % 2]].depth);
 		const ret: string[] = [];
 		const blank = ' '.repeat(line.length);
 		// blank lines, equally on top or bottom (randomly)
-		let diff = maxSie - roomInfo.depth;
-		for (let i = 0; i < diff; i++) {
-			const method = rand() < 0.5 ? 'push' : 'unshift';
-			ret[method](blank);
-		}
+		let diff = maxSize - roomInfo.depth;
 		// the actual lines
 		for (let i = 0; i < roomInfo.depth; i++) {
 			ret.push(line);
+		}
+		for (let i = 0; i < diff; i++) {
+			const method = rand() < 0.5 ? 'push' : 'unshift';
+			ret[method](blank);
 		}
 		roomLinesArrayMap[roomID] = ret;
 	});
@@ -129,7 +130,7 @@ export const buildMapFromSeed = (seed: string) => {
 			(roomLinesArrayMap.c || [])[i],
 		);
 	}
-	// quickie: make a door between hallway and entrance
+	// quickie: make a door between hallway and living room (entrance)
 
 	// find horiz coordinate
 	let bottommostRow = mapASCII[mapASCII.length - 1].split('');
@@ -154,14 +155,18 @@ export const buildMapFromSeed = (seed: string) => {
 		mapASCII.push(roomLinesArrayMap.a[i]);
 	}
 	// it's later now
-	[bottomOfHallWayIndex, bottomOfHallWayIndex + 1].forEach((index) => {
-		mapASCII[index] = mapASCII[index]
-			.split('')
-			.map((c, i) => {
-				return doorIndex === i ? 'z' : c;
-			})
-			.join('');
-	});
+	mapASCII[bottomOfHallWayIndex] = mapASCII[bottomOfHallWayIndex]
+		.split('')
+		.map((c, i) => {
+			return doorIndex === i ? 'B' : c;
+		})
+		.join('');
+	mapASCII[bottomOfHallWayIndex + 1] = mapASCII[bottomOfHallWayIndex + 1]
+		.split('')
+		.map((c, i) => {
+			return doorIndex === i ? 'A' : c;
+		})
+		.join('');
 
 	/* -------------- ADD DOORS -------------- */
 
@@ -187,40 +192,259 @@ export const buildMapFromSeed = (seed: string) => {
 			if (!firstDoorIndex) {
 				throw new Error('firstDoorIndex failed to be a valid value!');
 			}
-			mapASCII[firstDoorIndex] = mapASCII[firstDoorIndex].replace(left + 'b', 'zz');
+			mapASCII[firstDoorIndex] = mapASCII[firstDoorIndex].replace(left + 'b', left.toUpperCase() + 'B');
 			indicesR = indicesR.filter((n) => n !== firstDoorIndex);
 			let secondDoorIndex = indicesR.length > 0 ? randomFromArray(indicesR) : firstDoorIndex;
 			if (!secondDoorIndex) {
 				throw new Error('secondDoorIndex failed to be a valid value!');
 			}
-			mapASCII[secondDoorIndex] = mapASCII[secondDoorIndex].replace('b' + right, 'zz');
+			mapASCII[secondDoorIndex] = mapASCII[secondDoorIndex].replace('b' + right, 'B' + right.toUpperCase());
 		} else {
 			let firstDoorIndex = randomFromArray(indicesR);
 			if (!firstDoorIndex) {
 				throw new Error('firstDoorIndex failed to be a valid value!');
 			}
-			mapASCII[firstDoorIndex] = mapASCII[firstDoorIndex].replace('b' + right, 'zz');
+			mapASCII[firstDoorIndex] = mapASCII[firstDoorIndex].replace('b' + right, 'B' + right.toUpperCase());
 			indicesL = indicesL.filter((n) => n !== firstDoorIndex);
 			let secondDoorIndex = indicesL.length > 0 ? randomFromArray(indicesL) : firstDoorIndex;
 			if (!secondDoorIndex) {
 				throw new Error('secondDoorIndex failed to be a valid value!');
 			}
-			mapASCII[secondDoorIndex] = mapASCII[secondDoorIndex].replace(left + 'b', 'zz');
+			mapASCII[secondDoorIndex] = mapASCII[secondDoorIndex].replace(left + 'b', left.toUpperCase() + 'B');
 		}
 	});
 
 	/* -------------- HALLWAY CLEANUP -------------- */
 
 	// Trim hallway
-	const topmostDoorIndex = mapASCII.findIndex((line) => line.includes('z'));
+	const topmostDoorIndex = mapASCII.findIndex((line) => /[A-Z]/.test(line));
 	for (let i = 0; i < topmostDoorIndex - 1; i++) {
 		mapASCII[i] = mapASCII[i].replace(/b/g, ' ');
 	}
 
 	// Get hallway depth
-	roomWorkingData.b.depth = mapASCII.filter((line) => line.includes('b')).length;
+	roomWorkingData.b.depth = mapASCII.filter((line) => line.includes('b') || line.includes('B')).length;
 
 	/* -------------- CONVERT ROOMS TO REAL COORDINATE SPACE -------------- */
+
+	// get corners of each room
+	const roomCorners: Record<string, XYRange> = {};
+	Object.keys(ROOMS).forEach(roomID => {
+		// only works for square rooms
+		let topLeft: XYCoord = { x: NaN, y: NaN };
+		let bottomRight: XYCoord = { x: NaN, y: NaN };
+		y: for (let y = 0; y < mapASCII.length - 1; y++) {
+			for (let x = 0; x < mapASCII[0].length - 1; x++) {
+				if (mapASCII[y][x]?.toLowerCase() === roomID) {
+					topLeft = { x, y };
+					break y;
+				}
+			}
+		}
+		x: for (let y = mapASCII.length - 1; y >= 0; y--) {
+			for (let x = mapASCII[0].length - 1; x >= 0; x--) {
+				if (mapASCII[y][x]?.toLowerCase() === roomID) {
+					bottomRight = { x, y };
+					break x;
+				}
+			}
+		}
+		roomCorners[roomID] = {
+			x: { min: topLeft.x, max: bottomRight.x },
+			y: { min: topLeft.y, max: bottomRight.y },
+		}
+	});
+
+	// wall vs floor information
+
+	interface Edge {
+		roomID: string,
+		pos: XYCoord,
+		wallDirs: string[],
+		isDoor: boolean,
+		compositeInfo: string,
+	}
+	const compositeInfoMap: Record<string, string> = {
+		'nw': 'q',
+		'w': 'a',
+		'sw': 'z',
+		's': 'x',
+		'es': 'c',
+		'e': 'd',
+		'en': 'e',
+		'n': 'w',
+	}
+	let roomTileEdges: Edge[] = []; // non doubled! not offset!
+	Object.keys(roomCorners).forEach(roomID => {
+		let tiles: Edge[] = [];
+		let range = roomCorners[roomID];
+		for (let y = range.y.min; y <= range.y.max; y++) {
+			for (let x = range.x.min; x <= range.x.max; x++) {
+				let isDoor = /[A-Z]/.test(mapASCII[y][x]);
+				let edge: Edge = {
+					roomID,
+					pos: { x, y },
+					wallDirs: [],
+					isDoor: isDoor,
+					compositeInfo: 's'
+				}
+				if (x === range.x.min) {
+					edge.wallDirs.push('w');
+				} else if (x === range.x.max) {
+					edge.wallDirs.push('e');
+				}
+				if (y === range.y.min) {
+					edge.wallDirs.push('n');
+				} else if (y === range.y.max) {
+					edge.wallDirs.push('s');
+				}
+				let char = compositeInfoMap[edge.wallDirs.sort().join('')] || 's';
+				edge.compositeInfo = isDoor ? char.toUpperCase() : char;
+				roomTileEdges.push(edge);
+			}
+			roomTileEdges = roomTileEdges.concat(tiles);
+		}
+	});
+
+
+	const SCALE = 2;
+	// doubling the coordinates now
+	roomTileEdges = roomTileEdges.map(tile => {
+		tile.pos.x *= SCALE;
+		tile.pos.y *= SCALE;
+		return tile;
+	})
+	Object.keys(roomWorkingData).forEach((roomID) => {
+		roomWorkingData[roomID].width *= SCALE;
+		roomWorkingData[roomID].depth *= SCALE;
+	});
+	Object.keys(roomCorners).forEach(roomID => {
+		roomCorners[roomID].x.min *= 2;
+		roomCorners[roomID].y.min *= 2;
+		roomCorners[roomID].x.max *= 2;
+		roomCorners[roomID].y.max *= 2;
+	});
+
+	// getting the door info
+	const roomDoors: DoorInfo[] = [];
+	interface DoorInfo {
+		roomID: string,
+		pos: XYCoord,
+		doorDir: string,
+		wallDirs: string[],
+		destination: string,
+		compositeInfo: string,
+	}
+	const mysteryDoors = roomTileEdges.filter(entry => entry.isDoor);
+	mysteryDoors.forEach((mysteryDoor) => {
+		let possibleCounterparts = roomTileEdges
+			.filter(testTile => testTile.isDoor)
+			.filter(testTile => testTile.roomID !== mysteryDoor.roomID);
+		let translationMap: Record<string, XYCoord> = {
+			n: { x: 0, y: -SCALE },
+			e: { x: SCALE, y: 0 },
+			s: { x: 0, y: SCALE },
+			w: { x: -SCALE, y: 0 },
+		}
+		Object.keys(translationMap).forEach(dir => {
+			let translation = translationMap[dir];
+			let testCoords = translateXY(mysteryDoor.pos, translation);
+			for (let i = 0; i < possibleCounterparts.length; i++) {
+				if (compareXY(testCoords, possibleCounterparts[i].pos)) {
+					let remainingWallDirs: string[] = [];
+					mysteryDoor.wallDirs
+						.filter(wallDir => wallDir !== dir)
+						.forEach(remainingDir => {
+							remainingWallDirs.push(remainingDir);
+						})
+					roomDoors.push({
+						roomID: mysteryDoor.roomID,
+						pos: mysteryDoor.pos,
+						doorDir: dir,
+						wallDirs: remainingWallDirs,
+						destination: possibleCounterparts[i].roomID,
+						compositeInfo: mysteryDoor.compositeInfo,
+					});
+					break;
+				}
+			}
+		});
+	});
+
+	// getting it ready to hand off
+	const tileAssets = {
+		door: 'doorway_00',
+		wall: 'wall_00',
+		floor: 'floor_00.001',
+	}
+	Object.keys(roomWorkingData).forEach((roomID) => {
+		let workingRoomTileEdges = roomTileEdges
+			.filter(tile => tile.roomID === roomID);
+		let floorTiles: Tile[] = [];
+		let doorTiles: Tile[] = [];
+		//floors
+		workingRoomTileEdges
+			.forEach((tileInfo: Edge) => {
+				let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':floor' + '(' + tileInfo.compositeInfo + ')'
+				floorTiles.push({
+					name,
+					asset: tileAssets.floor,
+					x: tileInfo.pos.x,
+					y: tileInfo.pos.y,
+					rot: 0,
+					destination: '',
+					wallDir: '',
+					compositeInfo: tileInfo.compositeInfo,
+				});
+			});
+		// walls
+		workingRoomTileEdges
+			.filter(tile => !tile.isDoor)
+			.forEach((tileInfo: Edge) => {
+				tileInfo.wallDirs.forEach(dir => {
+					let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':wall-' + dir + '(' + tileInfo.compositeInfo + ')'
+					floorTiles.push({
+						name,
+						asset: tileAssets.wall,
+						x: tileInfo.pos.x,
+						y: tileInfo.pos.y,
+						rot: DIRECTIONS.indexOf(dir),
+						destination: '',
+						wallDir: '',
+						compositeInfo: tileInfo.compositeInfo,
+					});
+				});
+			});
+		//doors
+		roomDoors.forEach(tileInfo => {
+			let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':door' + '(' + tileInfo.compositeInfo + ')'
+			doorTiles.push({
+				name,
+				asset: '',
+				x: tileInfo.pos.x,
+				y: tileInfo.pos.y,
+				rot: DIRECTIONS.indexOf(tileInfo.doorDir),
+				destination: tileInfo.destination,
+				wallDir: '',
+				compositeInfo: tileInfo.compositeInfo,
+			});
+			tileInfo.wallDirs.forEach(dir => {
+				let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':wallForCornerDoor' + '(' + tileInfo.compositeInfo + ')'
+				floorTiles.push({
+					name,
+					asset: tileAssets.wall,
+					x: tileInfo.pos.x,
+					y: tileInfo.pos.y,
+					rot: DIRECTIONS.indexOf(dir),
+					destination: '',
+					wallDir: '',
+					compositeInfo: tileInfo.compositeInfo,
+				});
+			});
+		});
+		roomWorkingData[roomID].floors = floorTiles;
+		roomWorkingData[roomID].doors = doorTiles;
+	});
 
 	const arrayDoubler = <T>(arr: T[]): T[] => {
 		let ret: T[] = [];
@@ -236,55 +460,25 @@ export const buildMapFromSeed = (seed: string) => {
 		}),
 	);
 
-	// get real corner coords
-	const getCornerCords = (roomID: string, mapArray: string[]): XYRange => {
-		// only works for square rooms
-		let coordsY: number[] = [];
-		let coordsXset: Set<number> = new Set();
-		mapArray.forEach((line, i) => {
-			if (line.includes(roomID)) {
-				coordsY.push(i);
-				line.split('').forEach((c, x) => {
-					if (c === roomID) {
-						coordsXset.add(x);
-					}
-				});
-			}
-		});
-		let coordsX: number[] = Array.from(coordsXset).sort((a, b) => a - b);
-		return {
-			x: { min: coordsX[0], max: coordsX.slice(-1)[0] },
-			y: { min: coordsY[0], max: coordsY.slice(-1)[0] },
-		};
-	};
+	// make room coordinate space local to the room
 	Object.keys(roomWorkingData).forEach((roomID) => {
-		roomWorkingData[roomID].width *= 2;
-		roomWorkingData[roomID].depth *= 2;
-		const corners = getCornerCords(roomID, doubledMap);
-		roomWorkingData[roomID].cornerCoords = corners;
-	});
-	Object.keys(roomWorkingData).forEach((roomID) => {
-		if (
-			roomID === 'b' &&
-			roomWorkingData.a.cornerCoords.y.min - roomWorkingData.b.cornerCoords.y.max === 3
-		) {
-			roomWorkingData.b.cornerCoords.y.max += 2;
-		}
-		let b = roomWorkingData.b;
-		b.depth = b.cornerCoords.y.max - b.cornerCoords.y.min + 1;
-		let corners = roomWorkingData[roomID].cornerCoords;
-		roomWorkingData[roomID].x = corners.x.min + (corners.x.max - corners.x.min) / 2;
-		roomWorkingData[roomID].y = corners.y.min + (corners.y.max - corners.y.min) / 2;
-		let doorCoords: XYCoord[] = [];
-		for (let y = corners.y.min; y <= corners.y.max; y++) {
-			for (let x = corners.x.min; x <= corners.x.max; x++) {
-				// console.log(`${x}, ${y} = ${doubledMap[y][x]}`);
-				if (doubledMap[y][x] === 'z') {
-					doorCoords.push({ x, y });
-				}
-			}
-		}
-		roomWorkingData[roomID].doorCoords = doorCoords;
+		let room = roomWorkingData[roomID];
+		let roomCenter = getCenterForXYRange(roomCorners[roomID]);
+		room.x = roomCenter.x;
+		room.y = roomCenter.y;
+		room.floors = room.floors.map((item) => {
+			item.x -= room.x;
+			item.y -= room.y;
+			// item.name = `${item.x},${item.y}:${item.name}`;
+			return item;
+		}).filter(item => !(item.rot === 2));
+		room.doors = room.doors.map((item) => {
+			item.x -= room.x;
+			item.y -= room.y;
+			// item.name = `${item.x},${item.y}:${item.name}`;
+			return item;
+		}).filter(item => !(item.rot === 2));
+
 	});
 
 	/* -------------- ASSIGN ROOMS THEIR PURPOSES -------------- */
@@ -294,110 +488,6 @@ export const buildMapFromSeed = (seed: string) => {
 	let remainder = scrambleArray(['bedroom', 'bedroom', 'library', 'diningRoom']);
 	['c', 'd', 'e', 'f'].forEach((roomID, i) => {
 		roomWorkingData[roomID].name = remainder[i];
-	});
-
-	/* -------------- FLOOR ARRAY FOR EACH ROOM -------------- */
-
-	Object.keys(roomWorkingData).forEach((roomID) => {
-		let corners = roomWorkingData[roomID].cornerCoords;
-		let floorTiles: Tile[] = [];
-		for (let y = corners.y.min; y <= corners.y.max; y += 2) {
-			for (let x = corners.x.min; x <= corners.x.max; x += 2) {
-				let value = 's';
-				if (y === corners.y.min) {
-					if (x === corners.x.min) {
-						value = 'q';
-					} else if (x === corners.x.max - 1) {
-						value = 'e';
-					} else {
-						value = 'w';
-					}
-				} else {
-					if (x === corners.x.min) {
-						value = 'a';
-					} else if (x === corners.x.max - 1) {
-						value = 'd';
-					}
-				}
-				let destination = '';
-				let doorDir = '';
-				if (doubledMap[y][x] === 'z') {
-					if (roomID !== 'b') {
-						destination = 'b';
-						doorDir = roomID === 'a' ? 'down' : 'left-or-right';
-					} else {
-						if (x < roomWorkingData[roomID].x) {
-							// walk left
-							for (let i = corners.x.min; i >= 0; i--) {
-								const checkedValue = doubledMap[y][i];
-								if (/[^A-Z]/.test(checkedValue)) {
-									destination = checkedValue;
-								}
-							}
-						} else {
-							// walk right
-							for (let i = corners.x.max; i < totalMapWidth; i++) {
-								const checkedValue = doubledMap[y][i];
-								if (/[^A-Z]/.test(checkedValue)) {
-									destination = checkedValue;
-								}
-							}
-						}
-					}
-				}
-				const tileInfo = rotMap[value];
-				floorTiles.push({
-					asset: tileInfo.asset || '',
-					name: roomID + tileInfo.tile + '-' + tileInfo.variant + '-' + `(${value})`,
-					x: x + 0.5,
-					y: y + 0.5,
-					rot: tileInfo.rot,
-					destination,
-					doorDir,
-					wallDir: '',
-				});
-			}
-		}
-		roomWorkingData[roomID].floorTiles = floorTiles;
-	});
-	// determine door direction / exit
-	const translationMap: Record<string, XYCoord> = {
-		a: { x: 0, y: -2 },
-		c: { x: -2, y: 0 },
-		f: { x: -2, y: 0 },
-		d: { x: 2, y: 0 },
-		e: { x: 2, y: 0 },
-	}
-	Object.keys(roomWorkingData).forEach((roomID) => {
-		if (roomID !== 'b') {
-			let cornerCoords = roomWorkingData[roomID].doorCoords;
-			let compositeCoords = getXYCoordsAverage(cornerCoords);
-			compositeCoords = translateXY(compositeCoords, translationMap[roomID]);
-			let bFloorTiles = roomWorkingData.b.floorTiles;
-			let targetDoorForB = bFloorTiles.filter((item) => {
-				return item.x === compositeCoords.x && item.y === compositeCoords.y;
-			})[0];
-			targetDoorForB.destination = roomID;
-			targetDoorForB.doorDir = roomID === 'a' ? 'up' : 'left-or-right';
-		}
-	});
-
-	/* -------------- CLEANUP -------------- */
-
-	Object.keys(roomWorkingData).forEach((roomID) => {
-		const room = roomWorkingData[roomID];
-
-		// all floor tiles now local coords
-		room.floors = room.floorTiles.map((item) => {
-			item.x -= room.x;
-			item.y -= room.y;
-			item.name = `${item.x},${item.y}:${item.name}`;
-			return item;
-		});
-
-		// splitting floors and doors into floors and doors
-		room.floors = room.floorTiles.filter((item) => !item.destination);
-		room.doors = room.floorTiles.filter((item) => item.destination);
 	});
 
 	return {

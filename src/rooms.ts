@@ -1,5 +1,5 @@
 import { Furnishing } from "./LevelBuilder";
-import { RandomWeight, XYCoord as XYCoords, XYRange, randomFromRange } from "./utilities";
+import { RandomWeight, XYCoord, XYRange, randomFromRange } from "./utilities";
 
 export interface RoomInfo {
 	name: string,
@@ -12,7 +12,7 @@ export interface RoomWorkingData {
 	cornerCoords: XYRange;
 	x: number;
 	y: number;
-	doorCoords: XYCoords[];
+	doorCoords: XYCoord[];
 	name: string;
 	roomID: string;
 	floorTiles: Tile[];
@@ -65,12 +65,12 @@ export const ROOMS: Record<string, RoomInfo> = {
 };
 export interface Tile {
 	asset: string;
+	compositeInfo: string;
 	name: string;
 	x: number;
 	y: number;
 	rot: number;
 	destination: string;
-	doorDir: string;
 	wallDir: string;
 }
 export const buildRoom = (roomID: string): RoomWorkingData => {
@@ -176,27 +176,4 @@ export const ROOM_CONTENTS: Record<string, RandomWeight[]> = {
 		...shortWallStuff,
 		...everyRoomStuff,
 	],
-};
-
-export interface WorldTileInfo {
-	tile: string,
-	variant: string,
-	rot: number,
-	asset?: string
-};
-
-export const rotMap: Record<string, WorldTileInfo> = {
-	a: { tile: 'wall', variant: 'edge', rot: 3, asset: 'wall_00' },
-	q: { tile: 'wall', variant: 'corner', rot: 0 },
-	w: { tile: 'wall', variant: 'edge', rot: 0, asset: 'wall_00' },
-	e: { tile: 'wall', variant: 'corner', rot: 1 },
-	d: { tile: 'wall', variant: 'edge', rot: 1, asset: 'wall_00' },
-	s: { tile: 'wall', variant: 'floor', rot: 0, asset: 'floor_00.001' },
-
-	A: { tile: 'door', variant: 'edge', rot: 3 },
-	Q: { tile: 'door', variant: 'corner', rot: NaN },
-	W: { tile: 'door', variant: 'edge', rot: 0 },
-	E: { tile: 'door', variant: 'corner', rot: NaN },
-	D: { tile: 'door', variant: 'edge', rot: 1 },
-	S: { tile: 'door', variant: 'floor', rot: 0 },
 };

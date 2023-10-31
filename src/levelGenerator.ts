@@ -38,14 +38,15 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 		});
 		return ret;
 	};
-	const getWalls = (floors: Tile[]): Record<string, Tile[]> => {
+	const getWalls = (inputFloors: Tile[]): Record<string, Tile[]> => {
+		let floors = inputFloors.filter(item => item.name.includes('wall'));
 		let ret: Record<string, Tile[]> = {
-			n: floors.filter((item) => item.name.includes('(w)')),
-			w: floors.filter((item) => item.name.includes('(a)')),
-			e: floors.filter((item) => item.name.includes('(d)')),
+			n: floors.filter((item) => item.compositeInfo.includes('w')),
+			w: floors.filter((item) => item.compositeInfo.includes('a')),
+			e: floors.filter((item) => item.compositeInfo.includes('d')),
 		};
-		let q = floors.filter((item) => item.name.includes('(q)'));
-		let e = floors.filter((item) => item.name.includes('(e)'));
+		let q = floors.filter((item) => item.compositeInfo.includes('q'));
+		let e = floors.filter((item) => item.compositeInfo.includes('e'));
 		if (q.length) {
 			ret[rand() < 0.5 ? 'n' : 'w'].push(q[0]);
 		}
@@ -206,7 +207,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 			const wallTiles = doodad.wallTiles;
 			let x = wallTiles.reduce((acc, entry) => acc + (entry?.x || 0), 0) / wallTiles.length;
 			let y = wallTiles.reduce((acc, entry) => acc + (entry?.y || 0), 0) / wallTiles.length;
-			let wallType = wallTiles[0].name.split('(')[1][0];
+			let wallType = wallTiles[0].compositeInfo;
 			let rot = doodad.wallTiles[0].rot;
 			if (rot === 0 && doodad.furniture.d === 2) {
 				y += 0.5;
@@ -220,7 +221,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 			return {
 				label: `${x},${y}:${doodad.furniture.name}-(${wallType})`,
 				name: doodad.furniture.name,
-				assetName: doodad.furniture.name,
+				asset: doodad.furniture.name,
 				x,
 				y,
 				w: doodad.furniture.w,
