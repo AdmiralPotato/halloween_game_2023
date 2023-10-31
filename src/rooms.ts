@@ -72,6 +72,7 @@ export interface Tile {
 	rot: number;
 	destination: string;
 	wallDir: string;
+	roomID: string;
 }
 export const buildRoom = (roomID: string): RoomWorkingData => {
 	// width first

@@ -31,10 +31,13 @@ export const getCenterForXYRange = (range: XYRange): XYCoord => {
 		y: (range.y.max + range.y.min) / 2,
 	}
 }
-export const averageXYPairs = (arr: XYCoord[]): XYCoord => {
+export const averageXYCoords = (arr: XYCoord[]): XYCoord => {
+	let coordsSum = arr.reduce((sum, v) => {
+		return { x: sum.x + v.x, y: sum.x + v.x };
+	}, { x: 0, y: 0 });
 	return {
-		x: arr.reduce((acc, coord) => acc + coord.x, 0) / arr.length,
-		y: arr.reduce((acc, coord) => acc + coord.y, 0) / arr.length
+		x: coordsSum.x / arr.length,
+		y: coordsSum.y / arr.length
 	}
 }
 export const translateXY = (coord: XYCoord, moveBy: XYCoord): XYCoord => {

@@ -41,19 +41,14 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 	const getWalls = (inputFloors: Tile[]): Record<string, Tile[]> => {
 		let floors = inputFloors.filter(item => item.name.includes('wall'));
 		let ret: Record<string, Tile[]> = {
-			n: floors.filter((item) => item.compositeInfo.includes('w')),
-			w: floors.filter((item) => item.compositeInfo.includes('a')),
-			e: floors.filter((item) => item.compositeInfo.includes('d')),
+			e: floors.filter((item) => item.compositeInfo === 'd' || item.compositeInfo === 'c'),
+			// ne: floors.filter((item) => item.compositeInfo === 'e'),
+			n: floors.filter((item) => item.compositeInfo === 'w'),
+			// nw: floors.filter((item) => item.compositeInfo === 'q'),
+			w: floors.filter((item) => item.compositeInfo === 'a' || item.compositeInfo === 'z'),
 		};
-		let q = floors.filter((item) => item.compositeInfo.includes('q'));
-		let e = floors.filter((item) => item.compositeInfo.includes('e'));
-		if (q.length) {
-			ret[rand() < 0.5 ? 'n' : 'w'].push(q[0]);
-		}
-		if (e.length) {
-			ret[rand() < 0.5 ? 'n' : 'e'].push(e[0]);
-		}
 		Object.keys(ret).forEach((wallDir) => {
+			// get rid of it if it's empty (i.e. if it's 100% door)
 			if (!ret[wallDir].length) {
 				delete ret[wallDir]
 			}
@@ -65,15 +60,14 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 				w: [-0.5, 0],
 				e: [0.5, 0],
 			};
+			const rotMap: Record<string, number> = {
+				n: 0,
+				w: 3,
+				e: 1,
+			};
 			const adjust = adjustMap[wallDir];
 			ret[wallDir].forEach((item) => {
-				let rot = 0;
-				if (wallDir === 'w') {
-					rot = 3;
-				} else if (wallDir === 'e') {
-					rot = 1;
-				}
-				item.rot = rot;
+				item.rot = rotMap[wallDir];
 				item.x += adjust[0];
 				item.y += adjust[1];
 			});

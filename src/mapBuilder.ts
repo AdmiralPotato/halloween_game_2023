@@ -395,6 +395,7 @@ export const buildMapFromSeed = (seed: string) => {
 					destination: '',
 					wallDir: '',
 					compositeInfo: tileInfo.compositeInfo,
+					roomID,
 				});
 			});
 		// walls
@@ -412,6 +413,7 @@ export const buildMapFromSeed = (seed: string) => {
 						destination: '',
 						wallDir: '',
 						compositeInfo: tileInfo.compositeInfo,
+						roomID,
 					});
 				});
 			});
@@ -427,6 +429,7 @@ export const buildMapFromSeed = (seed: string) => {
 				destination: tileInfo.destination,
 				wallDir: '',
 				compositeInfo: tileInfo.compositeInfo,
+				roomID,
 			});
 			tileInfo.wallDirs.forEach(dir => {
 				let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':wallForCornerDoor' + '(' + tileInfo.compositeInfo + ')'
@@ -439,6 +442,7 @@ export const buildMapFromSeed = (seed: string) => {
 					destination: '',
 					wallDir: '',
 					compositeInfo: tileInfo.compositeInfo,
+					roomID,
 				});
 			});
 		});
