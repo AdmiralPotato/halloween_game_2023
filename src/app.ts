@@ -22,6 +22,7 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { ShadowGenerator } from '@babylonjs/core';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { Axis } from '@babylonjs/core/Maths/math.axis';
+import { setupUserInput } from './userInputState';
 
 class App {
 	constructor() {
@@ -131,80 +132,30 @@ class App {
 			// scene.createDefaultCamera(true, true, true);
 		});
 
-		const { seedButton, buttonMap } = UI.init();
-		const keyButtonMap: Record<string, string | undefined> = {
-			a: 'left',
-			w: 'up',
-			s: 'down',
-			d: 'right',
-			ArrowLeft: 'left',
-			ArrowUp: 'up',
-			ArrowDown: 'down',
-			ArrowRight: 'right',
-			' ': 'action',
-			Enter: 'action',
-		};
-		const buttonStateMap: Record<string, boolean | undefined> = {
-			left: false,
-			up: false,
-			down: false,
-			right: false,
-			action: false,
-		};
-		window.addEventListener('keydown', async (keydownEvent) => {
-			// hide/show the Inspector
-			// Shift+Ctrl+Alt+I
-			if (
-				keydownEvent.shiftKey &&
-				keydownEvent.ctrlKey &&
-				keydownEvent.altKey &&
-				keydownEvent.key === 'I'
-			) {
+		const buttonStateMap = setupUserInput({
+			respawnLevelFromStringSeed,
+			loadDevToolsCallback: async () => {
 				await pullInDevTools();
 				if (scene.debugLayer.isVisible()) {
 					scene.debugLayer.hide();
 				} else {
 					await scene.debugLayer.show();
 				}
-			}
-			// console.log('keydownEvent', keydownEvent);
-			const buttonName = keyButtonMap[keydownEvent.key];
-			if (buttonName) {
-				buttonStateMap[buttonName] = true;
-			}
-		});
-		window.addEventListener('keyup', (keydownEvent) => {
-			// console.log('keydownEvent', keydownEvent);
-			const buttonName = keyButtonMap[keydownEvent.key];
-			if (buttonName) {
-				buttonStateMap[buttonName] = false;
-			}
-		});
-		const buttonStateOn = (buttonName: string) => {
-			if (buttonName) {
-				buttonStateMap[buttonName] = true;
-			}
-		};
-		const buttonStateOff = (buttonName: string) => {
-			if (buttonName) {
-				buttonStateMap[buttonName] = false;
-			}
-		};
-		seedButton.onPointerUpObservable.add(respawnLevelFromStringSeed);
-		Object.entries(buttonMap).forEach(([key, button]) => {
-			button?.onPointerDownObservable.add(() => buttonStateOn(key));
-			button?.onPointerUpObservable.add(() => buttonStateOff(key));
+			},
 		});
 
 		let lastLogicTick = window.performance.now();
+		const motionDrag = 0.85;
+		const motionDragVector = new Vector3(motionDrag, motionDrag, motionDrag);
+		let motionVector = Vector3.Zero();
+		let lastAngle = 0;
 		const gameLogicLoop = () => {
 			const now = window.performance.now();
 			// should be in the scale of seconds?
 			const delta = (now - lastLogicTick) / 1000;
 
 			// console.log('buttonStateMap', buttonStateMap);
-			const movementSpeed = delta * 3;
-			const motionVector = Vector3.Zero();
+			const movementSpeed = delta * 1.05;
 			if (buttonStateMap.up) {
 				motionVector.z -= movementSpeed;
 			}
@@ -220,13 +171,11 @@ class App {
 			if (buttonStateMap.action) {
 				motionVector.y += movementSpeed;
 			}
-			if (motionVector.length()) {
+			motionVector.multiplyInPlace(motionDragVector);
+			if (motionVector.length() > 0.005) {
 				playerCharacterHolder.position.addInPlace(motionVector);
-				playerCharacterHolder.rotation.set(
-					0,
-					-Math.atan2(motionVector.z, motionVector.x) + Math.PI / 2,
-					0,
-				);
+				let currentAngle = -Math.atan2(motionVector.z, motionVector.x) + Math.PI / 2;
+				playerCharacterHolder.rotation.set(0, currentAngle, 0);
 			}
 
 			playerCharacterHolder.getWorldMatrix().getTranslationToRef(cameraTarget.position);
