@@ -121,9 +121,12 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 			ret[rand() < 0.5 ? 'n' : 'e'].push(e[0]);
 		}
 		Object.keys(ret).forEach((wallDir) => {
-			if (ret[wallDir] && ret[wallDir].length > 0) {
-				ret[wallDir] = padWall(ret[wallDir]);
+			if (!ret[wallDir].length) {
+				delete ret[wallDir]
 			}
+		})
+		Object.keys(ret).forEach((wallDir) => {
+			ret[wallDir] = padWall(ret[wallDir]);
 			const adjustMap: Record<string, number[]> = {
 				n: [0, -0.5],
 				w: [-0.5, 0],
@@ -149,7 +152,6 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 					return a.y - b.y;
 				});
 		});
-
 		return ret;
 	};
 
