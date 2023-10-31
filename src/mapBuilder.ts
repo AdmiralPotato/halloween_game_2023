@@ -42,7 +42,10 @@ export const buildMapFromSeed = (seed: string) => {
 			depth: NaN, // depth is procedural
 			line: '',
 			lines: [],
-			cornerCoords: { x: [NaN, NaN], y: [NaN, NaN] },
+			cornerCoords: {
+				x: { min: NaN, max: NaN },
+				y: { min: NaN, max: NaN }
+			},
 			x: NaN,
 			y: NaN,
 			doorCoords: [],
@@ -276,8 +279,8 @@ export const buildMapFromSeed = (seed: string) => {
 		});
 		let coordsX: number[] = Array.from(coordsXset).sort((a, b) => a - b);
 		return {
-			x: [coordsX[0], coordsX.slice(-1)[0]],
-			y: [coordsY[0], coordsY.slice(-1)[0]],
+			x: { min: coordsX[0], max: coordsX.slice(-1)[0] },
+			y: { min: coordsY[0], max: coordsY.slice(-1)[0] },
 		};
 	};
 	Object.keys(mapFloorPlanInfo).forEach((roomName) => {
@@ -289,18 +292,18 @@ export const buildMapFromSeed = (seed: string) => {
 	Object.keys(mapFloorPlanInfo).forEach((roomName) => {
 		if (
 			roomName === 'b' &&
-			mapFloorPlanInfo.a.cornerCoords.y[0] - mapFloorPlanInfo.b.cornerCoords.y[1] === 3
+			mapFloorPlanInfo.a.cornerCoords.y.min - mapFloorPlanInfo.b.cornerCoords.y.max === 3
 		) {
-			mapFloorPlanInfo.b.cornerCoords.y[1] += 2;
+			mapFloorPlanInfo.b.cornerCoords.y.max += 2;
 		}
 		let b = mapFloorPlanInfo.b;
-		b.depth = b.cornerCoords.y[1] - b.cornerCoords.y[0] + 1;
+		b.depth = b.cornerCoords.y.max - b.cornerCoords.y.min + 1;
 		let corners = mapFloorPlanInfo[roomName].cornerCoords;
-		mapFloorPlanInfo[roomName].x = corners.x[0] + (corners.x[1] - corners.x[0]) / 2;
-		mapFloorPlanInfo[roomName].y = corners.y[0] + (corners.y[1] - corners.y[0]) / 2;
+		mapFloorPlanInfo[roomName].x = corners.x.min + (corners.x.max - corners.x.min) / 2;
+		mapFloorPlanInfo[roomName].y = corners.y.min + (corners.y.max - corners.y.min) / 2;
 		let doorCoords: number[][] = [];
-		for (let y = corners.y[0]; y <= corners.y[1]; y++) {
-			for (let x = corners.x[0]; x <= corners.x[1]; x++) {
+		for (let y = corners.y.min; y <= corners.y.max; y++) {
+			for (let x = corners.x.min; x <= corners.x.max; x++) {
 				// console.log(`${x}, ${y} = ${doubledMap[y][x]}`);
 				if (doubledMap[y][x] === 'z') {
 					doorCoords.push([x, y]);
@@ -329,21 +332,21 @@ export const buildMapFromSeed = (seed: string) => {
 	Object.keys(mapFloorPlanInfo).forEach((roomName) => {
 		let corners = mapFloorPlanInfo[roomName].cornerCoords;
 		let floorTiles: Tile[] = [];
-		for (let y = corners.y[0]; y <= corners.y[1]; y += 2) {
-			for (let x = corners.x[0]; x <= corners.x[1]; x += 2) {
+		for (let y = corners.y.min; y <= corners.y.max; y += 2) {
+			for (let x = corners.x.min; x <= corners.x.max; x += 2) {
 				let value = 's';
-				if (y === corners.y[0]) {
-					if (x === corners.x[0]) {
+				if (y === corners.y.min) {
+					if (x === corners.x.min) {
 						value = 'q';
-					} else if (x === corners.x[1] - 1) {
+					} else if (x === corners.x.max - 1) {
 						value = 'e';
 					} else {
 						value = 'w';
 					}
 				} else {
-					if (x === corners.x[0]) {
+					if (x === corners.x.min) {
 						value = 'a';
-					} else if (x === corners.x[1] - 1) {
+					} else if (x === corners.x.max - 1) {
 						value = 'd';
 					}
 				}
@@ -356,7 +359,7 @@ export const buildMapFromSeed = (seed: string) => {
 					} else {
 						if (x < mapFloorPlanInfo[roomName].x) {
 							// walk left
-							for (let i = corners.x[0]; i >= 0; i--) {
+							for (let i = corners.x.min; i >= 0; i--) {
 								const checkedValue = doubledMap[y][i];
 								if (/[^A-Z]/.test(checkedValue)) {
 									destination = checkedValue;
@@ -364,7 +367,7 @@ export const buildMapFromSeed = (seed: string) => {
 							}
 						} else {
 							// walk right
-							for (let i = corners.x[1]; i < totalMapWidth; i++) {
+							for (let i = corners.x.max; i < totalMapWidth; i++) {
 								const checkedValue = doubledMap[y][i];
 								if (/[^A-Z]/.test(checkedValue)) {
 									destination = checkedValue;

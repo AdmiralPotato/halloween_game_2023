@@ -4,18 +4,15 @@ import { Furnishing } from './LevelBuilder';
 
 let randomizer = seedrandom('');
 
-export const setSeed = (seed: string) => {
-	randomizer = seedrandom(seed);
-};
+export const setSeed = (seed: string) => randomizer = seedrandom(seed);
 export const rand = (): number => randomizer();
-
 export const randomIndex = (max: number): number => {
 	return Math.floor(rand() * max);
 };
 export const randomFromRange = (min: number, max: number): number => {
-	const variation = randomIndex(max - min + 1);
-	return variation + min;
+	return randomIndex(max - min + 1) + min;
 };
+
 export interface Dimension {
 	width: number;
 	depth: number;
@@ -32,9 +29,17 @@ export interface Dimension {
 	floors: Tile[];
 	furnishings: Furnishing[];
 }
+export interface Range {
+	min: number,
+	max: number,
+}
+export interface XYPoint {
+	x: number;
+	y: number;
+}
 export interface XYRange {
-	x: number[];
-	y: number[];
+	x: Range;
+	y: Range;
 }
 export interface Tile {
 	asset: string;
@@ -53,7 +58,10 @@ export const getRandomSize = (width: number[], depth: number[]): Dimension => {
 		depth: randomFromRange(depth[0], depth[1]),
 		line: '',
 		lines: [],
-		cornerCoords: { x: [NaN, NaN], y: [NaN, NaN] },
+		cornerCoords: {
+			x: { min: NaN, max: NaN },
+			y: { min: NaN, max: NaN }
+		},
 		x: NaN,
 		y: NaN,
 		doorCoords: [],
