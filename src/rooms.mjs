@@ -1,3 +1,30 @@
+export const ROOMS = {
+	'a': {
+		name: "livingRoom",
+		exteriorWalls: ['w', 'e'],
+	},
+	'b': {
+		name: "hallway",
+		exteriorWalls: [],
+	},
+	'c': {
+		name: "RANDOM",
+		exteriorWalls: ['e'],
+	},
+	'd': {
+		name: "RANDOM",
+		exteriorWalls: ['w'],
+	},
+	'e': {
+		name: "RANDOM",
+		exteriorWalls: ['w', 'n'],
+	},
+	'f': {
+		name: "RANDOM",
+		exteriorWalls: ['e', 'n'],
+	},
+};
+
 const shortWallStuff = [
 	// wallHanging
 	{ item: 'curtainShort', weight: 1 },
@@ -20,7 +47,7 @@ const everyRoomStuff = [
 	{ item: 'EMPTY', weight: 2 },
 ];
 
-export const ROOMS = {
+export const ROOM_CONTENTS = {
 	livingRoom: [
 		{ item: 'fireplace', count: 1 },
 		{ item: 'couchCenter', weight: 1 },

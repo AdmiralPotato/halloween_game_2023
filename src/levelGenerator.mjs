@@ -1,18 +1,11 @@
 import seedrandom from 'seedrandom';
 import {buildMapFromSeed} from './mapBuilder.mjs';
 import {FURNISHINGS} from './furnishings.mjs';
-import {ROOMS} from './rooms.mjs';
+import {ROOM_CONTENTS, ROOMS} from './rooms.mjs';
 
 const DIRECTIONS = ['N','E','S','W'];
 const getOppositeDir = (dir) => {
 	return DIRECTIONS[(DIRECTIONS.indexOf(dir) + 2) % 4];
-};
-const exteriorWalls = {
-	'a': ['w','e'],
-	'd': ['w'],
-	'c': ['e'],
-	'e': ['w', 'n' ],
-	'f': ['e', 'n' ],
 };
 
 export const makeRoomsWithSeed = (seed) => {
@@ -130,7 +123,7 @@ export const makeRoomsWithSeed = (seed) => {
 	/* -------------- GET STUFF -------------- */
 
 	const getFurnishings = roomName => {
-		let furnishings = ROOMS[roomName];
+		let furnishings = ROOM_CONTENTS[roomName];
 		return {
 			wallHanging: furnishings.filter(entry=>{
 				return FURNISHINGS[entry.item]?.position === 'wallHanging';
@@ -273,9 +266,10 @@ export const makeRoomsWithSeed = (seed) => {
 			let targetWallIndex = randomIndex(remainingWalls.length);
 			let targetWall = remainingWalls.splice(targetWallIndex, 1)[0];
 			let wallDir = targetWall[0].wallDir;
+			let isExteriorWall = ROOMS[roomName].exteriorWalls.includes(wallDir)
 			if ( // if it can only go on an exterior wall, reroll (might infinite loop; TODO: FIX THIS)
 				FURNISHINGS[insertName].placement === 'exteriorWall'
-				&& !exteriorWalls[roomName].includes(wallDir)
+				&& !isExteriorWall
 			) {
 				remainingWalls.push(targetWall);
 				if (requiredItems.length) { // put furniture back at the bottom of the queue
