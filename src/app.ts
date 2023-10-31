@@ -21,6 +21,7 @@ import './styles.css';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { ShadowGenerator } from '@babylonjs/core';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
+import { Axis } from '@babylonjs/core/Maths/math.axis';
 
 class App {
 	constructor() {
@@ -41,8 +42,9 @@ class App {
 		let level: Mesh | null = null;
 		let firstRoom: Room | null = null;
 		const playerCharacterHolder = new Mesh('playerCharacterHolder', scene);
+		const cameraTarget = new Mesh('cameraTarget', scene);
 
-		const camera = new FollowCamera('Camera', Vector3.Zero(), scene, playerCharacterHolder);
+		const camera = new FollowCamera('Camera', Vector3.Zero(), scene, cameraTarget);
 		camera.heightOffset = 9;
 		console.log('Camera', camera);
 		const hemisphereLight: HemisphericLight = new HemisphericLight(
@@ -194,27 +196,47 @@ class App {
 			button?.onPointerUpObservable.add(() => buttonStateOff(key));
 		});
 
+		let lastLogicTick = window.performance.now();
+		const gameLogicLoop = () => {
+			const now = window.performance.now();
+			// should be in the scale of seconds?
+			const delta = (now - lastLogicTick) / 1000;
+
+			// console.log('buttonStateMap', buttonStateMap);
+			const movementSpeed = delta * 3;
+			const motionVector = Vector3.Zero();
+			if (buttonStateMap.up) {
+				motionVector.z -= movementSpeed;
+			}
+			if (buttonStateMap.down) {
+				motionVector.z += movementSpeed;
+			}
+			if (buttonStateMap.left) {
+				motionVector.x += movementSpeed;
+			}
+			if (buttonStateMap.right) {
+				motionVector.x -= movementSpeed;
+			}
+			if (buttonStateMap.action) {
+				motionVector.y += movementSpeed;
+			}
+			if (motionVector.length()) {
+				playerCharacterHolder.position.addInPlace(motionVector);
+				playerCharacterHolder.rotation.set(
+					0,
+					-Math.atan2(motionVector.z, motionVector.x) + Math.PI / 2,
+					0,
+				);
+			}
+
+			playerCharacterHolder.getWorldMatrix().getTranslationToRef(cameraTarget.position);
+			lastLogicTick = now;
+		};
+		// Let's separate out a game state loop even if rendering is hitching.
+		setInterval(gameLogicLoop, 1000 / 60);
 		engine.runRenderLoop(() => {
 			engine.resize();
 			scene.render();
-			const { position } = playerCharacterHolder;
-			position.x += Math.sin((window.performance.now() * Math.PI) / 5000) / 100;
-			// console.log('buttonStateMap', buttonStateMap);
-			if (buttonStateMap.up) {
-				position.z -= 0.25;
-			}
-			if (buttonStateMap.down) {
-				position.z += 0.25;
-			}
-			if (buttonStateMap.left) {
-				position.x += 0.25;
-			}
-			if (buttonStateMap.right) {
-				position.x -= 0.25;
-			}
-			if (buttonStateMap.action) {
-				position.y += 0.25;
-			}
 		});
 	}
 }
