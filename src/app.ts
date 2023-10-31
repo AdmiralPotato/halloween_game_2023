@@ -75,7 +75,7 @@ class App {
 				console.log('What is a MAGE?!?', imported);
 				const mageTransformNode = scene.getTransformNodeById('mage_bones');
 				mageTransformNode?.position.set(0, 0, 0);
-				mageTransformNode?.scaling.set(4, 4, 4);
+				// mageTransformNode?.scaling.set(4, 4, 4);
 				mage.receiveShadows = true;
 				shadowGenerator.addShadowCaster(mage);
 				playerCharacterHolder.addChild(mage);
