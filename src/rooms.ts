@@ -6,10 +6,9 @@ export interface RoomInfo {
 	exteriorWalls: string[],
 	defaultSize: XYRange,
 }
-export interface Dimension {
+export interface RoomWorkingData {
 	width: number;
 	depth: number;
-	line: string;
 	lines: string[];
 	cornerCoords: XYRange;
 	x: number;
@@ -75,12 +74,11 @@ export interface Tile {
 	doorDir: string;
 	wallDir: string;
 }
-export const buildRoom = (roomName: string): Dimension => {
+export const buildRoom = (roomName: string): RoomWorkingData => {
 	// width first
 	return {
 		width: randomFromRange(ROOMS[roomName].defaultSize.x),
 		depth: randomFromRange(ROOMS[roomName].defaultSize.y),
-		line: '',
 		lines: [],
 		cornerCoords: {
 			x: { min: NaN, max: NaN },

@@ -10,8 +10,8 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 
 	/* -------------- GET STUFF -------------- */
 
-	const getFurnishings = (roomName: string): Record<string, RandomWeight[]> => {
-		let furnishings = ROOM_CONTENTS[roomName];
+	const getFurnishings = (roomID: string): Record<string, RandomWeight[]> => {
+		let furnishings = ROOM_CONTENTS[roomID];
 		return {
 			wallHanging: furnishings.filter((entry) => {
 				return FURNISHINGS[entry.item]?.position === 'wallHanging';
@@ -137,9 +137,9 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 	};
 
 	let rooms = mapInfo.rooms;
-	Object.keys(rooms).forEach((roomName) => {
+	Object.keys(rooms).forEach((roomID) => {
 		// getting room info for this room
-		const roomType = rooms[roomName].name;
+		const roomType = rooms[roomID].name;
 		const itemPool = getFurnishings(roomType).wallEdge;
 		// get required items first
 		let requiredItems: string[] = [];
@@ -154,7 +154,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 			});
 		requiredItems = scrambleArray(requiredItems);
 		// get wall info for this room
-		const walls = getWalls(rooms[roomName].floors);
+		const walls = getWalls(rooms[roomID].floors);
 		// state stuff
 		let doodads = [];
 		let remainingWalls = Object.entries(walls).map(([wallDir, arr]) => {
@@ -172,7 +172,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 			let targetWallIndex = randomIndex(remainingWalls.length);
 			let targetWall = remainingWalls.splice(targetWallIndex, 1)[0];
 			let wallDir = targetWall[0].wallDir;
-			let isExteriorWall = ROOMS[roomName].exteriorWalls.includes(wallDir);
+			let isExteriorWall = ROOMS[roomID].exteriorWalls.includes(wallDir);
 			if (
 				// if it can only go on an exterior wall, reroll (might infinite loop; TODO: FIX THIS)
 				FURNISHINGS[insertName].placement === 'exteriorWall' &&
@@ -202,7 +202,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 		doodads = doodads.filter((doodad) => {
 			return doodad.furniture.name !== 'EMPTY';
 		});
-		rooms[roomName].furnishings = doodads.map((doodad): Furnishing => {
+		rooms[roomID].furnishings = doodads.map((doodad): Furnishing => {
 			const wallTiles = doodad.wallTiles;
 			let x = wallTiles.reduce((acc, entry) => acc + (entry?.x || 0), 0) / wallTiles.length;
 			let y = wallTiles.reduce((acc, entry) => acc + (entry?.y || 0), 0) / wallTiles.length;

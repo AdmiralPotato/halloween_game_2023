@@ -11,7 +11,7 @@ import {
 	rotMap,
 	ROOMS,
 	buildRoom,
-	Dimension,
+	RoomWorkingData,
 	Tile,
 } from './rooms';
 
@@ -24,24 +24,26 @@ export const buildMapFromSeed = (seed: string) => {
 
 	/* -------------- GET SIZES -------------- */
 
-	const mapFloorPlanInfo: Record<string, Dimension> = {};
+	const roomWorkingData: Record<string, RoomWorkingData> = {};
 
-	Object.keys(ROOMS).forEach(roomName => {
-		mapFloorPlanInfo[roomName] = buildRoom(roomName);
+	Object.keys(ROOMS).forEach(roomID => {
+		roomWorkingData[roomID] = buildRoom(roomID);
 	});
 
 	/* -------------- HORIZONTAL ASCII -------------- */
 
+	const roomLineMap: Record<string, string> = {};
+
 	// making the default ASCII row for each room
-	Object.entries(mapFloorPlanInfo).forEach(([key, entry]) => {
-		mapFloorPlanInfo[key].line = key.repeat(entry.width);
+	Object.entries(roomWorkingData).forEach(([roomID, entry]) => {
+		roomLineMap[roomID] = roomID.repeat(entry.width);
 	});
 	// align the leftmost rooms to the right, and the rightmost rooms to the left
-	const padRoomToAlignOn = (r1: string, r2: string, side: string) => {
-		const room = mapFloorPlanInfo[r1];
-		const padWidth = mapFloorPlanInfo[r2].width;
-		const method = side === 'right' ? 'padStart' : 'padEnd';
-		room.line = room.line[method](padWidth, ' ');
+	const padRoomToAlignOn = (leftRoomID: string, rightRoomID: string, alignmentDir: string) => {
+		const padWidth = roomLineMap[rightRoomID].length;
+		const method = alignmentDir === 'right' ? 'padStart' : 'padEnd';
+		let room = roomLineMap[leftRoomID];
+		room = room[method](padWidth, ' ');
 	};
 	padRoomToAlignOn('e', 'd', 'right');
 	padRoomToAlignOn('d', 'e', 'right');
@@ -51,86 +53,92 @@ export const buildMapFromSeed = (seed: string) => {
 	// padding the central room horizontally with the rest
 
 	const totalMapWidth =
-		mapFloorPlanInfo.e.line.length + // one of the leftmost rooms
-		mapFloorPlanInfo.f.line.length + // one of the rightmost rooms
-		mapFloorPlanInfo.b.line.length; // hallway
+		roomLineMap.e.length + // one of the leftmost rooms
+		roomLineMap.f.length + // one of the rightmost rooms
+		roomLineMap.b.length; // hallway
 
 	const padLineToWidth = (r: string, width: number) => {
-		const room = mapFloorPlanInfo[r];
-		const diff = Math.max(width - room.width, 0);
+		const room = roomLineMap[r];
+		const diff = Math.max(width - room.length, 0);
 		const padCount = Math.floor(diff / 2);
-		let ret = ' '.repeat(padCount) + room.line + ' '.repeat(padCount);
+		let ret = ' '.repeat(padCount) + room + ' '.repeat(padCount);
 		const method = randomIndex(2) === 0 ? 'padEnd' : 'padStart';
 		ret = ret[method](1, ' ');
 		return ret;
 	};
-	mapFloorPlanInfo.a.line = padLineToWidth('a', totalMapWidth);
+	roomLineMap.a = padLineToWidth('a', totalMapWidth);
 
 	/* -------------- VERTICAL ASCII -------------- */
 
-	['e', 'f'].forEach((roomName, index, arr) => {
-		const room = mapFloorPlanInfo[roomName];
-		const padToDepth = Math.max(room.depth, mapFloorPlanInfo[arr[(index + 1) % 2]].depth);
+
+	const roomLinesMap: Record<string, string[]> = {};
+
+	['e', 'f'].forEach((roomID, index, arr) => {
+		const roomLine = roomLineMap[roomID];
+		const roomInfo = roomWorkingData[roomID]
+		const padToDepth = Math.max(roomInfo.depth, roomWorkingData[arr[(index + 1) % 2]].depth);
 		const ret: string[] = [];
 		for (let i = 0; i < padToDepth; i++) {
-			ret.push(padToDepth - room.depth > i ? ' '.repeat(room.line.length) : room.line || '');
+			ret.push(padToDepth - roomInfo.depth > i ? ' '.repeat(roomLine.length) : roomLine || '');
 		}
-		room.lines = ret;
+		roomInfo.lines = ret;
 	});
 
-	['d', 'c'].forEach((roomName, index, arr) => {
-		const room = mapFloorPlanInfo[roomName];
-		const padToDepth = Math.max(room.depth, mapFloorPlanInfo[arr[(index + 1) % 2]].depth);
+	['d', 'c'].forEach((roomID, index, arr) => {
+		const roomLine = roomLineMap[roomID];
+		const roomInfo = roomWorkingData[roomID];
+		const padToDepth = Math.max(roomInfo.depth, roomWorkingData[arr[(index + 1) % 2]].depth);
 		const ret: string[] = [];
-		const blank = ' '.repeat(room.line.length);
+		const blank = ' '.repeat(roomLine.length);
 		// blank lines, equally on top or bottom (randomly)
-		let diffCount = padToDepth - room.depth;
+		let diffCount = padToDepth - roomInfo.depth;
 		for (let i = 0; i < diffCount; i++) {
 			const method = rand() < 0.5 ? 'push' : 'unshift';
 			ret[method](blank);
 		}
 		// the actual lines
-		for (let i = 0; i < room.depth; i++) {
-			if (!room.line) {
-				throw new Error('ROOM.LINE SHOULD BE HERE BE NOW!!!');
+		for (let i = 0; i < roomInfo.depth; i++) {
+			if (!roomLine) {
+				throw new Error('ROOMLINE SHOULD BE HERE BE NOW!!!');
 			}
-			ret.push(room.line);
+			ret.push(roomLine);
 		}
-		room.lines = ret;
+		roomInfo.lines = ret;
 	});
 
-	['a'].forEach((roomName) => {
-		const room = mapFloorPlanInfo[roomName];
+	['a'].forEach((roomID) => {
+		const roomLine = roomLineMap[roomID];
+		const roomInfo = roomWorkingData[roomID];
 		const ret = [];
-		for (let i = 0; i < room.depth; i++) {
-			if (!room.line) {
-				throw new Error('ROOM.LINE SHOULD BE HERE BE NOW!!!');
+		for (let i = 0; i < roomInfo.depth; i++) {
+			if (!roomLine) {
+				throw new Error('ROOMLINE SHOULD BE HERE BE NOW!!!');
 			}
-			ret.push(room.line);
+			ret.push(roomLine);
 		}
-		room.lines = ret;
+		roomInfo.lines = ret;
 	});
 
 	const mapASCII: string[] = [];
 
-	for (let i = 0; i < mapFloorPlanInfo.e.lines.length; i++) {
+	for (let i = 0; i < roomWorkingData.e.lines.length; i++) {
 		mapASCII.push(
-			mapFloorPlanInfo.e.lines[i] + mapFloorPlanInfo.b.line + mapFloorPlanInfo.f.lines[i],
+			roomWorkingData.e.lines[i] + roomLineMap.b + roomWorkingData.f.lines[i],
 		);
 	}
 
-	for (let i = 0; i < (mapFloorPlanInfo.d.lines || []).length; i++) {
+	for (let i = 0; i < (roomWorkingData.d.lines || []).length; i++) {
 		mapASCII.push(
-			(mapFloorPlanInfo.d.lines || [])[i] +
-			mapFloorPlanInfo.b.line +
-			(mapFloorPlanInfo.c.lines || [])[i],
+			(roomWorkingData.d.lines || [])[i] +
+			roomLineMap.b +
+			(roomWorkingData.c.lines || [])[i],
 		);
 	}
 	// quickie: make a door between hallway and entrance
 
 	// find horiz coordinate
 	let bottommostRow = mapASCII[mapASCII.length - 1].split('');
-	let topOfLivingRoom = mapFloorPlanInfo.a.line.split('');
+	let topOfLivingRoom = roomLineMap.a.split('');
 	let potentialDoorIndices: number[] = [];
 	bottommostRow.forEach((c, i) => {
 		if (c == 'b' && topOfLivingRoom[i] !== ' ') {
@@ -147,8 +155,8 @@ export const buildMapFromSeed = (seed: string) => {
 	let bottomOfHallWayIndex = mapASCII.length - 1;
 
 	// put in front room
-	for (let i = 0; i < mapFloorPlanInfo.a.lines.length; i++) {
-		mapASCII.push(mapFloorPlanInfo.a.lines[i]);
+	for (let i = 0; i < roomWorkingData.a.lines.length; i++) {
+		mapASCII.push(roomWorkingData.a.lines[i]);
 	}
 	// it's later now
 	[bottomOfHallWayIndex, bottomOfHallWayIndex + 1].forEach((index) => {
@@ -215,7 +223,7 @@ export const buildMapFromSeed = (seed: string) => {
 	}
 
 	// Get hallway depth
-	mapFloorPlanInfo.b.depth = mapASCII.filter((line) => line.includes('b')).length;
+	roomWorkingData.b.depth = mapASCII.filter((line) => line.includes('b')).length;
 
 	/* -------------- CONVERT ROOMS TO REAL COORDINATE SPACE -------------- */
 
@@ -234,15 +242,15 @@ export const buildMapFromSeed = (seed: string) => {
 	);
 
 	// get real corner coords
-	const getCornerCords = (roomName: string, mapArray: string[]): XYRange => {
+	const getCornerCords = (roomID: string, mapArray: string[]): XYRange => {
 		// only works for square rooms
 		let coordsY: number[] = [];
 		let coordsXset: Set<number> = new Set();
 		mapArray.forEach((line, i) => {
-			if (line.includes(roomName)) {
+			if (line.includes(roomID)) {
 				coordsY.push(i);
 				line.split('').forEach((c, x) => {
-					if (c === roomName) {
+					if (c === roomID) {
 						coordsXset.add(x);
 					}
 				});
@@ -254,24 +262,24 @@ export const buildMapFromSeed = (seed: string) => {
 			y: { min: coordsY[0], max: coordsY.slice(-1)[0] },
 		};
 	};
-	Object.keys(mapFloorPlanInfo).forEach((roomName) => {
-		mapFloorPlanInfo[roomName].width *= 2;
-		mapFloorPlanInfo[roomName].depth *= 2;
-		const corners = getCornerCords(roomName, doubledMap);
-		mapFloorPlanInfo[roomName].cornerCoords = corners;
+	Object.keys(roomWorkingData).forEach((roomID) => {
+		roomWorkingData[roomID].width *= 2;
+		roomWorkingData[roomID].depth *= 2;
+		const corners = getCornerCords(roomID, doubledMap);
+		roomWorkingData[roomID].cornerCoords = corners;
 	});
-	Object.keys(mapFloorPlanInfo).forEach((roomName) => {
+	Object.keys(roomWorkingData).forEach((roomID) => {
 		if (
-			roomName === 'b' &&
-			mapFloorPlanInfo.a.cornerCoords.y.min - mapFloorPlanInfo.b.cornerCoords.y.max === 3
+			roomID === 'b' &&
+			roomWorkingData.a.cornerCoords.y.min - roomWorkingData.b.cornerCoords.y.max === 3
 		) {
-			mapFloorPlanInfo.b.cornerCoords.y.max += 2;
+			roomWorkingData.b.cornerCoords.y.max += 2;
 		}
-		let b = mapFloorPlanInfo.b;
+		let b = roomWorkingData.b;
 		b.depth = b.cornerCoords.y.max - b.cornerCoords.y.min + 1;
-		let corners = mapFloorPlanInfo[roomName].cornerCoords;
-		mapFloorPlanInfo[roomName].x = corners.x.min + (corners.x.max - corners.x.min) / 2;
-		mapFloorPlanInfo[roomName].y = corners.y.min + (corners.y.max - corners.y.min) / 2;
+		let corners = roomWorkingData[roomID].cornerCoords;
+		roomWorkingData[roomID].x = corners.x.min + (corners.x.max - corners.x.min) / 2;
+		roomWorkingData[roomID].y = corners.y.min + (corners.y.max - corners.y.min) / 2;
 		let doorCoords: XYPoint[] = [];
 		for (let y = corners.y.min; y <= corners.y.max; y++) {
 			for (let x = corners.x.min; x <= corners.x.max; x++) {
@@ -281,27 +289,27 @@ export const buildMapFromSeed = (seed: string) => {
 				}
 			}
 		}
-		mapFloorPlanInfo[roomName].doorCoords = doorCoords;
+		roomWorkingData[roomID].doorCoords = doorCoords;
 	});
 
 	/* -------------- ASSIGN ROOMS THEIR PURPOSES -------------- */
 
-	mapFloorPlanInfo.a.name = 'livingRoom';
-	mapFloorPlanInfo.a.label = 'a';
+	roomWorkingData.a.name = 'livingRoom';
+	roomWorkingData.a.label = 'a';
 
-	mapFloorPlanInfo.b.name = 'hallway';
-	mapFloorPlanInfo.b.label = 'b';
+	roomWorkingData.b.name = 'hallway';
+	roomWorkingData.b.label = 'b';
 
 	let remainder = scrambleArray(['bedroom', 'bedroom', 'library', 'diningRoom']);
 	['c', 'd', 'e', 'f'].forEach((floorName, i) => {
-		mapFloorPlanInfo[floorName].name = remainder[i];
-		mapFloorPlanInfo[floorName].label = floorName;
+		roomWorkingData[floorName].name = remainder[i];
+		roomWorkingData[floorName].label = floorName;
 	});
 
 	/* -------------- FLOOR ARRAY FOR EACH ROOM -------------- */
 
-	Object.keys(mapFloorPlanInfo).forEach((roomName) => {
-		let corners = mapFloorPlanInfo[roomName].cornerCoords;
+	Object.keys(roomWorkingData).forEach((roomID) => {
+		let corners = roomWorkingData[roomID].cornerCoords;
 		let floorTiles: Tile[] = [];
 		for (let y = corners.y.min; y <= corners.y.max; y += 2) {
 			for (let x = corners.x.min; x <= corners.x.max; x += 2) {
@@ -324,11 +332,11 @@ export const buildMapFromSeed = (seed: string) => {
 				let destination = '';
 				let doorDir = '';
 				if (doubledMap[y][x] === 'z') {
-					if (roomName !== 'b') {
+					if (roomID !== 'b') {
 						destination = 'b';
-						doorDir = roomName === 'a' ? 'down' : 'left-or-right';
+						doorDir = roomID === 'a' ? 'down' : 'left-or-right';
 					} else {
-						if (x < mapFloorPlanInfo[roomName].x) {
+						if (x < roomWorkingData[roomID].x) {
 							// walk left
 							for (let i = corners.x.min; i >= 0; i--) {
 								const checkedValue = doubledMap[y][i];
@@ -350,7 +358,7 @@ export const buildMapFromSeed = (seed: string) => {
 				const tileInfo = rotMap[value];
 				floorTiles.push({
 					asset: tileInfo.asset || '',
-					name: roomName + tileInfo.tile + '-' + tileInfo.variant + '-' + `(${value})`,
+					name: roomID + tileInfo.tile + '-' + tileInfo.variant + '-' + `(${value})`,
 					x: x + 0.5,
 					y: y + 0.5,
 					rot: tileInfo.rot,
@@ -360,33 +368,33 @@ export const buildMapFromSeed = (seed: string) => {
 				});
 			}
 		}
-		mapFloorPlanInfo[roomName].floorTiles = floorTiles;
+		roomWorkingData[roomID].floorTiles = floorTiles;
 	});
-	Object.keys(mapFloorPlanInfo).forEach((roomName) => {
-		if (roomName !== 'b') {
-			let doorCornerCoords = mapFloorPlanInfo[roomName].doorCoords;
+	Object.keys(roomWorkingData).forEach((roomID) => {
+		if (roomID !== 'b') {
+			let doorCornerCoords = roomWorkingData[roomID].doorCoords;
 			let compositeDoorCoords = [
 				doorCornerCoords.reduce((acc, pair) => acc + pair.x, 0) / 4,
 				doorCornerCoords.reduce((acc, pair) => acc + pair.y, 0) / 4,
 			];
-			if (roomName === 'a') {
+			if (roomID === 'a') {
 				compositeDoorCoords[1] -= 2;
 			} else {
-				compositeDoorCoords[0] += roomName === 'c' || roomName === 'f' ? -2 : 2;
+				compositeDoorCoords[0] += roomID === 'c' || roomID === 'f' ? -2 : 2;
 			}
-			let bFloorTiles = mapFloorPlanInfo.b.floorTiles;
+			let bFloorTiles = roomWorkingData.b.floorTiles;
 			let targetDoor = bFloorTiles.filter((item) => {
 				return item.x === compositeDoorCoords[0] && item.y === compositeDoorCoords[1];
 			})[0];
-			targetDoor.destination = roomName;
-			targetDoor.doorDir = roomName === 'a' ? 'up' : 'left-or-right';
+			targetDoor.destination = roomID;
+			targetDoor.doorDir = roomID === 'a' ? 'up' : 'left-or-right';
 		}
 	});
 
 	/* -------------- CLEANUP -------------- */
 
-	Object.keys(mapFloorPlanInfo).forEach((roomName) => {
-		const room = mapFloorPlanInfo[roomName];
+	Object.keys(roomWorkingData).forEach((roomID) => {
+		const room = roomWorkingData[roomID];
 
 		// all floor tiles now local coords
 		room.floors = room.floorTiles.map((item) => {
@@ -402,7 +410,7 @@ export const buildMapFromSeed = (seed: string) => {
 	});
 
 	return {
-		rooms: mapFloorPlanInfo,
+		rooms: roomWorkingData,
 		printMap: doubledMap.join('\n'),
 	};
 };
