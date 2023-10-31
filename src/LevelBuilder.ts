@@ -24,7 +24,7 @@ interface Floor {
 export interface Furnishing {
 	label: string;
 	name: string;
-	assetName: string;
+	asset: string;
 	x: number;
 	y: number;
 	w: number;
@@ -88,7 +88,7 @@ export class LevelBuilder {
 				shadowGenerator.addShadowCaster(doodad);
 			});
 			room.doors.forEach((door) => {
-				const doodad = meshMap['doorway_00'].createInstance(Math.random().toString());
+				const doodad = meshMap['doorway_00'].createInstance(door.name);
 				floor.addChild(doodad);
 				doodad.position.x = door.x;
 				doodad.position.z = door.y;
@@ -106,7 +106,7 @@ export class LevelBuilder {
 					);
 				}
 				const doodad = meshMap[floorOrWallConfig.asset || 'wall_00'].createInstance(
-					Math.random().toString(),
+					floorOrWallConfig.name || Math.random().toString(),
 				);
 				floor.addChild(doodad);
 				doodad.position.x = floorOrWallConfig.x;

@@ -25,10 +25,19 @@ export interface XYRange {
 	x: Range;
 	y: Range;
 }
-export const averageXYPairs = (arr: XYCoord[]): XYCoord => {
+export const getCenterForXYRange = (range: XYRange): XYCoord => {
 	return {
-		x: arr.reduce((acc, pair) => acc + pair.x, 0) / 4,
-		y: arr.reduce((acc, pair) => acc + pair.y, 0) / 4
+		x: (range.x.max + range.x.min) / 2,
+		y: (range.y.max + range.y.min) / 2,
+	}
+}
+export const averageXYCoords = (arr: XYCoord[]): XYCoord => {
+	let coordsSum = arr.reduce((sum, v) => {
+		return { x: sum.x + v.x, y: sum.x + v.x };
+	}, { x: 0, y: 0 });
+	return {
+		x: coordsSum.x / arr.length,
+		y: coordsSum.y / arr.length
 	}
 }
 export const translateXY = (coord: XYCoord, moveBy: XYCoord): XYCoord => {
@@ -36,6 +45,9 @@ export const translateXY = (coord: XYCoord, moveBy: XYCoord): XYCoord => {
 		x: coord.x + moveBy.x,
 		y: coord.y + moveBy.y,
 	}
+}
+export const compareXY = (coord1: XYCoord, coord2: XYCoord): boolean => {
+	return coord1.x === coord2.x && coord1.y === coord2.y;
 }
 export const randomFromArray = <T>(array: T[]): T | null => {
 	if (array.length === 0) return null;
@@ -51,7 +63,7 @@ export const scrambleArray = <T>(arr: T[]): T[] => {
 	}
 	return ret;
 };
-const DIRECTIONS = ['n', 'e', 's', 'w'];
+export const DIRECTIONS = ['n', 'e', 's', 'w'];
 export const getRandomDir = (): string => {
 	return DIRECTIONS[randomIndex(4)];
 };

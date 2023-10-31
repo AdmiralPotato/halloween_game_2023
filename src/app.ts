@@ -97,7 +97,7 @@ class App {
 		};
 		const respawnLevelFromStringSeed = () => {
 			const seedString = window.prompt('GIVE SEED') || '';
-			const rooms = makeRoomsWithSeed(seedString) as Room[];
+			const rooms = makeRoomsWithSeed(seedString);
 			makeLevelFromRooms(rooms);
 		};
 		const addImportedToMeshMap = (imported: ISceneLoaderAsyncResult) => {
