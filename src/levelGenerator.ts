@@ -1,61 +1,23 @@
-import seedrandom from 'seedrandom';
-import {buildMapFromSeed} from './mapBuilder.mjs';
-import {FURNISHINGS} from './furnishings.mjs';
-import {ROOM_CONTENTS, ROOMS} from './rooms.mjs';
+import { buildMapFromSeed } from './mapBuilder';
+import { FURNISHINGS } from './furnishings';
+import { ROOM_CONTENTS, ROOMS } from './rooms';
+import { Furnishing } from './LevelBuilder';
+import {
+	rand,
+	randomIndex,
+	scrambleArray,
+	getRandomWithWeight,
+	RandomWeight,
+	Tile
+} from './rand';
+import { Room } from './LevelBuilder';
 
-const DIRECTIONS = ['N','E','S','W'];
-const getOppositeDir = (dir) => {
-	return DIRECTIONS[(DIRECTIONS.indexOf(dir) + 2) % 4];
-};
-
-export const makeRoomsWithSeed = (seed) => {
+export const makeRoomsWithSeed = (seed: number): Room[] => {
 	const mapInfo = buildMapFromSeed(seed);
-	let rand = seedrandom(seed);
 
 	/* -------------- UTILITY -------------- */
 
-	const randomIndex = (max) => {
-		return Math.floor(rand() * max);
-	};
-	// const randomFromRange = (min, max) => {
-	// 	const variation = randomIndex(max - min + 1);
-	// 	return variation + min;
-	// };
-	// const randomFromArray = (array) => {
-	// 	if (array.length === 0) return null;
-	// 	const i = randomIndex(array.length);
-	// 	return array[i];
-	// };
-	const scrambleArray = (arr) => {
-		const ret = [];
-		let workingArr = arr.slice();
-		while (workingArr.length) {
-			let i = randomIndex(workingArr.length);
-			ret.push(workingArr.splice(i, 1)[0]);
-		}
-		return ret;
-	};
-	const getRandomDir = () => DIRECTIONS[randomIndex(4)];
-	const getRandomWithWeight = input => {
-		const pickFrom = [];
-		if (Array.isArray(input)) {
-			// [{ item: itemName, weight: # }, {...}] version
-			input.forEach(entry=>{
-				for (let i = 0; i < entry.weight; i++) {
-					pickFrom.push(entry.item);
-				}
-			});
-		} else {
-			// { propertyName: #, ... } version
-			Object.entries(input).forEach(pair=>{
-				const [key, value] = pair;
-				for (let i = 0; i < value; i++) {
-					pickFrom.push(key);
-				}
-			});
-		}
-		return pickFrom[randomIndex(pickFrom.length)];
-	};
+	/*
 	const getChildren = {
 		couch: () => {
 			let weight = {
@@ -93,17 +55,17 @@ export const makeRoomsWithSeed = (seed) => {
 			return rand() < 0.7 ? [] : [{ item: 'tableLong', pos: 'n' }];
 		},
 		squareTable: () => {
-		// 1 chair minimum; 2 chairs sometimes (edges chosen is random)
+			// 1 chair minimum; 2 chairs sometimes (edges chosen is random)
 			const dir = getRandomDir();
 			const ret = [{ item: 'chair', pos: dir }];
 			if (rand() < 0.3) {
 				const opposite = getOppositeDir(dir);
-				ret.push({ item: 'chair', pos: opposite});
+				ret.push({ item: 'chair', pos: opposite });
 			}
 			return ret;
 		},
 		tableRound: () => {
-			let dirs = scrambleArray(['n','e','s','w']);
+			let dirs = scrambleArray(['n', 'e', 's', 'w']);
 			let ret = [{ item: 'chair', pos: dirs.pop() }];
 			for (let i = 0; i < 3; i++) {
 				if (rand() < 0.6) {
@@ -114,97 +76,101 @@ export const makeRoomsWithSeed = (seed) => {
 		},
 		diningTable4: () => {
 			const missing = 0.05;
-			return [ 'n0', 'n1', 'n2', 'n3', 's1', 's2', 's2', 'n4', ].map(pos=>{
-				return { item: rand() < missing ? 'EMPTY' :'chair', pos: pos };
+			return ['n0', 'n1', 'n2', 'n3', 's1', 's2', 's2', 'n4',].map(pos => {
+				return { item: rand() < missing ? 'EMPTY' : 'chair', pos: pos };
 			});
 		},
 	};
+	*/
 
 	/* -------------- GET STUFF -------------- */
 
-	const getFurnishings = roomName => {
+	const getFurnishings = (roomName: string): Record<string, RandomWeight[]> => {
 		let furnishings = ROOM_CONTENTS[roomName];
 		return {
-			wallHanging: furnishings.filter(entry=>{
+			wallHanging: furnishings.filter(entry => {
 				return FURNISHINGS[entry.item]?.position === 'wallHanging';
 			}),
-			wallEdge: furnishings.filter(entry=>{
+			wallEdge: furnishings.filter(entry => {
 				return FURNISHINGS[entry.item]?.position === 'wallEdge';
 			}),
-			freeStanding: furnishings.filter(entry=>{
+			freeStanding: furnishings.filter(entry => {
 				return FURNISHINGS[entry.item]?.position === 'freeStanding';
 			}),
 		};
 	};
 
-	const padWall = (wallArr) => {
-		let ret = [];
-		let prop = wallArr[0].y - wallArr[wallArr.length-1].y === 0 ? 'x' : 'y';
-		wallArr.forEach(tile=>{
-			[ -0.5, 0.5 ].forEach(margin=>{
+	const padWall = (wallArr: Tile[]): Tile[] => {
+		let ret: Tile[] = [];
+		let prop = wallArr[0].y - wallArr[wallArr.length - 1].y === 0 ? 'x' : 'y';
+		wallArr.forEach(tile => {
+			[-0.5, 0.5].forEach(margin => {
 				let insert = JSON.parse(JSON.stringify(tile));
 				insert[prop] += margin;
-				insert.name = insert.x+','+insert.y +':'+ insert.name.split(':')[1];
+				insert.name = insert.x + ',' + insert.y + ':' + insert.name.split(':')[1];
 				ret.push(insert);
 			});
 		});
 		return ret;
 	};
-	const getWalls = (floors) =>{
-		let ret = {
-			n: floors.filter(item=>item.name.includes('(w)')),
-			w: floors.filter(item=>item.name.includes('(a)')),
-			e: floors.filter(item=>item.name.includes('(d)')),
+	const getWalls = (floors: Tile[]): Record<string, Tile[]> => {
+		let ret: Record<string, Tile[]> = {
+			n: floors.filter(item => item.name.includes('(w)')),
+			w: floors.filter(item => item.name.includes('(a)')),
+			e: floors.filter(item => item.name.includes('(d)')),
 		};
-		let q = floors.filter(item=>item.name.includes('(q)'));
-		let e = floors.filter(item=>item.name.includes('(e)'));
+		let q = floors.filter(item => item.name.includes('(q)'));
+		let e = floors.filter(item => item.name.includes('(e)'));
 		if (q.length) {
-			ret[rand()<0.5?'n':'w'].push(q[0]);
+			ret[rand() < 0.5 ? 'n' : 'w'].push(q[0]);
 		}
 		if (e.length) {
-			ret[rand()<0.5?'n':'e'].push(e[0]);
+			ret[rand() < 0.5 ? 'n' : 'e'].push(e[0]);
 		}
-		Object.keys(ret).forEach(wallDir=>{
+		Object.keys(ret).forEach(wallDir => {
 			if (ret[wallDir] && ret[wallDir].length > 0) {
 				ret[wallDir] = padWall(ret[wallDir]);
 			}
-			const adjustMap = {
-				n: [0,-0.5],
-				w: [-0.5,0],
-				e: [0.5,0],
+			const adjustMap: Record<string, number[]> = {
+				n: [0, -0.5],
+				w: [-0.5, 0],
+				e: [0.5, 0],
 			};
 			const adjust = adjustMap[wallDir];
-			ret[wallDir].forEach(item=>{
+			ret[wallDir].forEach(item => {
 				let rot = 0;
 				if (wallDir === 'w') { rot = 3; }
 				else if (wallDir === 'e') { rot = 1; }
 				item.rot = rot;
-				item.x+=adjust[0];
-				item.y+=adjust[1];
+				item.x += adjust[0];
+				item.y += adjust[1];
 			});
-			ret[wallDir] = ret[wallDir].sort((a,b) => {
-				return a.x - b.x; 
-			}).sort((a,b) => {
-				return a.y - b.y; 
+			ret[wallDir] = ret[wallDir].sort((a, b) => {
+				return a.x - b.x;
+			}).sort((a, b) => {
+				return a.y - b.y;
 			});
 		});
 
 		return ret;
 	};
-	
+
 	////---------------------------------------------------//
 	/// ------------ THE REST OF THE OWL???? ------------ ///
 	//---------------------------------------------------////
 
-	const insertItemIntoWall = (targetWall, insertWidth) => {
+	interface InsertedItemsIntoWall {
+		usedWall: Tile[],
+		remainingWalls: Tile[][],
+	}
+	const insertItemIntoWall = (targetWall: Tile[], insertWidth: number): InsertedItemsIntoWall => {
 		if (insertWidth === targetWall.length) return { usedWall: targetWall, remainingWalls: [] };
-		if (insertWidth > targetWall.length) return false;
 		const targetWallIndex = randomIndex(targetWall.length);
-		let wallIndices = [ targetWallIndex ];
+		let wallIndices = [targetWallIndex];
 		for (let i = 1; i < insertWidth; i++) {
 			// grab a neighbor index
-			let westHasGap = targetWall[wallIndices[0]-1];
-			let eastHasGap = targetWall[wallIndices[wallIndices.length-1]+1];
+			let westHasGap = targetWall[wallIndices[0] - 1];
+			let eastHasGap = targetWall[wallIndices[wallIndices.length - 1] + 1];
 			let go = null;
 			if (!westHasGap) {
 				go = 'east';
@@ -213,10 +179,10 @@ export const makeRoomsWithSeed = (seed) => {
 			} else {
 				go = rand() < 0.5 ? 'west' : 'east';
 			}
-			if (go==='west') {
-				wallIndices.unshift(wallIndices[0]-1);
-			} else if (go==='east') {
-				wallIndices.push(wallIndices[wallIndices.length-1]+1);
+			if (go === 'west') {
+				wallIndices.unshift(wallIndices[0] - 1);
+			} else if (go === 'east') {
+				wallIndices.push(wallIndices[wallIndices.length - 1] + 1);
 			}
 		}
 		let workingWall = JSON.parse(JSON.stringify(targetWall));
@@ -240,10 +206,12 @@ export const makeRoomsWithSeed = (seed) => {
 		const roomType = rooms[roomName].name;
 		const itemPool = getFurnishings(roomType).wallEdge;
 		// get required items first
-		let requiredItems = [];
-		itemPool.filter(item=>item.count).forEach(item=>{
-			for (let i = 0; i < item.count; i++) {
-				requiredItems.push(item.item);
+		let requiredItems: string[] = [];
+		itemPool.filter(item => item.count).forEach(item => {
+			if (item.count) {
+				for (let i = 0; i < item.count; i++) {
+					requiredItems.push(item.item);
+				}
 			}
 		});
 		requiredItems = scrambleArray(requiredItems);
@@ -251,8 +219,8 @@ export const makeRoomsWithSeed = (seed) => {
 		const walls = getWalls(rooms[roomName].floors);
 		// state stuff
 		let doodads = [];
-		let remainingWalls = Object.entries(walls).map(([wallDir, arr])=>{
-			return arr.map(item=>{
+		let remainingWalls = Object.entries(walls).map(([wallDir, arr]) => {
+			return arr.map(item => {
 				return Object.assign({ wallDir }, item);
 			});
 		});
@@ -272,43 +240,49 @@ export const makeRoomsWithSeed = (seed) => {
 				&& !isExteriorWall
 			) {
 				remainingWalls.push(targetWall);
-				if (requiredItems.length) { // put furniture back at the bottom of the queue
-					requiredItems.push(requiredItems.unshift());
+				// put furniture back at the bottom of the queue
+				const queued = requiredItems.shift();
+				if (queued) {
+					requiredItems.push(queued);
 				}
 				continue;
 			}
 			requiredItems.shift();
-			let compositeInsertInfo = Object.assign({name: insertName}, FURNISHINGS[insertName]);
+			let compositeInsertInfo = Object.assign({ name: insertName }, FURNISHINGS[insertName]);
 			let insertWidth = compositeInsertInfo.w;
+			if (insertWidth > targetWall.length) { continue; }
 			let insertInfo = insertItemIntoWall(targetWall, insertWidth);
-			if (!insertInfo) { continue; }
 			doodads.push({
 				wallTiles: insertInfo.usedWall,
 				furniture: compositeInsertInfo,
 			});
-			remainingWalls = remainingWalls.concat(insertInfo.remainingWalls);
+			remainingWalls = [
+				...remainingWalls,
+				...insertInfo.remainingWalls
+			];
 		}
-		doodads = doodads.filter(doodad=>{
+		doodads = doodads.filter(doodad => {
 			return doodad.furniture.name !== 'EMPTY';
 		});
-		rooms[roomName].furnishings = doodads.map(doodad=> {
+		rooms[roomName].furnishings = doodads.map((doodad): Furnishing => {
 			const wallTiles = doodad.wallTiles;
-			let x = wallTiles.reduce((acc,entry)=>acc+(entry?.x||0),0)/wallTiles.length;
-			let y = wallTiles.reduce((acc,entry)=>acc+(entry?.y||0),0)/wallTiles.length;
+			let x = wallTiles.reduce((acc, entry) => acc + (entry?.x || 0), 0) / wallTiles.length;
+			let y = wallTiles.reduce((acc, entry) => acc + (entry?.y || 0), 0) / wallTiles.length;
 			let wallType = wallTiles[0].name.split('(')[1][0];
 			let rot = doodad.wallTiles[0].rot;
-			if (rot === 0 && doodad.furniture.d === 2) { 
+			if (rot === 0 && doodad.furniture.d === 2) {
 				y += 0.5;
 			}
-			if (rot === 1 && doodad.furniture.d === 2) { 
+			if (rot === 1 && doodad.furniture.d === 2) {
 				x -= 0.5;
 			}
-			if (rot === 3 && doodad.furniture.d === 2) { 
+			if (rot === 3 && doodad.furniture.d === 2) {
 				x += 0.5;
 			}
 			return {
 				label: `${x},${y}:${doodad.furniture.name}-(${wallType})`,
 				name: doodad.furniture.name,
+				assetName: doodad.furniture.name,
 				x,
 				y,
 				w: doodad.furniture.w,

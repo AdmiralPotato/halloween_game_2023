@@ -7,3 +7,4 @@ src/scratch*
 *.blend1
 *kra-autosave.kra
 stats.html
+tsc_output

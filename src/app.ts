@@ -15,7 +15,7 @@ import '@babylonjs/core/Rendering/outlineRenderer';
 
 import * as UI from './UserInterface';
 import { Room, LevelBuilder } from './LevelBuilder';
-import { makeRoomsWithSeed } from './levelGenerator.mjs';
+import { makeRoomsWithSeed } from './levelGenerator';
 
 import './styles.css';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
