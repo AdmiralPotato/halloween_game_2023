@@ -5,7 +5,7 @@ import {
 	randomFromArray,
 	scrambleArray,
 	XYRange,
-	XYPoint,
+	XYPair,
 } from './utilities';
 import {
 	rotMap,
@@ -70,8 +70,7 @@ export const buildMapFromSeed = (seed: string) => {
 
 	/* -------------- VERTICAL ASCII -------------- */
 
-
-	const roomLinesMap: Record<string, string[]> = {};
+	const roomLinesArrayMap: Record<string, string[]> = {};
 
 	['e', 'f'].forEach((roomID, index, arr) => {
 		const roomLine = roomLineMap[roomID];
@@ -81,7 +80,7 @@ export const buildMapFromSeed = (seed: string) => {
 		for (let i = 0; i < padToDepth; i++) {
 			ret.push(padToDepth - roomInfo.depth > i ? ' '.repeat(roomLine.length) : roomLine || '');
 		}
-		roomInfo.lines = ret;
+		roomLinesArrayMap[roomID] = ret;
 	});
 
 	['d', 'c'].forEach((roomID, index, arr) => {
@@ -98,12 +97,9 @@ export const buildMapFromSeed = (seed: string) => {
 		}
 		// the actual lines
 		for (let i = 0; i < roomInfo.depth; i++) {
-			if (!roomLine) {
-				throw new Error('ROOMLINE SHOULD BE HERE BE NOW!!!');
-			}
 			ret.push(roomLine);
 		}
-		roomInfo.lines = ret;
+		roomLinesArrayMap[roomID] = ret;
 	});
 
 	['a'].forEach((roomID) => {
@@ -111,27 +107,24 @@ export const buildMapFromSeed = (seed: string) => {
 		const roomInfo = roomWorkingData[roomID];
 		const ret = [];
 		for (let i = 0; i < roomInfo.depth; i++) {
-			if (!roomLine) {
-				throw new Error('ROOMLINE SHOULD BE HERE BE NOW!!!');
-			}
 			ret.push(roomLine);
 		}
-		roomInfo.lines = ret;
+		roomLinesArrayMap[roomID] = ret;
 	});
 
 	const mapASCII: string[] = [];
 
-	for (let i = 0; i < roomWorkingData.e.lines.length; i++) {
+	for (let i = 0; i < roomLinesArrayMap.e.length; i++) {
 		mapASCII.push(
-			roomWorkingData.e.lines[i] + roomLineMap.b + roomWorkingData.f.lines[i],
+			roomLinesArrayMap.e[i] + roomLineMap.b + roomLinesArrayMap.f[i],
 		);
 	}
 
-	for (let i = 0; i < (roomWorkingData.d.lines || []).length; i++) {
+	for (let i = 0; i < (roomLinesArrayMap.d || []).length; i++) {
 		mapASCII.push(
-			(roomWorkingData.d.lines || [])[i] +
+			(roomLinesArrayMap.d || [])[i] +
 			roomLineMap.b +
-			(roomWorkingData.c.lines || [])[i],
+			(roomLinesArrayMap.c || [])[i],
 		);
 	}
 	// quickie: make a door between hallway and entrance
@@ -155,8 +148,8 @@ export const buildMapFromSeed = (seed: string) => {
 	let bottomOfHallWayIndex = mapASCII.length - 1;
 
 	// put in front room
-	for (let i = 0; i < roomWorkingData.a.lines.length; i++) {
-		mapASCII.push(roomWorkingData.a.lines[i]);
+	for (let i = 0; i < roomLinesArrayMap.a.length; i++) {
+		mapASCII.push(roomLinesArrayMap.a[i]);
 	}
 	// it's later now
 	[bottomOfHallWayIndex, bottomOfHallWayIndex + 1].forEach((index) => {
@@ -280,7 +273,7 @@ export const buildMapFromSeed = (seed: string) => {
 		let corners = roomWorkingData[roomID].cornerCoords;
 		roomWorkingData[roomID].x = corners.x.min + (corners.x.max - corners.x.min) / 2;
 		roomWorkingData[roomID].y = corners.y.min + (corners.y.max - corners.y.min) / 2;
-		let doorCoords: XYPoint[] = [];
+		let doorCoords: XYPair[] = [];
 		for (let y = corners.y.min; y <= corners.y.max; y++) {
 			for (let x = corners.x.min; x <= corners.x.max; x++) {
 				// console.log(`${x}, ${y} = ${doubledMap[y][x]}`);

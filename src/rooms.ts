@@ -1,5 +1,5 @@
 import { Furnishing } from "./LevelBuilder";
-import { RandomWeight, XYPoint, XYRange, randomFromRange } from "./utilities";
+import { RandomWeight, XYPair, XYRange, randomFromRange } from "./utilities";
 
 export interface RoomInfo {
 	name: string,
@@ -9,11 +9,10 @@ export interface RoomInfo {
 export interface RoomWorkingData {
 	width: number;
 	depth: number;
-	lines: string[];
 	cornerCoords: XYRange;
 	x: number;
 	y: number;
-	doorCoords: XYPoint[];
+	doorCoords: XYPair[];
 	name: string;
 	label: string;
 	floorTiles: Tile[];
@@ -79,7 +78,6 @@ export const buildRoom = (roomName: string): RoomWorkingData => {
 	return {
 		width: randomFromRange(ROOMS[roomName].defaultSize.x),
 		depth: randomFromRange(ROOMS[roomName].defaultSize.y),
-		lines: [],
 		cornerCoords: {
 			x: { min: NaN, max: NaN },
 			y: { min: NaN, max: NaN }

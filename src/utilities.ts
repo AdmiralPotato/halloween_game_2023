@@ -17,7 +17,7 @@ export interface Range {
 	min: number,
 	max: number,
 }
-export interface XYPoint {
+export interface XYPair {
 	x: number;
 	y: number;
 }
