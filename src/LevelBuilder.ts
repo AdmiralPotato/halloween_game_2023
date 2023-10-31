@@ -63,6 +63,7 @@ export class LevelBuilder {
 				},
 				scene,
 			);
+			floor.visibility = 0.5;
 			floor.position.x = room.x;
 			floor.position.z = room.y;
 			floor.receiveShadows = true;
@@ -92,6 +93,25 @@ export class LevelBuilder {
 				doodad.position.x = door.x;
 				doodad.position.z = door.y;
 				doodad.rotate(Axis.Y, door.rot * -RIGHT_ANGLE);
+				doodad.renderOutline = true;
+				doodad.receiveShadows = true;
+				doodad.outlineColor = new Color3(0, 1, 1);
+				doodad.outlineWidth = 0.01;
+			});
+			room.floors.forEach((floorOrWallConfig) => {
+				if (!floorOrWallConfig.asset) {
+					console.log(
+						'floorOrWallConfig is missing `asset` property!',
+						floorOrWallConfig.asset,
+					);
+				}
+				const doodad = meshMap[floorOrWallConfig.asset || 'wall_00'].createInstance(
+					Math.random().toString(),
+				);
+				floor.addChild(doodad);
+				doodad.position.x = floorOrWallConfig.x;
+				doodad.position.z = floorOrWallConfig.y;
+				doodad.rotate(Axis.Y, floorOrWallConfig.rot * -RIGHT_ANGLE);
 				doodad.renderOutline = true;
 				doodad.receiveShadows = true;
 				doodad.outlineColor = new Color3(0, 1, 1);
