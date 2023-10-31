@@ -2,24 +2,18 @@ import {
 	rand,
 	setSeed,
 	randomIndex,
-	randomFromRange,
-	getRandomSize,
 	randomFromArray,
 	scrambleArray,
-	Dimension,
 	XYRange,
-	Tile,
+	XYPoint,
 } from './utilities';
-import { rotMap } from './rooms';
-
-/* -------------- SPECIFICATIONS -------------- */
-
-// NOTE: rooms will probably break if less than 2
-const normalWidth = [4, 7]; // these are ranges (min, max)
-const normalDepth = [3, 4];
-const hallWidth = [2, 2];
-const entranceWidth = [6, 9];
-const entranceDepth = [4, 6];
+import {
+	rotMap,
+	ROOMS,
+	buildRoom,
+	Dimension,
+	Tile,
+} from './rooms';
 
 ////---------------------------------------------------------//
 ///---------------------- THE OWL???? ----------------------///
@@ -30,34 +24,11 @@ export const buildMapFromSeed = (seed: string) => {
 
 	/* -------------- GET SIZES -------------- */
 
-	const mapFloorPlanInfo: Record<string, Dimension> = {
-		// four normal rooms
-		e: getRandomSize(normalWidth, normalDepth),
-		f: getRandomSize(normalWidth, normalDepth),
-		c: getRandomSize(normalWidth, normalDepth),
-		d: getRandomSize(normalWidth, normalDepth),
-		// hallway
-		b: {
-			width: randomFromRange(hallWidth[0], hallWidth[1]),
-			depth: NaN, // depth is procedural
-			line: '',
-			lines: [],
-			cornerCoords: {
-				x: { min: NaN, max: NaN },
-				y: { min: NaN, max: NaN }
-			},
-			x: NaN,
-			y: NaN,
-			doorCoords: [],
-			name: '',
-			label: '',
-			floorTiles: [],
-			floors: [],
-			doors: [],
-			furnishings: [],
-		},
-		a: getRandomSize(entranceWidth, entranceDepth),
-	};
+	const mapFloorPlanInfo: Record<string, Dimension> = {};
+
+	Object.keys(ROOMS).forEach(roomName => {
+		mapFloorPlanInfo[roomName] = buildRoom(roomName);
+	});
 
 	/* -------------- HORIZONTAL ASCII -------------- */
 
@@ -301,12 +272,12 @@ export const buildMapFromSeed = (seed: string) => {
 		let corners = mapFloorPlanInfo[roomName].cornerCoords;
 		mapFloorPlanInfo[roomName].x = corners.x.min + (corners.x.max - corners.x.min) / 2;
 		mapFloorPlanInfo[roomName].y = corners.y.min + (corners.y.max - corners.y.min) / 2;
-		let doorCoords: number[][] = [];
+		let doorCoords: XYPoint[] = [];
 		for (let y = corners.y.min; y <= corners.y.max; y++) {
 			for (let x = corners.x.min; x <= corners.x.max; x++) {
 				// console.log(`${x}, ${y} = ${doubledMap[y][x]}`);
 				if (doubledMap[y][x] === 'z') {
-					doorCoords.push([x, y]);
+					doorCoords.push({ x, y });
 				}
 			}
 		}
@@ -395,8 +366,8 @@ export const buildMapFromSeed = (seed: string) => {
 		if (roomName !== 'b') {
 			let doorCornerCoords = mapFloorPlanInfo[roomName].doorCoords;
 			let compositeDoorCoords = [
-				doorCornerCoords.reduce((acc, pair) => acc + pair[0], 0) / 4,
-				doorCornerCoords.reduce((acc, pair) => acc + pair[1], 0) / 4,
+				doorCornerCoords.reduce((acc, pair) => acc + pair.x, 0) / 4,
+				doorCornerCoords.reduce((acc, pair) => acc + pair.y, 0) / 4,
 			];
 			if (roomName === 'a') {
 				compositeDoorCoords[1] -= 2;

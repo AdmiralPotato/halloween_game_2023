@@ -1,8 +1,8 @@
 import { buildMapFromSeed } from './mapBuilder';
 import { FURNISHINGS } from './furnishings';
-import { ROOM_CONTENTS, ROOMS } from './rooms';
+import { ROOM_CONTENTS, ROOMS, Tile } from './rooms';
 import { Furnishing } from './LevelBuilder';
-import { rand, randomIndex, scrambleArray, getRandomWithWeight, RandomWeight, Tile } from './utilities';
+import { rand, randomIndex, scrambleArray, getRandomWithWeight, RandomWeight } from './utilities';
 import { Room } from './LevelBuilder';
 
 export const makeRoomsWithSeed = (seed: string): Room[] => {
