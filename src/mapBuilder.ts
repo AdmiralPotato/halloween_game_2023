@@ -9,7 +9,7 @@ import {
 	Dimension,
 	XYRange,
 	Tile,
-} from './rand';
+} from './utilities';
 import { rotMap } from './rooms';
 
 /* -------------- SPECIFICATIONS -------------- */
@@ -148,8 +148,8 @@ export const buildMapFromSeed = (seed: string) => {
 	for (let i = 0; i < (mapFloorPlanInfo.d.lines || []).length; i++) {
 		mapASCII.push(
 			(mapFloorPlanInfo.d.lines || [])[i] +
-				mapFloorPlanInfo.b.line +
-				(mapFloorPlanInfo.c.lines || [])[i],
+			mapFloorPlanInfo.b.line +
+			(mapFloorPlanInfo.c.lines || [])[i],
 		);
 	}
 	// quickie: make a door between hallway and entrance

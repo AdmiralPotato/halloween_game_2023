@@ -1,4 +1,4 @@
-import { RandomWeight } from "./rand";
+import { RandomWeight } from "./utilities";
 
 export interface RoomInfo {
 	name: string,

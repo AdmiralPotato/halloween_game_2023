@@ -2,7 +2,7 @@ import { buildMapFromSeed } from './mapBuilder';
 import { FURNISHINGS } from './furnishings';
 import { ROOM_CONTENTS, ROOMS } from './rooms';
 import { Furnishing } from './LevelBuilder';
-import { rand, randomIndex, scrambleArray, getRandomWithWeight, RandomWeight, Tile } from './rand';
+import { rand, randomIndex, scrambleArray, getRandomWithWeight, RandomWeight, Tile } from './utilities';
 import { Room } from './LevelBuilder';
 
 export const makeRoomsWithSeed = (seed: string): Room[] => {
@@ -300,7 +300,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 	return Object.values(rooms);
 };
 
-let seed = '1234';
+let seed = '1111';
 const mapWithRooms = makeRoomsWithSeed(seed);
 
 console.log(JSON.stringify(mapWithRooms, null, '\t'));

@@ -5,7 +5,7 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
-			"name": "Example",
+			"name": "MapBuilder",
 			"type": "node",
 			"request": "launch",
 			"runtimeExecutable": "node",
@@ -14,6 +14,25 @@
 				"--loader",
 				"ts-node/esm",
 				"./src/mapBuilder.ts"
+			],
+			"args": [],
+			"cwd": "${workspaceRoot}",
+			"internalConsoleOptions": "openOnSessionStart",
+			"skipFiles": [
+				"<node_internals>/**",
+				"node_modules/**"
+			]
+		},
+		{
+			"name": "LevelGenerator",
+			"type": "node",
+			"request": "launch",
+			"runtimeExecutable": "node",
+			"runtimeArgs": [
+				"--experimental-specifier-resolution=node",
+				"--loader",
+				"ts-node/esm",
+				"./src/levelGenerator.ts"
 			],
 			"args": [],
 			"cwd": "${workspaceRoot}",
