@@ -5,7 +5,9 @@ import {
 	randomFromArray,
 	scrambleArray,
 	XYRange,
-	XYPair,
+	XYCoord,
+	averageXYPairs as getXYCoordsAverage,
+	translateXY,
 } from './utilities';
 import {
 	rotMap,
@@ -73,41 +75,41 @@ export const buildMapFromSeed = (seed: string) => {
 	const roomLinesArrayMap: Record<string, string[]> = {};
 
 	['e', 'f'].forEach((roomID, index, arr) => {
-		const roomLine = roomLineMap[roomID];
+		const line = roomLineMap[roomID];
 		const roomInfo = roomWorkingData[roomID]
-		const padToDepth = Math.max(roomInfo.depth, roomWorkingData[arr[(index + 1) % 2]].depth);
+		const maxSize = Math.max(roomInfo.depth, roomWorkingData[arr[(index + 1) % 2]].depth);
 		const ret: string[] = [];
-		for (let i = 0; i < padToDepth; i++) {
-			ret.push(padToDepth - roomInfo.depth > i ? ' '.repeat(roomLine.length) : roomLine || '');
+		for (let i = 0; i < maxSize; i++) {
+			ret.push(maxSize - roomInfo.depth > i ? ' '.repeat(line.length) : line || '');
 		}
 		roomLinesArrayMap[roomID] = ret;
 	});
 
 	['d', 'c'].forEach((roomID, index, arr) => {
-		const roomLine = roomLineMap[roomID];
+		const line = roomLineMap[roomID];
 		const roomInfo = roomWorkingData[roomID];
-		const padToDepth = Math.max(roomInfo.depth, roomWorkingData[arr[(index + 1) % 2]].depth);
+		const maxSie = Math.max(roomInfo.depth, roomWorkingData[arr[(index + 1) % 2]].depth);
 		const ret: string[] = [];
-		const blank = ' '.repeat(roomLine.length);
+		const blank = ' '.repeat(line.length);
 		// blank lines, equally on top or bottom (randomly)
-		let diffCount = padToDepth - roomInfo.depth;
-		for (let i = 0; i < diffCount; i++) {
+		let diff = maxSie - roomInfo.depth;
+		for (let i = 0; i < diff; i++) {
 			const method = rand() < 0.5 ? 'push' : 'unshift';
 			ret[method](blank);
 		}
 		// the actual lines
 		for (let i = 0; i < roomInfo.depth; i++) {
-			ret.push(roomLine);
+			ret.push(line);
 		}
 		roomLinesArrayMap[roomID] = ret;
 	});
 
 	['a'].forEach((roomID) => {
-		const roomLine = roomLineMap[roomID];
+		const line = roomLineMap[roomID];
 		const roomInfo = roomWorkingData[roomID];
 		const ret = [];
 		for (let i = 0; i < roomInfo.depth; i++) {
-			ret.push(roomLine);
+			ret.push(line);
 		}
 		roomLinesArrayMap[roomID] = ret;
 	});
@@ -222,9 +224,9 @@ export const buildMapFromSeed = (seed: string) => {
 
 	const arrayDoubler = <T>(arr: T[]): T[] => {
 		let ret: T[] = [];
-		arr.forEach((item) => {
-			ret.push(item);
-			ret.push(item);
+		arr.forEach((t) => {
+			ret.push(t);
+			ret.push(t);
 		});
 		return ret;
 	};
@@ -273,7 +275,7 @@ export const buildMapFromSeed = (seed: string) => {
 		let corners = roomWorkingData[roomID].cornerCoords;
 		roomWorkingData[roomID].x = corners.x.min + (corners.x.max - corners.x.min) / 2;
 		roomWorkingData[roomID].y = corners.y.min + (corners.y.max - corners.y.min) / 2;
-		let doorCoords: XYPair[] = [];
+		let doorCoords: XYCoord[] = [];
 		for (let y = corners.y.min; y <= corners.y.max; y++) {
 			for (let x = corners.x.min; x <= corners.x.max; x++) {
 				// console.log(`${x}, ${y} = ${doubledMap[y][x]}`);
@@ -288,15 +290,10 @@ export const buildMapFromSeed = (seed: string) => {
 	/* -------------- ASSIGN ROOMS THEIR PURPOSES -------------- */
 
 	roomWorkingData.a.name = 'livingRoom';
-	roomWorkingData.a.label = 'a';
-
 	roomWorkingData.b.name = 'hallway';
-	roomWorkingData.b.label = 'b';
-
 	let remainder = scrambleArray(['bedroom', 'bedroom', 'library', 'diningRoom']);
-	['c', 'd', 'e', 'f'].forEach((floorName, i) => {
-		roomWorkingData[floorName].name = remainder[i];
-		roomWorkingData[floorName].label = floorName;
+	['c', 'd', 'e', 'f'].forEach((roomID, i) => {
+		roomWorkingData[roomID].name = remainder[i];
 	});
 
 	/* -------------- FLOOR ARRAY FOR EACH ROOM -------------- */
@@ -363,24 +360,25 @@ export const buildMapFromSeed = (seed: string) => {
 		}
 		roomWorkingData[roomID].floorTiles = floorTiles;
 	});
+	// determine door direction / exit
+	const translationMap: Record<string, XYCoord> = {
+		a: { x: 0, y: -2 },
+		c: { x: -2, y: 0 },
+		f: { x: -2, y: 0 },
+		d: { x: 2, y: 0 },
+		e: { x: 2, y: 0 },
+	}
 	Object.keys(roomWorkingData).forEach((roomID) => {
 		if (roomID !== 'b') {
-			let doorCornerCoords = roomWorkingData[roomID].doorCoords;
-			let compositeDoorCoords = [
-				doorCornerCoords.reduce((acc, pair) => acc + pair.x, 0) / 4,
-				doorCornerCoords.reduce((acc, pair) => acc + pair.y, 0) / 4,
-			];
-			if (roomID === 'a') {
-				compositeDoorCoords[1] -= 2;
-			} else {
-				compositeDoorCoords[0] += roomID === 'c' || roomID === 'f' ? -2 : 2;
-			}
+			let cornerCoords = roomWorkingData[roomID].doorCoords;
+			let compositeCoords = getXYCoordsAverage(cornerCoords);
+			compositeCoords = translateXY(compositeCoords, translationMap[roomID]);
 			let bFloorTiles = roomWorkingData.b.floorTiles;
-			let targetDoor = bFloorTiles.filter((item) => {
-				return item.x === compositeDoorCoords[0] && item.y === compositeDoorCoords[1];
+			let targetDoorForB = bFloorTiles.filter((item) => {
+				return item.x === compositeCoords.x && item.y === compositeCoords.y;
 			})[0];
-			targetDoor.destination = roomID;
-			targetDoor.doorDir = roomID === 'a' ? 'up' : 'left-or-right';
+			targetDoorForB.destination = roomID;
+			targetDoorForB.doorDir = roomID === 'a' ? 'up' : 'left-or-right';
 		}
 	});
 
