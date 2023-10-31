@@ -20,8 +20,6 @@ import { makeRoomsWithSeed } from './levelGenerator';
 import './styles.css';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { ShadowGenerator } from '@babylonjs/core';
-// @ts-ignore // doesn't have a d.ts, is function that takes an ArrayBuffer and returns Number
-import crc32 from 'crc32';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 
 class App {
@@ -97,9 +95,7 @@ class App {
 		};
 		const respawnLevelFromStringSeed = () => {
 			const seedString = window.prompt('GIVE SEED') || '';
-			const buffer = new TextEncoder().encode(seedString);
-			const seed: number = crc32(buffer);
-			const rooms = makeRoomsWithSeed(seed) as Room[];
+			const rooms = makeRoomsWithSeed(seedString) as Room[];
 			makeLevelFromRooms(rooms);
 		};
 		const addImportedToMeshMap = (imported: ISceneLoaderAsyncResult) => {
@@ -128,7 +124,7 @@ class App {
 		const assetLoadingPromises = [magePromise, environmentPromise, doodadsPromise];
 		Promise.all(assetLoadingPromises).then(() => {
 			console.log('What is meshMap after all is loaded?', meshMap);
-			const rooms = makeRoomsWithSeed(1234) as Room[];
+			const rooms = makeRoomsWithSeed('1234') as Room[];
 			makeLevelFromRooms(rooms);
 			// scene.createDefaultCamera(true, true, true);
 		});

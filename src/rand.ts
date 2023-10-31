@@ -4,8 +4,8 @@ import { Furnishing } from './LevelBuilder';
 
 let randomizer = seedrandom('');
 
-export const setSeed = (seed: number) => {
-	randomizer = seedrandom(seed + '');
+export const setSeed = (seed: string) => {
+	randomizer = seedrandom(seed);
 };
 export const rand = (): number => randomizer();
 
@@ -17,36 +17,37 @@ export const randomFromRange = (min: number, max: number): number => {
 	return variation + min;
 };
 export interface Dimension {
-	width: number,
-	depth: number,
-	line: string,
-	lines: string[],
-	cornerCoords: XYRange,
-	x: number,
-	y: number,
-	doorCoords: number[][],
-	name: string,
-	label: string,
-	floorTiles: Tile[],
-	doors: Tile[],
-	floors: Tile[],
+	width: number;
+	depth: number;
+	line: string;
+	lines: string[];
+	cornerCoords: XYRange;
+	x: number;
+	y: number;
+	doorCoords: number[][];
+	name: string;
+	label: string;
+	floorTiles: Tile[];
+	doors: Tile[];
+	floors: Tile[];
 	furnishings: Furnishing[];
 }
 export interface XYRange {
-	x: number[],
-	y: number[],
+	x: number[];
+	y: number[];
 }
 export interface Tile {
-	asset: string,
-	name: string,
-	x: number,
-	y: number,
-	rot: number,
-	destination: string,
-	doorDir: string,
-	wallDir: string,
+	asset: string;
+	name: string;
+	x: number;
+	y: number;
+	rot: number;
+	destination: string;
+	doorDir: string;
+	wallDir: string;
 }
-export const getRandomSize = (width: number[], depth: number[]): Dimension => { // width first
+export const getRandomSize = (width: number[], depth: number[]): Dimension => {
+	// width first
 	return {
 		width: randomFromRange(width[0], width[1]),
 		depth: randomFromRange(depth[0], depth[1]),
@@ -81,14 +82,14 @@ export const scrambleArray = <T>(arr: T[]): T[] => {
 const DIRECTIONS = ['n', 'e', 's', 'w'];
 export const getRandomDir = (): string => {
 	return DIRECTIONS[randomIndex(4)];
-}
+};
 export const getOppositeDir = (dir: string): string => {
 	return DIRECTIONS[(DIRECTIONS.indexOf(dir) + 2) % 4];
 };
 export interface RandomWeight {
-	weight?: number,
-	count?: number,
-	item: string
+	weight?: number;
+	count?: number;
+	item: string;
 }
 export const getRandomWithWeight = (input: RandomWeight[] | Record<string, number>): string => {
 	const pickFrom: string[] = [];

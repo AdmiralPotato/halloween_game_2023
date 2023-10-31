@@ -2,17 +2,10 @@ import { buildMapFromSeed } from './mapBuilder';
 import { FURNISHINGS } from './furnishings';
 import { ROOM_CONTENTS, ROOMS } from './rooms';
 import { Furnishing } from './LevelBuilder';
-import {
-	rand,
-	randomIndex,
-	scrambleArray,
-	getRandomWithWeight,
-	RandomWeight,
-	Tile
-} from './rand';
+import { rand, randomIndex, scrambleArray, getRandomWithWeight, RandomWeight, Tile } from './rand';
 import { Room } from './LevelBuilder';
 
-export const makeRoomsWithSeed = (seed: number): Room[] => {
+export const makeRoomsWithSeed = (seed: string): Room[] => {
 	const mapInfo = buildMapFromSeed(seed);
 
 	/* -------------- UTILITY -------------- */
@@ -88,13 +81,13 @@ export const makeRoomsWithSeed = (seed: number): Room[] => {
 	const getFurnishings = (roomName: string): Record<string, RandomWeight[]> => {
 		let furnishings = ROOM_CONTENTS[roomName];
 		return {
-			wallHanging: furnishings.filter(entry => {
+			wallHanging: furnishings.filter((entry) => {
 				return FURNISHINGS[entry.item]?.position === 'wallHanging';
 			}),
-			wallEdge: furnishings.filter(entry => {
+			wallEdge: furnishings.filter((entry) => {
 				return FURNISHINGS[entry.item]?.position === 'wallEdge';
 			}),
-			freeStanding: furnishings.filter(entry => {
+			freeStanding: furnishings.filter((entry) => {
 				return FURNISHINGS[entry.item]?.position === 'freeStanding';
 			}),
 		};
@@ -103,8 +96,8 @@ export const makeRoomsWithSeed = (seed: number): Room[] => {
 	const padWall = (wallArr: Tile[]): Tile[] => {
 		let ret: Tile[] = [];
 		let prop = wallArr[0].y - wallArr[wallArr.length - 1].y === 0 ? 'x' : 'y';
-		wallArr.forEach(tile => {
-			[-0.5, 0.5].forEach(margin => {
+		wallArr.forEach((tile) => {
+			[-0.5, 0.5].forEach((margin) => {
 				let insert = JSON.parse(JSON.stringify(tile));
 				insert[prop] += margin;
 				insert.name = insert.x + ',' + insert.y + ':' + insert.name.split(':')[1];
@@ -115,19 +108,19 @@ export const makeRoomsWithSeed = (seed: number): Room[] => {
 	};
 	const getWalls = (floors: Tile[]): Record<string, Tile[]> => {
 		let ret: Record<string, Tile[]> = {
-			n: floors.filter(item => item.name.includes('(w)')),
-			w: floors.filter(item => item.name.includes('(a)')),
-			e: floors.filter(item => item.name.includes('(d)')),
+			n: floors.filter((item) => item.name.includes('(w)')),
+			w: floors.filter((item) => item.name.includes('(a)')),
+			e: floors.filter((item) => item.name.includes('(d)')),
 		};
-		let q = floors.filter(item => item.name.includes('(q)'));
-		let e = floors.filter(item => item.name.includes('(e)'));
+		let q = floors.filter((item) => item.name.includes('(q)'));
+		let e = floors.filter((item) => item.name.includes('(e)'));
 		if (q.length) {
 			ret[rand() < 0.5 ? 'n' : 'w'].push(q[0]);
 		}
 		if (e.length) {
 			ret[rand() < 0.5 ? 'n' : 'e'].push(e[0]);
 		}
-		Object.keys(ret).forEach(wallDir => {
+		Object.keys(ret).forEach((wallDir) => {
 			if (ret[wallDir] && ret[wallDir].length > 0) {
 				ret[wallDir] = padWall(ret[wallDir]);
 			}
@@ -137,19 +130,24 @@ export const makeRoomsWithSeed = (seed: number): Room[] => {
 				e: [0.5, 0],
 			};
 			const adjust = adjustMap[wallDir];
-			ret[wallDir].forEach(item => {
+			ret[wallDir].forEach((item) => {
 				let rot = 0;
-				if (wallDir === 'w') { rot = 3; }
-				else if (wallDir === 'e') { rot = 1; }
+				if (wallDir === 'w') {
+					rot = 3;
+				} else if (wallDir === 'e') {
+					rot = 1;
+				}
 				item.rot = rot;
 				item.x += adjust[0];
 				item.y += adjust[1];
 			});
-			ret[wallDir] = ret[wallDir].sort((a, b) => {
-				return a.x - b.x;
-			}).sort((a, b) => {
-				return a.y - b.y;
-			});
+			ret[wallDir] = ret[wallDir]
+				.sort((a, b) => {
+					return a.x - b.x;
+				})
+				.sort((a, b) => {
+					return a.y - b.y;
+				});
 		});
 
 		return ret;
@@ -160,8 +158,8 @@ export const makeRoomsWithSeed = (seed: number): Room[] => {
 	//---------------------------------------------------////
 
 	interface InsertedItemsIntoWall {
-		usedWall: Tile[],
-		remainingWalls: Tile[][],
+		usedWall: Tile[];
+		remainingWalls: Tile[][];
 	}
 	const insertItemIntoWall = (targetWall: Tile[], insertWidth: number): InsertedItemsIntoWall => {
 		if (insertWidth === targetWall.length) return { usedWall: targetWall, remainingWalls: [] };
@@ -191,8 +189,12 @@ export const makeRoomsWithSeed = (seed: number): Room[] => {
 		if (workingWall.length) {
 			let right = workingWall.splice(0, wallIndices[0]);
 			let left = workingWall;
-			if (right.length > 0) { remainingWalls.push(right); }
-			if (left.length > 0) { remainingWalls.push(left); }
+			if (right.length > 0) {
+				remainingWalls.push(right);
+			}
+			if (left.length > 0) {
+				remainingWalls.push(left);
+			}
 		}
 		return {
 			usedWall: splice,
@@ -201,26 +203,28 @@ export const makeRoomsWithSeed = (seed: number): Room[] => {
 	};
 
 	let rooms = mapInfo.rooms;
-	Object.keys(rooms).forEach(roomName => {
+	Object.keys(rooms).forEach((roomName) => {
 		// getting room info for this room
 		const roomType = rooms[roomName].name;
 		const itemPool = getFurnishings(roomType).wallEdge;
 		// get required items first
 		let requiredItems: string[] = [];
-		itemPool.filter(item => item.count).forEach(item => {
-			if (item.count) {
-				for (let i = 0; i < item.count; i++) {
-					requiredItems.push(item.item);
+		itemPool
+			.filter((item) => item.count)
+			.forEach((item) => {
+				if (item.count) {
+					for (let i = 0; i < item.count; i++) {
+						requiredItems.push(item.item);
+					}
 				}
-			}
-		});
+			});
 		requiredItems = scrambleArray(requiredItems);
 		// get wall info for this room
 		const walls = getWalls(rooms[roomName].floors);
 		// state stuff
 		let doodads = [];
 		let remainingWalls = Object.entries(walls).map(([wallDir, arr]) => {
-			return arr.map(item => {
+			return arr.map((item) => {
 				return Object.assign({ wallDir }, item);
 			});
 		});
@@ -234,10 +238,11 @@ export const makeRoomsWithSeed = (seed: number): Room[] => {
 			let targetWallIndex = randomIndex(remainingWalls.length);
 			let targetWall = remainingWalls.splice(targetWallIndex, 1)[0];
 			let wallDir = targetWall[0].wallDir;
-			let isExteriorWall = ROOMS[roomName].exteriorWalls.includes(wallDir)
-			if ( // if it can only go on an exterior wall, reroll (might infinite loop; TODO: FIX THIS)
-				FURNISHINGS[insertName].placement === 'exteriorWall'
-				&& !isExteriorWall
+			let isExteriorWall = ROOMS[roomName].exteriorWalls.includes(wallDir);
+			if (
+				// if it can only go on an exterior wall, reroll (might infinite loop; TODO: FIX THIS)
+				FURNISHINGS[insertName].placement === 'exteriorWall' &&
+				!isExteriorWall
 			) {
 				remainingWalls.push(targetWall);
 				// put furniture back at the bottom of the queue
@@ -250,18 +255,17 @@ export const makeRoomsWithSeed = (seed: number): Room[] => {
 			requiredItems.shift();
 			let compositeInsertInfo = Object.assign({ name: insertName }, FURNISHINGS[insertName]);
 			let insertWidth = compositeInsertInfo.w;
-			if (insertWidth > targetWall.length) { continue; }
+			if (insertWidth > targetWall.length) {
+				continue;
+			}
 			let insertInfo = insertItemIntoWall(targetWall, insertWidth);
 			doodads.push({
 				wallTiles: insertInfo.usedWall,
 				furniture: compositeInsertInfo,
 			});
-			remainingWalls = [
-				...remainingWalls,
-				...insertInfo.remainingWalls
-			];
+			remainingWalls = [...remainingWalls, ...insertInfo.remainingWalls];
 		}
-		doodads = doodads.filter(doodad => {
+		doodads = doodads.filter((doodad) => {
 			return doodad.furniture.name !== 'EMPTY';
 		});
 		rooms[roomName].furnishings = doodads.map((doodad): Furnishing => {
@@ -296,7 +300,7 @@ export const makeRoomsWithSeed = (seed: number): Room[] => {
 	return Object.values(rooms);
 };
 
-let seed = 1234;
+let seed = '1234';
 const mapWithRooms = makeRoomsWithSeed(seed);
 
 console.log(JSON.stringify(mapWithRooms, null, '\t'));

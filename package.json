@@ -16,7 +16,6 @@
     "@babylonjs/core": "^6.27.1",
     "@babylonjs/gui": "^6.27.1",
     "@babylonjs/loaders": "^6.27.1",
-    "crc32": "^0.2.2",
     "seedrandom": "^3.0.5"
   },
   "devDependencies": {
