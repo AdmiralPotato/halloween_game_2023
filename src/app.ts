@@ -198,7 +198,7 @@ class App {
 		let rooms: Room[] | null;
 		Promise.all(assetLoadingPromises).then(() => {
 			console.log('What is meshMap after all is loaded?', meshMap);
-			initLevelFromSeed('1234');
+			initLevelFromSeed('bob');
 			// scene.createDefaultCamera(true, true, true);
 		});
 
