@@ -185,7 +185,7 @@ class App {
 			lastLogicTick = now;
 		};
 		// Let's separate out a game state loop even if rendering is hitching.
-		setInterval(gameLogicLoop, 1000 / 60);
+		scene.registerBeforeRender(gameLogicLoop);
 		engine.runRenderLoop(() => {
 			engine.resize();
 			scene.render();
