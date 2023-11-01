@@ -25,6 +25,13 @@ export const populateCenterObjects = (roomData: RoomWorkingData, roomType: strin
 	let decidedStuff: ItemWithContext[] = [];
 	let floors = roomData.floors;
 	let requiredCenterStuff = possibleStuff.filter(item => item.count);
+	let floorCoords = floors.map(floor => {
+		return {
+			x: floor.x, y: floor.y,
+		}
+	})
+	let floorRange: XYRange = getXYRangeFromXYCoords(floorCoords);
+	let floorCenter: XYCoord = getCenterForXYRange(floorRange);
 
 	// try center stuff
 	let center = requiredCenterStuff.filter(item => {
@@ -45,10 +52,10 @@ export const populateCenterObjects = (roomData: RoomWorkingData, roomType: strin
 		decidedStuff.push(normalizedItem);
 	});
 	let print = printRoom(roomData.floors, decidedStuff);
-	console.log(print);
+	// console.log(print);
 	return decidedStuff;
 };
 
 
-let test = populateCenterObjects(testRoom, 'livingRoom');
+let test = populateCenterObjects(testRoom, 'diningRoom');
 
