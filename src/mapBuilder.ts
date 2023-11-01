@@ -373,9 +373,9 @@ export const buildMapFromSeed = (seed: string) => {
 
 	// getting it ready to hand off
 	const tileAssets = {
-		door: 'doorway_00',
-		wall: 'wall_00',
-		floor: 'floor_00.001',
+		door: 'doorway',
+		wall: 'wall',
+		floor: 'floor',
 	}
 	Object.keys(roomWorkingData).forEach((roomID) => {
 		let workingRoomTileEdges = roomTileEdges

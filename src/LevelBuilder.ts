@@ -88,7 +88,7 @@ export class LevelBuilder {
 				shadowGenerator.addShadowCaster(doodad);
 			});
 			room.doors.forEach((door) => {
-				const doodad = meshMap['doorway_00'].createInstance(door.name);
+				const doodad = meshMap['doorway'].createInstance(door.name);
 				floor.addChild(doodad);
 				doodad.position.x = door.x;
 				doodad.position.z = door.y;
@@ -105,7 +105,7 @@ export class LevelBuilder {
 						floorOrWallConfig.asset,
 					);
 				}
-				const doodad = meshMap[floorOrWallConfig.asset || 'wall_00'].createInstance(
+				const doodad = meshMap[floorOrWallConfig.asset || 'wall'].createInstance(
 					floorOrWallConfig.name || Math.random().toString(),
 				);
 				floor.addChild(doodad);
