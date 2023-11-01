@@ -53,6 +53,8 @@ class App {
 			sideOrientation: Mesh.DOUBLESIDE,
 		});
 		playerCharacterHolder.addChild(actionIntersectMeshParent);
+		let playerCharacterMesh: Mesh | null = null;
+		let playerCharacterMaterial: StandardMaterial | null = null;
 		actionIntersectMeshParent.addChild(actionIntersectMesh);
 		actionIntersectMesh.billboardMode = 3;
 		const mat = new StandardMaterial('actionIntersectMeshMaterial');
@@ -117,6 +119,9 @@ class App {
 		const magePromise = SceneLoader.ImportMeshAsync(null, './assets/', 'mage.glb', scene).then(
 			(imported) => {
 				const mage = imported.meshes[0];
+				playerCharacterMesh = (scene.getMeshById('mage_mesh') as Mesh) || null;
+				playerCharacterMaterial =
+					(playerCharacterMesh?.material as StandardMaterial) || null;
 				// console.log('What is a MAGE(imported)?!?', imported);
 				const mageAnimationGroup = imported.animationGroups[0];
 				mageAnimationGroup.stop();
@@ -287,10 +292,13 @@ class App {
 			if (buttonStateMap.right) {
 				motionVector.x -= movementSpeed;
 			}
-			if (buttonStateMap.action && playerCharacterHolder.position.y < 0.05) {
+			if (buttonStateMap.action) {
 				buttonStateMap.action = false;
 				didAction = true;
-				motionVector.y += movementSpeed * 30;
+				if (playerCharacterMaterial) {
+					playerCharacterMaterial.alpha = 0;
+					console.log('What is playerCharacterMaterial?', playerCharacterMaterial);
+				}
 			}
 			if (buttonStateMap.seed) {
 				buttonStateMap.seed = false;
@@ -322,6 +330,9 @@ class App {
 			}
 			if (playerCharacterHolder.position.y > 0.05) {
 				playerCharacterHolder.position.y *= 0.8;
+			}
+			if (playerCharacterMaterial && playerCharacterMaterial.alpha !== 1) {
+				playerCharacterMaterial.alpha = Math.min(playerCharacterMaterial.alpha + 0.1, 1);
 			}
 
 			playerCharacterHolder.getWorldMatrix().getTranslationToRef(cameraTarget.position);
