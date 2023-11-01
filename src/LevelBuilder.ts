@@ -32,6 +32,7 @@ export interface Furnishing {
 	h: number;
 	rot: number;
 	hasCandy: boolean;
+	checked?: boolean;
 }
 
 export interface Room {
@@ -43,6 +44,8 @@ export interface Room {
 	doors: Door[];
 	floors: Floor[];
 	furnishings: Furnishing[];
+	roomMesh?: Mesh;
+	furnishingMeshes?: Mesh[];
 }
 
 export class LevelBuilder {
@@ -72,8 +75,9 @@ export class LevelBuilder {
 			// floor.renderOutline = true;
 			// floor.outlineColor = new Color3(0, 1, 0);
 			// floor.outlineWidth = 0.01;
+			room.roomMesh = floor;
 			base.addChild(floor);
-			room.furnishings.forEach((furnishing, index) => {
+			room.furnishingMeshes = room.furnishings.map((furnishing, index) => {
 				const doodad = meshMap[furnishing.name].clone(
 					`${room.name}-furnishing-${index}-${furnishing.name}`,
 				);
@@ -81,13 +85,9 @@ export class LevelBuilder {
 				doodad.position.x = furnishing.x;
 				doodad.position.z = furnishing.y;
 				doodad.rotate(Axis.Y, furnishing.rot * RIGHT_ANGLE);
-				doodad.renderOutline = true;
-				doodad.outlineColor = furnishing.hasCandy
-					? new Color3(1, 0, 0)
-					: new Color3(0, 0, 1);
-				doodad.outlineWidth = 0.05;
 				doodad.receiveShadows = true;
 				shadowGenerator.addShadowCaster(doodad);
+				return doodad;
 			});
 			room.doors.forEach((door) => {
 				const doodad = meshMap['doorway'].createInstance(door.name);
