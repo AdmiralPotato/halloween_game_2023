@@ -1,37 +1,28 @@
-import { NullEngineOptions } from '@babylonjs/core';
 import { AdvancedDynamicTexture, Button } from '@babylonjs/gui';
+// @ts-ignore
+import JoystickController from 'joystick-controller';
+
+const joystick = new JoystickController({
+	leftToRight: true,
+	bottomToUp: true,
+	radius: 48,
+	maxRange: 48,
+	x: '64px',
+	y: '64px',
+	distortion: true,
+});
 
 export function init() {
 	const advancedTexture = AdvancedDynamicTexture.CreateFullscreenUI('UI');
-	const seedButton = Button.CreateSimpleButton('seedButton', 'Enter Seed');
-	seedButton.width = '128px';
-	seedButton.height = '48px';
-	seedButton.verticalAlignment = 0;
-	seedButton.horizontalAlignment = 0;
-	seedButton.color = 'white';
-	seedButton.cornerRadius = 4;
-	seedButton.background = '#666';
-	seedButton.paddingTop = 8;
-	seedButton.paddingBottom = 8;
-	seedButton.paddingLeft = 8;
-	seedButton.paddingRight = 8;
-	advancedTexture.addControl(seedButton);
-
 	const buttonConfigs = [
-		/*
-		{ symbol: '↑', key: 'w', x: -64, y: -64, name: 'up' },
-		{ symbol: '→', key: 'd', x: 0, y: 0, name: 'right' },
-		{ symbol: '↓', key: 's', x: -64, y: 0, name: 'down' },
-		{ symbol: '←', key: 'a', x: -128, y: 0, name: 'left' },
-		*/
-		{ symbol: '↲', key: 'Space', x: -24, y: -24, name: 'action', alignX: 1, alignY: 1 },
+		{ symbol: '🍬', x: -24, y: -24, name: 'action', alignX: 1, alignY: 1 },
+		{ symbol: '🎥', x: 8, y: 8, name: 'camera', alignX: 0, alignY: 0 },
+		{ symbol: '🌱', x: -8, y: 8, name: 'seed', alignX: 1, alignY: 0 },
 	];
 	const buttonMap: Record<string, Button | null> = {
-		up: <Button | null>null,
-		right: <Button | null>null,
-		down: <Button | null>null,
-		left: <Button | null>null,
 		action: <Button | null>null,
+		camera: <Button | null>null,
+		seed: <Button | null>null,
 	};
 	buttonConfigs.forEach((config) => {
 		const button = Button.CreateSimpleButton(config.name, config.symbol);
@@ -53,7 +44,7 @@ export function init() {
 	});
 
 	return {
-		seedButton,
 		buttonMap,
+		joystick,
 	};
 }

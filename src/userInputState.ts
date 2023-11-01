@@ -1,22 +1,4 @@
 import * as UI from './UserInterface';
-// @ts-ignore
-import JoystickController from 'joystick-controller';
-
-const joystick = new JoystickController({
-	leftToRight: true,
-	bottomToUp: true,
-	radius: 48,
-	maxRange: 48,
-	x: '64px',
-	y: '64px',
-	distortion: true,
-});
-
-type VoidishCallback = () => void;
-interface UserInputConfig {
-	respawnLevelFromStringSeed: VoidishCallback;
-	loadDevToolsCallback: VoidishCallback;
-}
 
 const keyButtonMap: Record<string, string | undefined> = {
 	a: 'left',
@@ -29,6 +11,9 @@ const keyButtonMap: Record<string, string | undefined> = {
 	ArrowRight: 'right',
 	' ': 'action',
 	Enter: 'action',
+	'`': 'camera',
+	'~': 'camera',
+	Escape: 'seed',
 };
 const buttonStateMap: Record<string, boolean | undefined> = {
 	left: false,
@@ -36,6 +21,9 @@ const buttonStateMap: Record<string, boolean | undefined> = {
 	down: false,
 	right: false,
 	action: false,
+	camera: false,
+	seed: false,
+	devtools: false,
 };
 
 const buttonStateOn = (buttonName: string) => {
@@ -49,22 +37,19 @@ const buttonStateOff = (buttonName: string) => {
 	}
 };
 
-let loadDevToolsCallback: VoidishCallback | undefined;
-
 window.addEventListener('keydown', async (keydownEvent) => {
+	let buttonName = keyButtonMap[keydownEvent.key];
 	// hide/show the Inspector
 	// Shift+Ctrl+Alt+I
 	if (
 		keydownEvent.shiftKey &&
 		keydownEvent.ctrlKey &&
 		keydownEvent.altKey &&
-		keydownEvent.key === 'I' &&
-		loadDevToolsCallback
+		keydownEvent.key === 'I'
 	) {
-		loadDevToolsCallback();
+		buttonName = 'devTools';
 	}
 	// console.log('keydownEvent', keydownEvent);
-	const buttonName = keyButtonMap[keydownEvent.key];
 	if (buttonName) {
 		buttonStateOn(buttonName);
 	}
@@ -77,12 +62,8 @@ window.addEventListener('keyup', (keydownEvent) => {
 	}
 });
 
-export const setupUserInput = (config: UserInputConfig) => {
-	const { seedButton, buttonMap } = UI.init();
-
-	loadDevToolsCallback = config.loadDevToolsCallback;
-
-	seedButton.onPointerUpObservable.add(config.respawnLevelFromStringSeed);
+export const setupUserInput = () => {
+	const { buttonMap, joystick } = UI.init();
 
 	Object.entries(buttonMap).forEach(([key, button]) => {
 		button?.onPointerDownObservable.add(() => buttonStateOn(key));

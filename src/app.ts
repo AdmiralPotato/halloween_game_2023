@@ -65,8 +65,21 @@ class App {
 		actionIntersectMeshParent.position.set(0, 0.5, 0.75);
 
 		const camera = new FollowCamera('Camera', Vector3.Zero(), scene, cameraTarget);
-		camera.radius = 8;
-		camera.heightOffset = 4;
+		let currentCameraStateIndex = 0;
+		const cameraConfigurations = [
+			{ radius: 4, heightOffset: 1.5, name: 'play' },
+			{ radius: 8, heightOffset: 4, name: 'edit' },
+			{ radius: 4, heightOffset: 9, name: 'mgs' },
+		];
+		const initCameraState = () => {
+			Object.assign(camera, cameraConfigurations[currentCameraStateIndex]);
+		};
+		initCameraState();
+		const toggleCameraMode = () => {
+			currentCameraStateIndex += 1;
+			currentCameraStateIndex %= cameraConfigurations.length;
+			initCameraState();
+		};
 		console.log('Camera', camera);
 		const hemisphereLight: HemisphericLight = new HemisphericLight(
 			'hemisphereLight',
@@ -90,6 +103,14 @@ class App {
 		const pullInDevTools = async () => {
 			await import('@babylonjs/core/Debug/debugLayer');
 			await import('@babylonjs/inspector');
+		};
+		const toggleDevTools = async () => {
+			await pullInDevTools();
+			if (scene.debugLayer.isVisible()) {
+				scene.debugLayer.hide();
+			} else {
+				await scene.debugLayer.show();
+			}
 		};
 
 		let characterAnimations: Record<string, AnimationGroup> | null = null;
@@ -181,17 +202,7 @@ class App {
 			// scene.createDefaultCamera(true, true, true);
 		});
 
-		const { buttonStateMap, joystick } = setupUserInput({
-			respawnLevelFromStringSeed,
-			loadDevToolsCallback: async () => {
-				await pullInDevTools();
-				if (scene.debugLayer.isVisible()) {
-					scene.debugLayer.hide();
-				} else {
-					await scene.debugLayer.show();
-				}
-			},
-		});
+		const { buttonStateMap, joystick } = setupUserInput();
 
 		const isVectorInsideMesh = (point: Vector3, room: Mesh): boolean => {
 			return room.getBoundingInfo().intersectsPoint(point);
@@ -280,6 +291,18 @@ class App {
 				buttonStateMap.action = false;
 				didAction = true;
 				motionVector.y += movementSpeed * 30;
+			}
+			if (buttonStateMap.seed) {
+				buttonStateMap.seed = false;
+				respawnLevelFromStringSeed();
+			}
+			if (buttonStateMap.camera) {
+				buttonStateMap.camera = false;
+				toggleCameraMode();
+			}
+			if (buttonStateMap.devTools) {
+				buttonStateMap.devTools = false;
+				toggleDevTools();
 			}
 			if (joystick.distance !== 0) {
 				motionVector.x += (-joystick.x / joystick.options.maxRange) * movementSpeed;
