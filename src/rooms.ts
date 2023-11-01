@@ -15,7 +15,6 @@ export interface RoomWorkingData {
 	doorCoords: XYCoord[];
 	name: string;
 	roomID: string;
-	floorTiles: Tile[];
 	doors: Tile[];
 	floors: Tile[];
 	furnishings: Furnishing[];
@@ -67,6 +66,7 @@ export interface Tile {
 	asset: string;
 	compositeInfo: string;
 	name: string;
+	type: string;
 	x: number;
 	y: number;
 	rot: number;
@@ -88,7 +88,6 @@ export const buildRoom = (roomID: string): RoomWorkingData => {
 		doorCoords: [],
 		name: '',
 		roomID: roomID,
-		floorTiles: [],
 		floors: [],
 		doors: [],
 		furnishings: [],
