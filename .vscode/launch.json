@@ -60,6 +60,25 @@
 				"<node_internals>/**",
 				"node_modules/**"
 			]
+		},
+		{
+			"name": "RoomFurnishing",
+			"type": "node",
+			"request": "launch",
+			"runtimeExecutable": "node",
+			"runtimeArgs": [
+				"--experimental-specifier-resolution=node",
+				"--loader",
+				"ts-node/esm",
+				"./src/roomFurnishing.ts"
+			],
+			"args": [],
+			"cwd": "${workspaceRoot}",
+			"internalConsoleOptions": "openOnSessionStart",
+			"skipFiles": [
+				"<node_internals>/**",
+				"node_modules/**"
+			]
 		}
 	]
 }
