@@ -3,7 +3,7 @@ import { ISceneLoaderAsyncResult, SceneLoader } from '@babylonjs/core/Loading/sc
 import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
-import { Vector3, type Vector4 } from '@babylonjs/core/Maths/math.vector';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
@@ -13,22 +13,19 @@ import '@babylonjs/core/Helpers/sceneHelpers';
 import '@babylonjs/loaders/glTF/2.0/glTFLoader';
 import '@babylonjs/core/Rendering/outlineRenderer';
 
-import * as UI from './UserInterface';
 import { Room, LevelBuilder } from './LevelBuilder';
 import { makeRoomsWithSeed } from './levelGenerator';
 
 import './styles.css';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import {
-	AnimationGroup,
-	CreatePlane,
-	Node,
-	Plane,
-	ShadowGenerator,
-	Texture,
-} from '@babylonjs/core';
+import { AnimationGroup, ShadowGenerator, Texture } from '@babylonjs/core';
+import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { setupUserInput } from './userInputState';
+
+const COLOR_HIGHLIGHTED = new Color3(0, 1, 0);
+const COLOR_YES_CANDY = new Color3(1, 0, 0);
+const COLOR_NO_CANDY = new Color3(0, 0, 1);
 
 class App {
 	constructor() {
@@ -47,7 +44,7 @@ class App {
 		material.diffuseColor.set(0.2, 0.2, 0.2);
 		material.specularColor.set(0, 0, 0);
 		let level: Mesh | null = null;
-		let firstRoom: Room | null = null;
+		let currentRoom: Room | null = null;
 		const playerCharacterHolder = new Mesh('playerCharacterHolder', scene);
 		const cameraTarget = new Mesh('cameraTarget', scene);
 		const actionIntersectMeshParent = new Mesh('actionIntersectMeshParent');
@@ -139,8 +136,8 @@ class App {
 			if (level) {
 				level.dispose();
 			}
-			firstRoom = rooms[5];
-			playerCharacterHolder.position.set(firstRoom.x, 0, firstRoom.y);
+			currentRoom = rooms[0];
+			playerCharacterHolder.position.set(currentRoom.x, 0, currentRoom.y);
 			level = LevelBuilder.build(rooms, meshMap, scene, shadowGenerator);
 			scene.addMesh(level);
 		};
@@ -173,9 +170,10 @@ class App {
 		).then(addImportedToMeshMap);
 
 		const assetLoadingPromises = [magePromise, environmentPromise, doodadsPromise];
+		let rooms: Room[] | null;
 		Promise.all(assetLoadingPromises).then(() => {
 			console.log('What is meshMap after all is loaded?', meshMap);
-			const rooms = makeRoomsWithSeed('1234') as Room[];
+			rooms = makeRoomsWithSeed('1234') as Room[];
 			makeLevelFromRooms(rooms);
 			// scene.createDefaultCamera(true, true, true);
 		});
@@ -196,18 +194,20 @@ class App {
 			return room.getBoundingInfo().intersectsPoint(point);
 		};
 		const hideRoomsPlayerIsNotInside = () => {
-			const rooms = level?.getChildren();
 			if (rooms) {
 				rooms.forEach((room) => {
-					const isEnabled = room.isEnabled();
-					const isPlayerInRoom = isVectorInRoom(
-						playerCharacterHolder.position,
-						room as Mesh,
-					);
+					const mesh = room.roomMesh;
+					if (!mesh) {
+						return; // can't intersect with mesh that's missing
+					}
+					const isEnabled = mesh.isEnabled();
+					const isPlayerInRoom = isVectorInRoom(playerCharacterHolder.position, mesh);
 					if (isEnabled && !isPlayerInRoom) {
-						room.setEnabled(false);
+						mesh.setEnabled(false);
 					} else if (!isEnabled && isPlayerInRoom) {
-						room.setEnabled(true);
+						mesh.setEnabled(true);
+						currentRoom = room;
+						console.log('currentRoom: ', currentRoom);
 					}
 				});
 			}
@@ -217,11 +217,45 @@ class App {
 		const motionDrag = 0.85;
 		const motionDragVector = new Vector3(motionDrag, motionDrag, motionDrag);
 		let motionVector = Vector3.Zero();
+
+		const doActionIntersect = (didAction: boolean) => {
+			const interactVector = actionIntersectMesh
+				.getWorldMatrix()
+				.getTranslationToRef(Vector3.Zero());
+			if (currentRoom?.furnishingMeshes) {
+				currentRoom?.furnishingMeshes.forEach((doodad, index) => {
+					const furnishing = currentRoom?.furnishings[index];
+					if (!furnishing) {
+						throw new Error('Somehow we dont have furnishing???');
+					}
+					const intersects = doodad.getBoundingInfo().intersectsPoint(interactVector);
+					if (intersects) {
+						// console.log('doodad intersects!', doodad);
+						doodad.renderOutline = true;
+						doodad.outlineWidth = 0.05;
+						if (!furnishing.checked) {
+							doodad.outlineColor = COLOR_HIGHLIGHTED;
+							if (didAction) {
+								furnishing.checked = true;
+								doodad.outlineColor = furnishing.hasCandy
+									? COLOR_YES_CANDY
+									: COLOR_NO_CANDY;
+							}
+						}
+					} else {
+						if (!furnishing.checked) {
+							doodad.renderOutline = false;
+						}
+					}
+				});
+			}
+		};
+
 		const gameLogicLoop = () => {
 			const now = window.performance.now();
 			// should be in the scale of seconds?
 			const delta = (now - lastLogicTick) / 1000;
-
+			let didAction = false;
 			// console.log('buttonStateMap', buttonStateMap);
 			const movementSpeed = delta * 0.8;
 			if (buttonStateMap.up) {
@@ -238,6 +272,7 @@ class App {
 			}
 			if (buttonStateMap.action && playerCharacterHolder.position.y < 0.05) {
 				buttonStateMap.action = false;
+				didAction = true;
 				motionVector.y += movementSpeed * 30;
 			}
 			if (joystick.distance !== 0) {
@@ -263,6 +298,8 @@ class App {
 			playerCharacterHolder.getWorldMatrix().getTranslationToRef(cameraTarget.position);
 			hideRoomsPlayerIsNotInside();
 			actionIntersectMesh.rotate(new Vector3(0, 0, 1), delta * 5);
+
+			doActionIntersect(didAction);
 
 			lastLogicTick = now;
 		};
