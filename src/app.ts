@@ -19,7 +19,7 @@ import { makeRoomsWithSeed } from './levelGenerator';
 
 import './styles.css';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import { ShadowGenerator } from '@babylonjs/core';
+import { AnimationGroup, ShadowGenerator } from '@babylonjs/core';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { setupUserInput } from './userInputState';
 
@@ -72,11 +72,36 @@ class App {
 			await import('@babylonjs/inspector');
 		};
 
+		let characterAnimations: Record<string, AnimationGroup> | null = null;
 		const magePromise = SceneLoader.ImportMeshAsync(null, './assets/', 'mage.glb', scene).then(
 			(imported) => {
 				const mage = imported.meshes[0];
-				console.log('What is a MAGE?!?', imported);
+				// console.log('What is a MAGE(imported)?!?', imported);
+				const mageAnimationGroup = imported.animationGroups[0];
+				mageAnimationGroup.stop();
+				// console.log('What is a mageAnimationGroup?', mageAnimationGroup);
+				const mageSkeleton = imported.skeletons[0];
+				characterAnimations = {
+					idle: Object.assign(mageAnimationGroup.clone('Idle'), {
+						_loopAnimation: true,
+						_from: 0,
+						_to: 374,
+						_isAdditive: false,
+					}) as AnimationGroup,
+					run: Object.assign(mageAnimationGroup.clone('Idle'), {
+						_loopAnimation: true,
+						_from: 375,
+						_to: 413,
+						_isAdditive: false,
+					}) as AnimationGroup,
+				};
+				characterAnimations.idle.start(true);
+				characterAnimations.run.start(true);
+				characterAnimations.run.weight = 0;
+				// animations.run.loopAnimation = true;
+				console.log('What is animations?', characterAnimations);
 				const mageTransformNode = scene.getTransformNodeById('mage_bones');
+				console.log('What is a MAGE?!?', mageTransformNode);
 				mageTransformNode?.position.set(0, 0, 0);
 				// mageTransformNode?.scaling.set(4, 4, 4);
 				mage.receiveShadows = true;
@@ -196,7 +221,13 @@ class App {
 				motionVector.z += (-joystick.y / joystick.options.maxRange) * movementSpeed;
 			}
 			motionVector.multiplyInPlace(motionDragVector);
-			if (motionVector.length() > 0.005) {
+			const motionLength = motionVector.length();
+			if (characterAnimations) {
+				let ratio = Math.max(0, Math.min(1, motionLength / movementSpeed));
+				characterAnimations.idle.weight = 1 - ratio;
+				characterAnimations.run.weight = ratio;
+			}
+			if (motionLength > 0.005) {
 				playerCharacterHolder.position.addInPlace(motionVector);
 				let currentAngle = -Math.atan2(motionVector.z, motionVector.x) + Math.PI / 2;
 				playerCharacterHolder.rotation.set(0, currentAngle, 0);
