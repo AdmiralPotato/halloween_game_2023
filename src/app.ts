@@ -141,10 +141,14 @@ class App {
 			level = LevelBuilder.build(rooms, meshMap, scene, shadowGenerator);
 			scene.addMesh(level);
 		};
+
+		const initLevelFromSeed = (seedString: string) => {
+			rooms = makeRoomsWithSeed(seedString);
+			makeLevelFromRooms(rooms);
+		};
 		const respawnLevelFromStringSeed = () => {
 			const seedString = window.prompt('GIVE SEED') || '';
-			const rooms = makeRoomsWithSeed(seedString);
-			makeLevelFromRooms(rooms);
+			initLevelFromSeed(seedString);
 		};
 		const addImportedToMeshMap = (imported: ISceneLoaderAsyncResult) => {
 			imported.meshes.forEach((mesh) => {
@@ -173,8 +177,7 @@ class App {
 		let rooms: Room[] | null;
 		Promise.all(assetLoadingPromises).then(() => {
 			console.log('What is meshMap after all is loaded?', meshMap);
-			const rooms = makeRoomsWithSeed('bob') as Room[];
-			makeLevelFromRooms(rooms);
+			initLevelFromSeed('1234');
 			// scene.createDefaultCamera(true, true, true);
 		});
 
@@ -190,7 +193,7 @@ class App {
 			},
 		});
 
-		const isVectorInRoom = (point: Vector3, room: Mesh): boolean => {
+		const isVectorInsideMesh = (point: Vector3, room: Mesh): boolean => {
 			return room.getBoundingInfo().intersectsPoint(point);
 		};
 		const hideRoomsPlayerIsNotInside = () => {
@@ -201,13 +204,16 @@ class App {
 						return; // can't intersect with mesh that's missing
 					}
 					const isEnabled = mesh.isEnabled();
-					const isPlayerInRoom = isVectorInRoom(playerCharacterHolder.position, mesh);
+					const isPlayerInRoom = isVectorInsideMesh(playerCharacterHolder.position, mesh);
 					if (isEnabled && !isPlayerInRoom) {
 						mesh.setEnabled(false);
-					} else if (!isEnabled && isPlayerInRoom) {
-						mesh.setEnabled(true);
+						console.log();
+					} else if (isPlayerInRoom) {
+						if (!isEnabled) {
+							mesh.setEnabled(true);
+						}
 						currentRoom = room;
-						console.log('currentRoom: ', currentRoom);
+						// console.log('currentRoom: ', currentRoom);
 					}
 				});
 			}
@@ -228,7 +234,7 @@ class App {
 					if (!furnishing) {
 						throw new Error('Somehow we dont have furnishing???');
 					}
-					const intersects = doodad.getBoundingInfo().intersectsPoint(interactVector);
+					const intersects = isVectorInsideMesh(interactVector, doodad);
 					if (intersects) {
 						// console.log('doodad intersects!', doodad);
 						doodad.renderOutline = true;
