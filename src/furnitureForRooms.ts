@@ -66,7 +66,7 @@ export const printRoom = (tiles: Tile[], stuff: ItemWithContext[]): string => {
 		}
 		print.push(line);
 	}
-	console.log(print.join('\n'));
+	// console.log(print.join('\n'));
 	return print.join('\n');
 };
 
@@ -118,7 +118,7 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 	},
 	chair: {
 		placement: 'free', placementContext: '',
-		asset: 'armchair',
+		asset: 'chair',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	bed: {
@@ -128,12 +128,12 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 	},
 	endTable0: {
 		placement: 'free', placementContext: '',
-		asset: 'endtable_primitive0',
+		asset: 'endtable',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	endTable1: {
 		placement: 'free', placementContext: '',
-		asset: 'endtable_primitive1',
+		asset: 'endtable',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	candelabra: {
@@ -368,14 +368,16 @@ const getChildren: Record<string, Function> = {
 	},
 	diningTableHalf: (): ChildInfo[] => {
 		const missing = 0.05;
-		let children = ['n0', 'n1', 'n2', 'n3', 's0', 's1', 's2', 's3',].map(pos => {
+		let children: ChildInfo[] = [];
+		['n0', 'n1', 'n2', 'n3', 's0', 's1', 's2', 's3',].forEach(pos => {
 			let rot: number = pos.includes('n') ? 0 : 2;
-			return { item: rand() < missing ? 'EMPTY' : 'chair', pos, rot };
+			let insert = { item: rand() < missing ? 'EMPTY' : 'chair', pos, rot };
+			children.push(insert);
 		});
 		['n4', 'n5', 's4', 's5',].forEach(pos => {
 			children.push({ item: 'EMPTY', pos, rot: 0 })
-		})
-		children.push({ item: 'diningTableHalf', pos: 'e', rot: 2 });
+		});
+		children.push({ item: 'diningTableHalf', pos: 'w', rot: 2 });
 		return children;
 	},
 	// squareTable: () => { // NOTE: OLD STYLE OF DATA

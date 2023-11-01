@@ -65,8 +65,8 @@ class App {
 		actionIntersectMeshParent.position.set(0, 0.5, 0.75);
 
 		const camera = new FollowCamera('Camera', Vector3.Zero(), scene, cameraTarget);
-		camera.radius = 4;
-		camera.heightOffset = 2;
+		camera.radius = 8;
+		camera.heightOffset = 4;
 		console.log('Camera', camera);
 		const hemisphereLight: HemisphericLight = new HemisphericLight(
 			'hemisphereLight',
