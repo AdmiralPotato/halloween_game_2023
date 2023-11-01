@@ -388,6 +388,7 @@ export const buildMapFromSeed = (seed: string) => {
 				let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':floor' + '(' + tileInfo.compositeInfo + ')'
 				floorTiles.push({
 					name,
+					type: 'floor',
 					asset: tileAssets.floor,
 					x: tileInfo.pos.x,
 					y: tileInfo.pos.y,
@@ -406,6 +407,7 @@ export const buildMapFromSeed = (seed: string) => {
 					let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':wall-' + dir + '(' + tileInfo.compositeInfo + ')'
 					floorTiles.push({
 						name,
+						type: 'wall',
 						asset: tileAssets.wall,
 						x: tileInfo.pos.x,
 						y: tileInfo.pos.y,
@@ -423,6 +425,7 @@ export const buildMapFromSeed = (seed: string) => {
 			doorTiles.push({
 				name,
 				asset: '',
+				type: 'door',
 				x: tileInfo.pos.x,
 				y: tileInfo.pos.y,
 				rot: DIRECTIONS.indexOf(tileInfo.doorDir),
@@ -435,6 +438,7 @@ export const buildMapFromSeed = (seed: string) => {
 				let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':wallForCornerDoor' + '(' + tileInfo.compositeInfo + ')'
 				floorTiles.push({
 					name,
+					type: 'wall',
 					asset: tileAssets.wall,
 					x: tileInfo.pos.x,
 					y: tileInfo.pos.y,

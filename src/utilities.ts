@@ -1,6 +1,7 @@
 // @ts-ignore
 import seedrandom from 'seedrandom';
 import { Furnishing } from './LevelBuilder';
+import { Tile } from './rooms';
 
 let randomizer = seedrandom('');
 
@@ -25,6 +26,28 @@ export interface XYRange {
 	x: Range;
 	y: Range;
 }
+export const getXYRangeFromXYCoords = (tiles: Tile[]) => {
+	return tiles.map(tile => {
+		return {
+			x: { min: tile.x, max: tile.x },
+			y: { min: tile.y, max: tile.y }
+		};
+	}).reduce((range: XYRange, cur: XYRange) => {
+		return {
+			x: {
+				min: Math.min(range.x.min, cur.x.min),
+				max: Math.max(range.x.max, cur.x.max)
+			},
+			y: {
+				min: Math.min(range.y.min, cur.y.min),
+				max: Math.max(range.y.max, cur.y.max)
+			},
+		}
+	}, {
+		x: { min: Infinity, max: -Infinity },
+		y: { min: Infinity, max: -Infinity },
+	});
+};
 export const getCenterForXYRange = (range: XYRange): XYCoord => {
 	return {
 		x: (range.x.max + range.x.min) / 2,
@@ -33,7 +56,7 @@ export const getCenterForXYRange = (range: XYRange): XYCoord => {
 }
 export const averageXYCoords = (arr: XYCoord[]): XYCoord => {
 	let coordsSum = arr.reduce((sum, v) => {
-		return { x: sum.x + v.x, y: sum.x + v.x };
+		return { x: sum.x + v.x, y: sum.y + v.y };
 	}, { x: 0, y: 0 });
 	return {
 		x: coordsSum.x / arr.length,
@@ -44,6 +67,18 @@ export const translateXY = (coord: XYCoord, moveBy: XYCoord): XYCoord => {
 	return {
 		x: coord.x + moveBy.x,
 		y: coord.y + moveBy.y,
+	}
+}
+export const multiplyXYs = (coord: XYCoord, scaleXYBy: XYCoord): XYCoord => {
+	return {
+		x: coord.x * scaleXYBy.x,
+		y: coord.y * scaleXYBy.y,
+	}
+}
+export const scaleXY = (coord: XYCoord, scale: number): XYCoord => {
+	return {
+		x: coord.x * scale,
+		y: coord.y * scale,
 	}
 }
 export const compareXY = (coord1: XYCoord, coord2: XYCoord): boolean => {

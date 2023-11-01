@@ -41,6 +41,25 @@
 				"<node_internals>/**",
 				"node_modules/**"
 			]
+		},
+		{
+			"name": "FurnitureForRooms",
+			"type": "node",
+			"request": "launch",
+			"runtimeExecutable": "node",
+			"runtimeArgs": [
+				"--experimental-specifier-resolution=node",
+				"--loader",
+				"ts-node/esm",
+				"./src/furnitureForRooms.ts"
+			],
+			"args": [],
+			"cwd": "${workspaceRoot}",
+			"internalConsoleOptions": "openOnSessionStart",
+			"skipFiles": [
+				"<node_internals>/**",
+				"node_modules/**"
+			]
 		}
 	]
 }
