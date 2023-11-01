@@ -18,11 +18,13 @@ export function init() {
 	advancedTexture.addControl(seedButton);
 
 	const buttonConfigs = [
+		/*
 		{ symbol: '↑', key: 'w', x: -64, y: -64, name: 'up' },
 		{ symbol: '→', key: 'd', x: 0, y: 0, name: 'right' },
 		{ symbol: '↓', key: 's', x: -64, y: 0, name: 'down' },
 		{ symbol: '←', key: 'a', x: -128, y: 0, name: 'left' },
-		{ symbol: '↲', key: 'Space', x: 0, y: 0, name: 'action', alignX: 0, alignY: 1 },
+		*/
+		{ symbol: '↲', key: 'Space', x: -24, y: -24, name: 'action', alignX: 1, alignY: 1 },
 	];
 	const buttonMap: Record<string, Button | null> = {
 		up: <Button | null>null,

@@ -21,6 +21,7 @@ import './styles.css';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { ShadowGenerator } from '@babylonjs/core';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
+import { setupUserInput } from './userInputState';
 
 class App {
 	constructor() {
@@ -41,9 +42,11 @@ class App {
 		let level: Mesh | null = null;
 		let firstRoom: Room | null = null;
 		const playerCharacterHolder = new Mesh('playerCharacterHolder', scene);
+		const cameraTarget = new Mesh('cameraTarget', scene);
 
-		const camera = new FollowCamera('Camera', Vector3.Zero(), scene, playerCharacterHolder);
-		camera.heightOffset = 9;
+		const camera = new FollowCamera('Camera', Vector3.Zero(), scene, cameraTarget);
+		camera.radius = 4;
+		camera.heightOffset = 2;
 		console.log('Camera', camera);
 		const hemisphereLight: HemisphericLight = new HemisphericLight(
 			'hemisphereLight',
@@ -129,92 +132,89 @@ class App {
 			// scene.createDefaultCamera(true, true, true);
 		});
 
-		const { seedButton, buttonMap } = UI.init();
-		const keyButtonMap: Record<string, string | undefined> = {
-			a: 'left',
-			w: 'up',
-			s: 'down',
-			d: 'right',
-			ArrowLeft: 'left',
-			ArrowUp: 'up',
-			ArrowDown: 'down',
-			ArrowRight: 'right',
-			' ': 'action',
-			Enter: 'action',
-		};
-		const buttonStateMap: Record<string, boolean | undefined> = {
-			left: false,
-			up: false,
-			down: false,
-			right: false,
-			action: false,
-		};
-		window.addEventListener('keydown', async (keydownEvent) => {
-			// hide/show the Inspector
-			// Shift+Ctrl+Alt+I
-			if (
-				keydownEvent.shiftKey &&
-				keydownEvent.ctrlKey &&
-				keydownEvent.altKey &&
-				keydownEvent.key === 'I'
-			) {
+		const { buttonStateMap, joystick } = setupUserInput({
+			respawnLevelFromStringSeed,
+			loadDevToolsCallback: async () => {
 				await pullInDevTools();
 				if (scene.debugLayer.isVisible()) {
 					scene.debugLayer.hide();
 				} else {
 					await scene.debugLayer.show();
 				}
-			}
-			// console.log('keydownEvent', keydownEvent);
-			const buttonName = keyButtonMap[keydownEvent.key];
-			if (buttonName) {
-				buttonStateMap[buttonName] = true;
-			}
-		});
-		window.addEventListener('keyup', (keydownEvent) => {
-			// console.log('keydownEvent', keydownEvent);
-			const buttonName = keyButtonMap[keydownEvent.key];
-			if (buttonName) {
-				buttonStateMap[buttonName] = false;
-			}
-		});
-		const buttonStateOn = (buttonName: string) => {
-			if (buttonName) {
-				buttonStateMap[buttonName] = true;
-			}
-		};
-		const buttonStateOff = (buttonName: string) => {
-			if (buttonName) {
-				buttonStateMap[buttonName] = false;
-			}
-		};
-		seedButton.onPointerUpObservable.add(respawnLevelFromStringSeed);
-		Object.entries(buttonMap).forEach(([key, button]) => {
-			button?.onPointerDownObservable.add(() => buttonStateOn(key));
-			button?.onPointerUpObservable.add(() => buttonStateOff(key));
+			},
 		});
 
+		const isVectorInRoom = (point: Vector3, room: Mesh): boolean => {
+			return room.getBoundingInfo().intersectsPoint(point);
+		};
+		const hideRoomsPlayerIsNotInside = () => {
+			const rooms = level?.getChildren();
+			if (rooms) {
+				rooms.forEach((room) => {
+					const isEnabled = room.isEnabled();
+					const isPlayerInRoom = isVectorInRoom(
+						playerCharacterHolder.position,
+						room as Mesh,
+					);
+					if (isEnabled && !isPlayerInRoom) {
+						room.setEnabled(false);
+					} else if (!isEnabled && isPlayerInRoom) {
+						room.setEnabled(true);
+					}
+				});
+			}
+		};
+
+		let lastLogicTick = window.performance.now();
+		const motionDrag = 0.85;
+		const motionDragVector = new Vector3(motionDrag, motionDrag, motionDrag);
+		let motionVector = Vector3.Zero();
+		const gameLogicLoop = () => {
+			const now = window.performance.now();
+			// should be in the scale of seconds?
+			const delta = (now - lastLogicTick) / 1000;
+
+			// console.log('buttonStateMap', buttonStateMap);
+			const movementSpeed = delta * 1.05;
+			if (buttonStateMap.up) {
+				motionVector.z -= movementSpeed;
+			}
+			if (buttonStateMap.down) {
+				motionVector.z += movementSpeed;
+			}
+			if (buttonStateMap.left) {
+				motionVector.x += movementSpeed;
+			}
+			if (buttonStateMap.right) {
+				motionVector.x -= movementSpeed;
+			}
+			if (buttonStateMap.action) {
+				motionVector.y += movementSpeed * 4;
+			}
+			if (joystick.distance !== 0) {
+				motionVector.x += (-joystick.x / joystick.options.maxRange) * movementSpeed;
+				motionVector.z += (-joystick.y / joystick.options.maxRange) * movementSpeed;
+			}
+			motionVector.multiplyInPlace(motionDragVector);
+			if (motionVector.length() > 0.005) {
+				playerCharacterHolder.position.addInPlace(motionVector);
+				let currentAngle = -Math.atan2(motionVector.z, motionVector.x) + Math.PI / 2;
+				playerCharacterHolder.rotation.set(0, currentAngle, 0);
+			}
+			if (playerCharacterHolder.position.y > 0.05) {
+				playerCharacterHolder.position.y *= 0.8;
+			}
+
+			playerCharacterHolder.getWorldMatrix().getTranslationToRef(cameraTarget.position);
+			hideRoomsPlayerIsNotInside();
+
+			lastLogicTick = now;
+		};
+		// Let's separate out a game state loop even if rendering is hitching.
+		scene.registerBeforeRender(gameLogicLoop);
 		engine.runRenderLoop(() => {
 			engine.resize();
 			scene.render();
-			const { position } = playerCharacterHolder;
-			position.x += Math.sin((window.performance.now() * Math.PI) / 5000) / 100;
-			// console.log('buttonStateMap', buttonStateMap);
-			if (buttonStateMap.up) {
-				position.z -= 0.25;
-			}
-			if (buttonStateMap.down) {
-				position.z += 0.25;
-			}
-			if (buttonStateMap.left) {
-				position.x += 0.25;
-			}
-			if (buttonStateMap.right) {
-				position.x -= 0.25;
-			}
-			if (buttonStateMap.action) {
-				position.y += 0.25;
-			}
 		});
 	}
 }
