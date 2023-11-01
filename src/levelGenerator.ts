@@ -4,6 +4,8 @@ import { ROOM_CONTENTS, ROOMS, Tile } from './rooms';
 import { Furnishing } from './LevelBuilder';
 import { rand, randomIndex, scrambleArray, getRandomWithWeight, RandomWeight } from './utilities';
 import { Room } from './LevelBuilder';
+import { populateCenterObjects } from './roomFurnishing';
+import { FURNISHINGS2, ItemWithContext } from './furnitureForRooms';
 
 export const makeRoomsWithSeed = (seed: string): Room[] => {
 	const mapInfo = buildMapFromSeed(seed);
@@ -224,6 +226,25 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 				rot: rot,
 				hasCandy: rand() < 0.3,
 			};
+		});
+
+		const convertNewThingToOld = (thing: ItemWithContext) => {
+			rooms[roomID].furnishings.push({
+				label: '',
+				asset: thing.itemName,
+				name: FURNISHINGS2[thing.itemName].asset,
+				x: thing.itemCenterCoord.x,
+				y: thing.itemCenterCoord.y,
+				w: FURNISHINGS2[thing.itemName].dimensions.width,
+				d: FURNISHINGS2[thing.itemName].dimensions.depth,
+				h: FURNISHINGS2[thing.itemName].dimensions.height,
+				rot: thing.rot,
+				hasCandy: rand() < 0.3,
+			});
+		};
+		populateCenterObjects(rooms[roomID], roomType).map(newThing => {
+			convertNewThingToOld(newThing);
+			newThing.children.forEach(child => convertNewThingToOld(child));
 		});
 	});
 	return Object.values(rooms);

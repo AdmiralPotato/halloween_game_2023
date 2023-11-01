@@ -9,7 +9,7 @@ export interface RoomInfo {
 export interface RoomWorkingData {
 	width: number;
 	depth: number;
-	cornerCoords: XYRange;
+	// cornerCoords: XYRange;
 	x: number;
 	y: number;
 	doorCoords: XYCoord[];
@@ -79,10 +79,10 @@ export const buildRoom = (roomID: string): RoomWorkingData => {
 	return {
 		width: randomFromRange(ROOMS[roomID].defaultSize.x),
 		depth: randomFromRange(ROOMS[roomID].defaultSize.y),
-		cornerCoords: {
-			x: { min: NaN, max: NaN },
-			y: { min: NaN, max: NaN }
-		},
+		// cornerCoords: {
+		// 	x: { min: NaN, max: NaN },
+		// 	y: { min: NaN, max: NaN }
+		// },
 		x: NaN,
 		y: NaN,
 		doorCoords: [],

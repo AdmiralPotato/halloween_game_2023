@@ -1,9 +1,5 @@
-import { buildMapFromSeed } from './mapBuilder';
-import { FURNISHINGS } from './furnishings';
-import { ROOM_CONTENTS, ROOMS, RoomWorkingData, Tile } from './rooms';
-import { Furnishing } from './LevelBuilder';
-import { rand, randomIndex, scrambleArray, getRandomWithWeight, RandomWeight, getXYRangeFromXYCoords, translateXY, XYCoord, getRandomDir, getOppositeDir, DIRECTIONS, averageXYCoords, scaleXY } from './utilities';
-import { Room } from './LevelBuilder';
+import { Tile } from './rooms';
+import { rand, scrambleArray, getRandomWithWeight, getXYRangeFromXYCoords, translateXY, XYCoord, getOppositeDir, DIRECTIONS, averageXYCoords, scaleXY, compareXY, XYRange, getCenterForXYRange } from './utilities';
 
 const cNeighborMap: Record<string, Record<string, string>> = {
 	q: { nw: 'q', ne: 'w', sw: 'a', se: 's', },
@@ -44,19 +40,29 @@ const padRoom = (tiles: Tile[]): Tile[] => {
 	return ret;
 };
 
-const printRoom = (tiles: Tile[]): string => {
+export const printRoom = (tiles: Tile[], stuff: ItemWithContext[]): string => {
+	let hitBoxed = (stuff || []).map(item => item.occupiedCoords).flat();
+
 	let modifiedTiles = padRoom(tiles.filter(item => item.type === 'floor'));
-	let drawRange = getXYRangeFromXYCoords(modifiedTiles);
+	let drawRange: XYRange = getXYRangeFromXYCoords(modifiedTiles);
 	let print = [];
+	let roomCorners = getXYRangeFromXYCoords(tiles.map(tile => { return { x: tile.x, y: tile.y } }));
+	let roomCenter = getCenterForXYRange(roomCorners);
 	for (let y = drawRange.y.min; y <= drawRange.y.max; y++) {
 		let line = '';
 		for (let x = drawRange.x.min; x <= drawRange.x.max; x++) {
 			let thisSpot = modifiedTiles.filter(tile => tile.x === x && tile.y === y);
-			if (thisSpot.length === 1) { line += thisSpot[0].compositeInfo; }
-			else if (thisSpot.length < 1) { line += ' '; }
+			let value = '';
+			if (thisSpot.length === 1) { value = thisSpot[0].compositeInfo; }
+			else if (thisSpot.length < 1) { value = ' '; }
 			else {
-				line += '!';
+				value = '!';
 			}
+			let hit = hitBoxed.some(coord => compareXY(coord, { x, y, }));
+			if (hit) {
+				value = '\u001B[31m' + value + '\u001B[0m';
+			}
+			line += value;
 		}
 		print.push(line);
 	}
@@ -206,7 +212,7 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 		dimensions: { width: 2, depth: 1, height: 2 },
 	},
 	diningTableHalf: {
-		placement: 'wall', placementContext: '',
+		placement: 'center', placementContext: '',
 		asset: 'tableLongEnd',
 		dimensions: { width: 2, depth: 2, height: 1 },
 	},
@@ -247,7 +253,7 @@ const commonStuff: FurnitureWeight[] = [
 export const ROOM_CONTENTS2: Record<string, FurnitureWeight[]> = {
 	livingRoom: [
 		{ item: 'fireplace', weight: 0, count: 1 },
-		{ item: 'couchCenter', weight: 1, count: NaN },
+		{ item: 'couchCenter', weight: 0, count: 1 },
 		{ item: 'couchWall', weight: 1, count: NaN },
 		{ item: 'armChair', weight: 2, count: NaN },
 		{ item: 'bookcaseTallWide', weight: 1, count: NaN },
@@ -283,7 +289,7 @@ export const ROOM_CONTENTS2: Record<string, FurnitureWeight[]> = {
 		{ item: 'chest', weight: 1, count: NaN },
 		{ item: 'curtains', weight: 0, count: 2 },
 		{ item: 'couchWall', weight: 1, count: NaN },
-		{ item: 'couchCenter', weight: 4, count: NaN },
+		{ item: 'couchCenter', weight: 0, count: 1 },
 		{ item: 'armChair', weight: 2, count: NaN },
 		{ item: 'bookcaseTallWide', weight: 10, count: NaN },
 		{ item: 'bookcaseTallNarrow', weight: 8, count: NaN },
@@ -347,7 +353,7 @@ const getChildren: Record<string, Function> = {
 		];
 	},
 	couchCenter: (): ChildInfo[] => {
-		return rand() < 0.7 ? [] : [{ item: 'dresser', pos: 'n', rot: 2 }];
+		return rand() < 0 ? [] : [{ item: 'dresser', pos: 'n', rot: 2 }];
 	},
 	roundTable: (): ChildInfo[] => {
 		let dirs = scrambleArray(DIRECTIONS);
@@ -366,6 +372,9 @@ const getChildren: Record<string, Function> = {
 			let rot: number = pos.includes('n') ? 0 : 2;
 			return { item: rand() < missing ? 'EMPTY' : 'chair', pos, rot };
 		});
+		['n4', 'n5', 's4', 's5',].forEach(pos => {
+			children.push({ item: 'EMPTY', pos, rot: 0 })
+		})
 		children.push({ item: 'diningTableHalf', pos: 'e', rot: 2 });
 		return children;
 	},
@@ -382,7 +391,7 @@ const getChildren: Record<string, Function> = {
 };
 
 const spreadItemsOnAxis = (items: ItemWithContext[], axis: string, itemSize: number): ItemWithContext[] => {
-	if (items.length < 2) {
+	if (items.length < 1) {
 		return items;
 	}
 	let ret: ItemWithContext[] = JSON.parse(JSON.stringify(items));
@@ -392,16 +401,31 @@ const spreadItemsOnAxis = (items: ItemWithContext[], axis: string, itemSize: num
 	let initial = (-itemSize * (items.length - 1)) / 2
 	for (
 		let i = initial;
-		i < items.length - 1;
+		i < items.length - 2;
 		i += itemSize
 	) {
 		let thisTranslation = JSON.parse(JSON.stringify(rawTranslation));
 		thisTranslation[axis] = i;
 		translationSeries.push(thisTranslation);
 	}
+	let splitCollisions = items.length % 2 !== 0;
 	return ret.map((item: ItemWithContext, i: number) => {
-		item.itemCenterCoord.x = centerCoord.x + translationSeries[i].x;
-		item.itemCenterCoord.y = centerCoord.y + translationSeries[i].y;
+		let translation = translationSeries[i] || rawTranslation;
+		let x: number = centerCoord.x + translation.x;
+		let y: number = centerCoord.y + translation.y;
+		if (splitCollisions) {
+			let splitAmt = (itemSize - 1) / 2;
+			let occupiedCoords: XYCoord[] = [{ x: x, y: y }, { x: x, y: y }];
+			if (axis !== 'x' && axis !== 'y') { throw new Error("ASSERT LOL"); }
+			occupiedCoords[0][axis] += splitAmt;
+			occupiedCoords[1][axis] -= splitAmt;
+			item.occupiedCoords = occupiedCoords;
+		} else {
+			let occupiedCoords: XYCoord[] = [{ x: x, y: y }];
+			item.occupiedCoords = occupiedCoords;
+		}
+		item.itemCenterCoord.x = x;
+		item.itemCenterCoord.y = y;
 		return item;
 	});
 };
@@ -455,17 +479,17 @@ const fillOutChildrenFromParent = (parent: ItemWithContext): ItemWithContext[] =
 			finalChildren = finalChildren.concat(pivotChildren);
 		}
 	})
-	return finalChildren;
+	return finalChildren.filter(item => !(item.itemName === "EMPTY"));
 };
 
-interface ItemWithContext {
+export interface ItemWithContext {
 	occupiedCoords: XYCoord[];
 	itemCenterCoord: XYCoord;
 	itemName: string;
 	children: ItemWithContext[];
 	rot: number;
 };
-const getItemInfo = (itemName: string): ItemWithContext => {
+export const getItemInfo = (itemName: string): ItemWithContext => {
 	let info = FURNISHINGS2[itemName];
 	let occupiedCoords: XYCoord[] = [];
 	for (let y = 0; y < info.dimensions.depth; y++) {
@@ -481,7 +505,12 @@ const getItemInfo = (itemName: string): ItemWithContext => {
 		rot: 0,
 	};
 	// children!
-	parentInfo.children = JSON.parse(JSON.stringify(fillOutChildrenFromParent(parentInfo)));
+	let children = JSON.parse(JSON.stringify(fillOutChildrenFromParent(parentInfo)));
+	parentInfo.children = children;
+	children.forEach((child: ItemWithContext) => {
+		if (child.occupiedCoords.length)
+			parentInfo.occupiedCoords = parentInfo.occupiedCoords.concat(child.occupiedCoords);
+	})
 	return parentInfo;
 };
 
@@ -509,20 +538,24 @@ const pivotItemsAroundPoint = (items: ItemWithContext[], coord: XYCoord, turns: 
 	return items.map((item: ItemWithContext) => pivotItemAroundPoint(item, coord, turns));
 }
 
-// export const makeRoomsWithSeed = (seed: string): Room[] => {
-// 	const rooms = buildMapFromSeed(seed).rooms;
-// 	printRoom(rooms.a.floors);
+export const translateItemAndChildren = (item: ItemWithContext, translation: XYCoord): ItemWithContext => {
+	item.itemCenterCoord = translateXY(item.itemCenterCoord, translation);
+	item.occupiedCoords = item.occupiedCoords.map(inner => translateXY(inner, translation));
+	item.children = item.children.map(child => {
+		child.itemCenterCoord = translateXY(child.itemCenterCoord, translation);
+		child.occupiedCoords = child.occupiedCoords.map(inner => translateXY(inner, translation));
+		return child;
+	})
+	return item;
+}
 
-// 	return Object.values(rooms);
-// };
+// occupiedCoords: XYCoord[];
+// 	children: ItemWithContext[];
 
-// let seed = '1234';
-// const mapWithRooms = makeRoomsWithSeed(seed);
+// let test = getItemInfo("couchCenter");
+// console.log(test);
 
-let test = getItemInfo("diningTableHalf");
-console.log(test);
-
-fillOutChildrenFromParent(test)
+// fillOutChildrenFromParent(test)
 
 // console.log(JSON.stringify(mapWithRooms, null, '\t'));
-console.log('breakme');
+// console.log('breakme');

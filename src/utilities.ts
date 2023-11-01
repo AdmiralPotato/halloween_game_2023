@@ -26,8 +26,8 @@ export interface XYRange {
 	x: Range;
 	y: Range;
 }
-export const getXYRangeFromXYCoords = (tiles: Tile[]) => {
-	return tiles.map(tile => {
+export const getXYRangeFromXYCoords = (coords: XYCoord[]) => {
+	return coords.map(tile => {
 		return {
 			x: { min: tile.x, max: tile.x },
 			y: { min: tile.y, max: tile.y }
@@ -110,22 +110,13 @@ export interface RandomWeight {
 	count?: number;
 	item: string;
 }
-export const getRandomWithWeight = (input: RandomWeight[] | Record<string, number>): string => {
+export const getRandomWithWeight = (input: RandomWeight[]): string => {
 	const pickFrom: string[] = [];
-	if (Array.isArray(input)) {
-		// [{ item: itemName, weight: # }, {...}] version
-		input.forEach((entry: RandomWeight) => {
-			for (let i = 0; i < (entry.weight || 0); i++) {
-				pickFrom.push(entry.item);
-			}
-		});
-	} else {
-		// { itemName: #, ... } version
-		Object.entries(input).forEach(([key, count]) => {
-			for (let i = 0; i < count; i++) {
-				pickFrom.push(key);
-			}
-		});
-	}
+	// [{ item: itemName, weight: # }, {...}] version
+	input.forEach((entry: RandomWeight) => {
+		for (let i = 0; i < (entry.weight || 0); i++) {
+			pickFrom.push(entry.item);
+		}
+	});
 	return pickFrom[randomIndex(pickFrom.length)];
 };
