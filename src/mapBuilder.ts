@@ -504,4 +504,4 @@ export const buildMapFromSeed = (seed: string) => {
 	};
 };
 
-console.log(buildMapFromSeed('1234').printMap);
+console.log(buildMapFromSeed('bob').printMap);

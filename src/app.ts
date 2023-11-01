@@ -175,7 +175,7 @@ class App {
 		const assetLoadingPromises = [magePromise, environmentPromise, doodadsPromise];
 		Promise.all(assetLoadingPromises).then(() => {
 			console.log('What is meshMap after all is loaded?', meshMap);
-			const rooms = makeRoomsWithSeed('1234') as Room[];
+			const rooms = makeRoomsWithSeed('bob') as Room[];
 			makeLevelFromRooms(rooms);
 			// scene.createDefaultCamera(true, true, true);
 		});

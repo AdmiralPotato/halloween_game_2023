@@ -245,7 +245,7 @@ const commonStuff: FurnitureWeight[] = [
 	{ item: 'candelabra', weight: 2, count: NaN },
 	{ item: 'endTable0', weight: 2, count: NaN },
 	{ item: 'endTable1', weight: 2, count: NaN },
-	{ item: 'EMPTY', weight: 2, count: NaN },
+	{ item: 'EMPTY', weight: 1, count: NaN },
 	{ item: 'gargoyle', weight: 1, count: NaN },
 	{ item: 'painting', weight: 1, count: NaN },
 ]
