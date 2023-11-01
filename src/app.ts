@@ -45,7 +45,8 @@ class App {
 		const cameraTarget = new Mesh('cameraTarget', scene);
 
 		const camera = new FollowCamera('Camera', Vector3.Zero(), scene, cameraTarget);
-		camera.heightOffset = 9;
+		camera.radius = 4;
+		camera.heightOffset = 2;
 		console.log('Camera', camera);
 		const hemisphereLight: HemisphericLight = new HemisphericLight(
 			'hemisphereLight',
@@ -143,11 +144,31 @@ class App {
 			},
 		});
 
+		const isVectorInRoom = (point: Vector3, room: Mesh): boolean => {
+			return room.getBoundingInfo().intersectsPoint(point);
+		};
+		const hideRoomsPlayerIsNotInside = () => {
+			const rooms = level?.getChildren();
+			if (rooms) {
+				rooms.forEach((room) => {
+					const isEnabled = room.isEnabled();
+					const isPlayerInRoom = isVectorInRoom(
+						playerCharacterHolder.position,
+						room as Mesh,
+					);
+					if (isEnabled && !isPlayerInRoom) {
+						room.setEnabled(false);
+					} else if (!isEnabled && isPlayerInRoom) {
+						room.setEnabled(true);
+					}
+				});
+			}
+		};
+
 		let lastLogicTick = window.performance.now();
 		const motionDrag = 0.85;
 		const motionDragVector = new Vector3(motionDrag, motionDrag, motionDrag);
 		let motionVector = Vector3.Zero();
-		let lastAngle = 0;
 		const gameLogicLoop = () => {
 			const now = window.performance.now();
 			// should be in the scale of seconds?
@@ -168,7 +189,7 @@ class App {
 				motionVector.x -= movementSpeed;
 			}
 			if (buttonStateMap.action) {
-				motionVector.y += movementSpeed;
+				motionVector.y += movementSpeed * 4;
 			}
 			if (joystick.distance !== 0) {
 				motionVector.x += (-joystick.x / joystick.options.maxRange) * movementSpeed;
@@ -180,8 +201,13 @@ class App {
 				let currentAngle = -Math.atan2(motionVector.z, motionVector.x) + Math.PI / 2;
 				playerCharacterHolder.rotation.set(0, currentAngle, 0);
 			}
+			if (playerCharacterHolder.position.y > 0.05) {
+				playerCharacterHolder.position.y *= 0.8;
+			}
 
 			playerCharacterHolder.getWorldMatrix().getTranslationToRef(cameraTarget.position);
+			hideRoomsPlayerIsNotInside();
+
 			lastLogicTick = now;
 		};
 		// Let's separate out a game state loop even if rendering is hitching.

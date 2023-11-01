@@ -58,7 +58,7 @@ export class LevelBuilder {
 				'floor-' + room.name,
 				{
 					width: room.width,
-					height: 0.01,
+					height: 2,
 					depth: room.depth,
 				},
 				scene,
@@ -66,10 +66,12 @@ export class LevelBuilder {
 			floor.visibility = 0.5;
 			floor.position.x = room.x;
 			floor.position.z = room.y;
+			floor.position.y = 0.95; // let the mesh sink a little below the player, for "isInRoom" check
 			floor.receiveShadows = true;
-			floor.renderOutline = true;
-			floor.outlineColor = new Color3(0, 1, 0);
-			floor.outlineWidth = 0.01;
+			floor.visibility = 0;
+			// floor.renderOutline = true;
+			// floor.outlineColor = new Color3(0, 1, 0);
+			// floor.outlineWidth = 0.01;
 			base.addChild(floor);
 			room.furnishings.forEach((furnishing, index) => {
 				const doodad = meshMap[furnishing.name].clone(
