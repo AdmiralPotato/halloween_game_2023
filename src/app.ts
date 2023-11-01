@@ -3,7 +3,7 @@ import { ISceneLoaderAsyncResult, SceneLoader } from '@babylonjs/core/Loading/sc
 import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { Scene } from '@babylonjs/core/scene';
-import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Vector3, type Vector4 } from '@babylonjs/core/Maths/math.vector';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
@@ -19,7 +19,14 @@ import { makeRoomsWithSeed } from './levelGenerator';
 
 import './styles.css';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import { AnimationGroup, ShadowGenerator } from '@babylonjs/core';
+import {
+	AnimationGroup,
+	CreatePlane,
+	Node,
+	Plane,
+	ShadowGenerator,
+	Texture,
+} from '@babylonjs/core';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { setupUserInput } from './userInputState';
 
@@ -43,6 +50,22 @@ class App {
 		let firstRoom: Room | null = null;
 		const playerCharacterHolder = new Mesh('playerCharacterHolder', scene);
 		const cameraTarget = new Mesh('cameraTarget', scene);
+		const actionIntersectMeshParent = new Mesh('actionIntersectMeshParent');
+		const actionIntersectMesh = CreatePlane('actionIntersectMesh', {
+			size: 0.25,
+			sideOrientation: Mesh.DOUBLESIDE,
+		});
+		playerCharacterHolder.addChild(actionIntersectMeshParent);
+		actionIntersectMeshParent.addChild(actionIntersectMesh);
+		actionIntersectMesh.billboardMode = 3;
+		const mat = new StandardMaterial('actionIntersectMeshMaterial');
+		const sparkTexture = new Texture('./assets/spark.png');
+		mat.diffuseTexture = sparkTexture;
+		// mat.diffuseColor = new Color3(0, 0.5, 0.9);
+		actionIntersectMesh.material = mat;
+		mat.alphaMode = Engine.ALPHA_ADD;
+		mat.opacityTexture = sparkTexture;
+		actionIntersectMeshParent.position.set(0, 0.5, 0.75);
 
 		const camera = new FollowCamera('Camera', Vector3.Zero(), scene, cameraTarget);
 		camera.radius = 4;
@@ -200,7 +223,7 @@ class App {
 			const delta = (now - lastLogicTick) / 1000;
 
 			// console.log('buttonStateMap', buttonStateMap);
-			const movementSpeed = delta * 1.05;
+			const movementSpeed = delta * 0.8;
 			if (buttonStateMap.up) {
 				motionVector.z -= movementSpeed;
 			}
@@ -213,8 +236,9 @@ class App {
 			if (buttonStateMap.right) {
 				motionVector.x -= movementSpeed;
 			}
-			if (buttonStateMap.action) {
-				motionVector.y += movementSpeed * 4;
+			if (buttonStateMap.action && playerCharacterHolder.position.y < 0.05) {
+				buttonStateMap.action = false;
+				motionVector.y += movementSpeed * 30;
 			}
 			if (joystick.distance !== 0) {
 				motionVector.x += (-joystick.x / joystick.options.maxRange) * movementSpeed;
@@ -238,6 +262,7 @@ class App {
 
 			playerCharacterHolder.getWorldMatrix().getTranslationToRef(cameraTarget.position);
 			hideRoomsPlayerIsNotInside();
+			actionIntersectMesh.rotate(new Vector3(0, 0, 1), delta * 5);
 
 			lastLogicTick = now;
 		};
