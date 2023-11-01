@@ -21,7 +21,6 @@ import './styles.css';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { ShadowGenerator } from '@babylonjs/core';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
-import { Axis } from '@babylonjs/core/Maths/math.axis';
 import { setupUserInput } from './userInputState';
 
 class App {
@@ -132,7 +131,7 @@ class App {
 			// scene.createDefaultCamera(true, true, true);
 		});
 
-		const buttonStateMap = setupUserInput({
+		const { buttonStateMap, joystick } = setupUserInput({
 			respawnLevelFromStringSeed,
 			loadDevToolsCallback: async () => {
 				await pullInDevTools();
@@ -170,6 +169,10 @@ class App {
 			}
 			if (buttonStateMap.action) {
 				motionVector.y += movementSpeed;
+			}
+			if (joystick.distance !== 0) {
+				motionVector.x += (-joystick.x / joystick.options.maxRange) * movementSpeed;
+				motionVector.z += (-joystick.y / joystick.options.maxRange) * movementSpeed;
 			}
 			motionVector.multiplyInPlace(motionDragVector);
 			if (motionVector.length() > 0.005) {

@@ -1,4 +1,16 @@
 import * as UI from './UserInterface';
+// @ts-ignore
+import JoystickController from 'joystick-controller';
+
+const joystick = new JoystickController({
+	leftToRight: true,
+	bottomToUp: true,
+	radius: 48,
+	maxRange: 48,
+	x: '64px',
+	y: '64px',
+	distortion: true,
+});
 
 type VoidishCallback = () => void;
 interface UserInputConfig {
@@ -65,7 +77,7 @@ window.addEventListener('keyup', (keydownEvent) => {
 	}
 });
 
-export const setupUserInput = (config: UserInputConfig): Record<string, boolean | undefined> => {
+export const setupUserInput = (config: UserInputConfig) => {
 	const { seedButton, buttonMap } = UI.init();
 
 	loadDevToolsCallback = config.loadDevToolsCallback;
@@ -77,5 +89,5 @@ export const setupUserInput = (config: UserInputConfig): Record<string, boolean 
 		button?.onPointerUpObservable.add(() => buttonStateOff(key));
 	});
 
-	return buttonStateMap;
+	return { buttonStateMap, joystick };
 };
