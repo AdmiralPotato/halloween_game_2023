@@ -22,7 +22,7 @@ let testRoom: RoomWorkingData = {
 export const populateRoomCenter3 = (roomData: RoomWorkingData, roomName: string) => {
 	let floors: Tile[] = roomData.floors;
 	let floorCoords = padRoom(floors)
-		.filter((tile: Tile)=>{
+		.filter((tile: Tile) => {
 			return tile.compositeInfo === 's';
 		})
 		.map((tile: Tile) => {
@@ -38,20 +38,20 @@ export const populateRoomCenter3 = (roomData: RoomWorkingData, roomName: string)
 		y: floorRange.y.max - floorRange.y.min + paddingBetweenCenterAndWall,
 	};
 	let ret = generateCenterFurniture[roomName](floorSize);
-	ret = ret.filter((item: ItemWithContext)=>(item.itemName !== "EMPTY"))
+	ret = ret.filter((item: ItemWithContext) => (item.itemName !== "EMPTY"))
 	return ret;
 };
 
 const generateCenterFurniture: Record<string, Function> = {
-	diningRoom: (placementBounds: XYCoord): ItemWithContext[] =>  {
+	diningRoom: (placementBounds: XYCoord): ItemWithContext[] => {
 		let tables: ItemWithContext[] = [];
 		let chairsN: ItemWithContext[] = [];
 		let chairsS: ItemWithContext[] = [];
-		if ( placementBounds.y < 2 || placementBounds.x < 4 ) { return []; }
+		if (placementBounds.y < 2 || placementBounds.x < 4) { return []; }
 		let tableCount = Math.floor(placementBounds.x / 2) - 1;
 		for (let i = 1; i <= tableCount; i++) {
 			let item = "diningTableMid";
-			let rot = 0;i === 1 ? 0 : 2;
+			let rot = 0; i === 1 ? 0 : 2;
 			if (i === 1) {
 				rot = 2;
 				item = "diningTableHalf";
@@ -65,25 +65,25 @@ const generateCenterFurniture: Record<string, Function> = {
 					{ x: -0.5, y: 0.5 },
 					{ x: 0.5, y: 0.5 },
 				],
-				itemCenterCoord: {x: 0, y: 0},
+				itemCenterCoord: { x: 0, y: 0 },
 				itemName: item,
 				children: [],
 				rot,
 			})
-			
+
 		}
 		const chairRate = 0.95;
-		for (let i = 1; i <= tableCount*2; i++) {
+		for (let i = 1; i <= tableCount * 2; i++) {
 			chairsN.push({
-				occupiedCoords: [{x: 0, y: -1}],
-				itemCenterCoord: {x: 0, y: -1},
+				occupiedCoords: [{ x: 0, y: -.5 }],
+				itemCenterCoord: { x: 0, y: -.5 },
 				itemName: rand() < chairRate ? 'chair' : 'EMPTY',
 				children: [],
 				rot: 0,
 			})
 			chairsS.push({
-				occupiedCoords: [{x: 0, y: 1}],
-				itemCenterCoord: {x: 0, y: 1},
+				occupiedCoords: [{ x: 0, y: .5 }],
+				itemCenterCoord: { x: 0, y: .5 },
 				itemName: rand() < chairRate ? 'chair' : 'EMPTY',
 				children: [],
 				rot: 2,
@@ -96,12 +96,12 @@ const generateCenterFurniture: Record<string, Function> = {
 		if (placementBounds.x > 2) {
 			ret = ret.concat(chairsS);
 		}
-		ret.forEach(item=>{
+		ret.forEach(item => {
 			console.log(
-				item.itemCenterCoord.x+','
-				+item.itemCenterCoord.y+': '
-				+item.itemName
-				+` (rot: ${item.rot})`
+				item.itemCenterCoord.x + ','
+				+ item.itemCenterCoord.y + ': '
+				+ item.itemName
+				+ ` (rot: ${item.rot})`
 			);
 		})
 		return ret;
@@ -114,7 +114,7 @@ export const populateCenterObjects = (roomData: RoomWorkingData, roomType: strin
 	let decidedStuff: ItemWithContext[] = [];
 	let requiredCenterStuff = possibleStuff.filter(item => item.count);
 	let floors = roomData.floors;
-	let floorCoords = floors.filter(floor=>floor.compositeInfo === 's').map(floor => {
+	let floorCoords = floors.filter(floor => floor.compositeInfo === 's').map(floor => {
 		return {
 			x: floor.x, y: floor.y,
 		}
