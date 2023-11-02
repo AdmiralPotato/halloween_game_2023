@@ -437,15 +437,15 @@ export const spreadItemsOnAxis = (items: ItemWithContext[], axis: string, itemSi
 	});
 };
 const fillOutChildrenFromParent = (parent: ItemWithContext): ItemWithContext[] => {
-	let childrenGet = getChildren[parent.itemName];
+	let childrenGet = getChildren[parent.name];
 	if (!childrenGet) {
 		return [];
 	}
 	let childrenInfo = childrenGet();
 	let finalChildren: ItemWithContext[] = [];
 	let parentDimensions: Record<string, number> = {
-		x: FURNISHINGS2[parent.itemName].dimensions.width,
-		y: FURNISHINGS2[parent.itemName].dimensions.depth,
+		x: FURNISHINGS2[parent.name].dimensions.width,
+		y: FURNISHINGS2[parent.name].dimensions.depth,
 	}
 	let normalizedTransforms: Record<string, XYCoord> = {
 		n: { x: 0, y: -1 },
@@ -474,7 +474,7 @@ const fillOutChildrenFromParent = (parent: ItemWithContext): ItemWithContext[] =
 						x: parent.itemCenterCoord.x + naiveTranslation.x,
 						y: parent.itemCenterCoord.y + naiveTranslation.y,
 					},
-					itemName: child.item,
+					name: child.item,
 					children: [],
 					rot: child.rot,
 				};
@@ -486,18 +486,18 @@ const fillOutChildrenFromParent = (parent: ItemWithContext): ItemWithContext[] =
 			finalChildren = finalChildren.concat(pivotChildren);
 		}
 	})
-	return finalChildren.filter(item => !(item.itemName === "EMPTY"));
+	return finalChildren.filter(item => !(item.name === "EMPTY"));
 };
 
 export interface ItemWithContext {
 	occupiedCoords: XYCoord[];
 	itemCenterCoord: XYCoord;
-	itemName: string;
+	name: string;
 	children: ItemWithContext[];
 	rot: number;
 };
-export const getItemInfo = (itemName: string): ItemWithContext => {
-	let info = FURNISHINGS2[itemName];
+export const getItemInfo = (name: string): ItemWithContext => {
+	let info = FURNISHINGS2[name];
 	let occupiedCoords: XYCoord[] = [];
 	for (let y = 0; y < info.dimensions.depth; y++) {
 		for (let x = 0; x < info.dimensions.width; x++) {
@@ -507,7 +507,7 @@ export const getItemInfo = (itemName: string): ItemWithContext => {
 	let parentInfo = {
 		occupiedCoords,
 		itemCenterCoord: averageXYCoords(occupiedCoords),
-		itemName,
+		name,
 		children: [],
 		rot: 0,
 	};

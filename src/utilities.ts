@@ -112,7 +112,7 @@ export interface RandomWeight {
 }
 export const getRandomWithWeight = (input: RandomWeight[]): string => {
 	const pickFrom: string[] = [];
-	// [{ item: itemName, weight: # }, {...}] version
+	// [{ item: name, weight: # }, {...}] version
 	input.forEach((entry: RandomWeight) => {
 		for (let i = 0; i < (entry.weight || 0); i++) {
 			pickFrom.push(entry.item);

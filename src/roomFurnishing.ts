@@ -19,7 +19,7 @@ let testRoom: RoomWorkingData = {
 	"furnishings": []
 };
 
-export const populateRoomCenter3 = (roomData: RoomWorkingData, roomName: string) => {
+export const populateRoomCenter3 = (roomData: RoomWorkingData, roomName: string): ItemWithContext[] => {
 	let floors: Tile[] = roomData.floors;
 	let floorCoords = padRoom(floors)
 		.filter((tile: Tile) => {
@@ -34,11 +34,11 @@ export const populateRoomCenter3 = (roomData: RoomWorkingData, roomName: string)
 	// let floorCenterCoord: XYCoord = getCenterForXYRange(floorRange);
 	let paddingBetweenCenterAndWall = 1;
 	let floorSize = {
-		x: floorRange.x.max - floorRange.x.min + paddingBetweenCenterAndWall,
-		y: floorRange.y.max - floorRange.y.min + paddingBetweenCenterAndWall,
+		x: floorRange.x.max - floorRange.x.min - paddingBetweenCenterAndWall,
+		y: floorRange.y.max - floorRange.y.min - paddingBetweenCenterAndWall,
 	};
 	let ret = generateCenterFurniture[roomName](floorSize);
-	ret = ret.filter((item: ItemWithContext) => (item.itemName !== "EMPTY"))
+	ret = ret.filter((item: ItemWithContext) => (item.name !== "EMPTY"))
 	return ret;
 };
 
@@ -66,7 +66,7 @@ const generateCenterFurniture: Record<string, Function> = {
 					{ x: 0.5, y: 0.5 },
 				],
 				itemCenterCoord: { x: 0, y: 0 },
-				itemName: item,
+				name: item,
 				children: [],
 				rot,
 			})
@@ -77,14 +77,14 @@ const generateCenterFurniture: Record<string, Function> = {
 			chairsN.push({
 				occupiedCoords: [{ x: 0, y: -.5 }],
 				itemCenterCoord: { x: 0, y: -.5 },
-				itemName: rand() < chairRate ? 'chair' : 'EMPTY',
+				name: rand() < chairRate ? 'chair' : 'EMPTY',
 				children: [],
 				rot: 0,
 			})
 			chairsS.push({
 				occupiedCoords: [{ x: 0, y: .5 }],
 				itemCenterCoord: { x: 0, y: .5 },
-				itemName: rand() < chairRate ? 'chair' : 'EMPTY',
+				name: rand() < chairRate ? 'chair' : 'EMPTY',
 				children: [],
 				rot: 2,
 			})
@@ -96,61 +96,22 @@ const generateCenterFurniture: Record<string, Function> = {
 		if (placementBounds.x > 2) {
 			ret = ret.concat(chairsS);
 		}
-		ret.forEach(item => {
-			console.log(
-				item.itemCenterCoord.x + ','
-				+ item.itemCenterCoord.y + ': '
-				+ item.itemName
-				+ ` (rot: ${item.rot})`
-			);
-		})
+		// ret.forEach(item => {
+		// 	console.log(
+		// 		item.itemCenterCoord.x + ','
+		// 		+ item.itemCenterCoord.y + ': '
+		// 		+ item.name
+		// 		+ ` (rot: ${item.rot})`
+		// 	);
+		// })
 		return ret;
-	}
+	},
+	library: () => { return [] },
+	hallway: () => { return [] },
+	bedroom: () => { return [] },
+	livingRoom: () => { return [] },
 }
 
-export const populateCenterObjects = (roomData: RoomWorkingData, roomType: string) => {
-	// todo: move wall stuff to here, where it'll work better
-	let possibleStuff = ROOM_CONTENTS2[roomType];
-	let decidedStuff: ItemWithContext[] = [];
-	let requiredCenterStuff = possibleStuff.filter(item => item.count);
-	let floors = roomData.floors;
-	let floorCoords = floors.filter(floor => floor.compositeInfo === 's').map(floor => {
-		return {
-			x: floor.x, y: floor.y,
-		}
-	})
-	let floorRange: XYRange = getXYRangeFromXYCoords(floorCoords);
-	let floorCenterCoord: XYCoord = getCenterForXYRange(floorRange);
-	let paddingBetweenCenterAndWall = 1;
-	let floorSize = {
-		x: floorRange.x.max - floorRange.x.min + paddingBetweenCenterAndWall,
-		y: floorRange.y.max - floorRange.y.min + paddingBetweenCenterAndWall,
-	};
-
-	// try center stuff
-	let center = requiredCenterStuff.filter(item => {
-		return FURNISHINGS2[item.item].placement === 'center'
-	});// assuming only 1 required of each thing (TODO change it)
-	center.forEach(item => {
-		let thingInfo = getItemInfo(item.item);
-		// let eligibleFloorRange: XYRange = getXYRangeFromXYCoords(
-		// 	floors.filter(item => item.compositeInfo === 's'));
-		let hitBoxCoords: XYCoord[] = thingInfo.occupiedCoords;
-		let thingHitBox: XYRange = getXYRangeFromXYCoords(hitBoxCoords);
-		let centerOfItem: XYCoord = getCenterForXYRange(thingHitBox);
-		let translateBy = {
-			x: Math.floor(centerOfItem.x) + 0.5,
-			y: Math.floor(centerOfItem.y) + 0.5,
-		}
-		let normalizedItem = translateItemAndChildren(thingInfo, translateBy);
-		decidedStuff.push(normalizedItem);
-	});
-	let print = printRoom(roomData.floors, decidedStuff);
-	// console.log(print);
-	return decidedStuff;
-};
-
-// let test = populateCenterObjects(testRoom, 'diningRoom');
 // let test2 = populateRoomCenter3(testRoom, "diningRoom")
 
 // console.log(test)

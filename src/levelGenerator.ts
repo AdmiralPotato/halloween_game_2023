@@ -4,7 +4,7 @@ import { ROOM_CONTENTS, ROOMS, Tile } from './rooms';
 import { Furnishing } from './LevelBuilder';
 import { rand, randomIndex, scrambleArray, getRandomWithWeight, RandomWeight } from './utilities';
 import { Room } from './LevelBuilder';
-import { populateCenterObjects, populateRoomCenter3 } from './roomFurnishing';
+import { populateRoomCenter3 } from './roomFurnishing';
 import { FURNISHINGS2, ItemWithContext } from './furnitureForRooms';
 
 export const makeRoomsWithSeed = (seed: string): Room[] => {
@@ -228,38 +228,31 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 			};
 		});
 
-		const convertNewThingToOld = (thing: ItemWithContext) => {
-			if (!FURNISHINGS2[thing.itemName]) {
-				throw new Error("Could not find furniture called " + thing.itemName)
+		// put the center objects in
+		const convertNewThingToOld = (thing: ItemWithContext): Furnishing => {
+			if (!FURNISHINGS2[thing.name]) {
+				throw new Error("Could not find furniture called " + thing.name)
 			}
-			let item = {
+			return {
 				label: '',
-				asset: thing.itemName,
-				name: FURNISHINGS2[thing.itemName].asset,
+				asset: thing.name,
+				name: FURNISHINGS2[thing.name].asset,
 				x: thing.itemCenterCoord.x,
 				y: thing.itemCenterCoord.y,
-				w: FURNISHINGS2[thing.itemName].dimensions.width,
-				d: FURNISHINGS2[thing.itemName].dimensions.depth,
-				h: FURNISHINGS2[thing.itemName].dimensions.height,
+				w: FURNISHINGS2[thing.name].dimensions.width,
+				d: FURNISHINGS2[thing.name].dimensions.depth,
+				h: FURNISHINGS2[thing.name].dimensions.height,
 				rot: thing.rot,
 				hasCandy: rand() < 0.3,
 			};
-			if (item.asset !== 'EMPTY') {
-				rooms[roomID].furnishings.push(item);
-			}
 		};
-		if (roomType === 'diningRoom') {
-			let newStuff = populateRoomCenter3(rooms[roomID], roomType);
-			newStuff.forEach((item: ItemWithContext)=>{
-					convertNewThingToOld(item);
-				});
-			// console.log("DINING ROOM TIME")
-		} else {
-			populateCenterObjects(rooms[roomID], roomType).map(newThing => {
-				convertNewThingToOld(newThing);
-				newThing.children.forEach(child => convertNewThingToOld(child));
+		let converted: Furnishing[] = populateRoomCenter3(rooms[roomID], roomType)
+			.filter((item: ItemWithContext) => item.name !== "EMPTY")
+			.map((item: ItemWithContext) => {
+				return convertNewThingToOld(item);
 			});
-		}
+		let thingsInRoom = rooms[roomID].furnishings
+		thingsInRoom = thingsInRoom.concat(converted);
 	});
 	return Object.values(rooms);
 };
