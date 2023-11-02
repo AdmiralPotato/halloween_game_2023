@@ -1,6 +1,6 @@
-import { FURNISHINGS2, ItemWithContext, ROOM_CONTENTS2, getItemInfo, printRoom, translateItemAndChildren } from './furnitureForRooms';
-import { RoomWorkingData } from './rooms';
-import { getXYRangeFromXYCoords, XYCoord, XYRange, getCenterForXYRange } from './utilities';
+import { ChildInfo, FURNISHINGS2, ItemWithContext, ROOM_CONTENTS2, getItemInfo, padRoom, printRoom, spreadItemsOnAxis, translateItemAndChildren } from './furnitureForRooms';
+import { RoomWorkingData, Tile } from './rooms';
+import { getXYRangeFromXYCoords, XYCoord, XYRange, getCenterForXYRange, rand } from './utilities';
 
 let testRoom: RoomWorkingData = {
 	"width": 14,
@@ -19,19 +19,113 @@ let testRoom: RoomWorkingData = {
 	"furnishings": []
 };
 
+export const populateRoomCenter3 = (roomData: RoomWorkingData, roomName: string) => {
+	let floors: Tile[] = roomData.floors;
+	let floorCoords = padRoom(floors)
+		.filter((tile: Tile)=>{
+			return tile.compositeInfo === 's';
+		})
+		.map((tile: Tile) => {
+			return {
+				x: tile.x, y: tile.y,
+			}
+		});
+	let floorRange: XYRange = getXYRangeFromXYCoords(floorCoords);
+	// let floorCenterCoord: XYCoord = getCenterForXYRange(floorRange);
+	let paddingBetweenCenterAndWall = 1;
+	let floorSize = {
+		x: floorRange.x.max - floorRange.x.min + paddingBetweenCenterAndWall,
+		y: floorRange.y.max - floorRange.y.min + paddingBetweenCenterAndWall,
+	};
+	let ret = generateCenterFurniture[roomName](floorSize);
+	ret = ret.filter((item: ItemWithContext)=>(item.itemName !== "EMPTY"))
+	return ret;
+};
+
+const generateCenterFurniture: Record<string, Function> = {
+	diningRoom: (placementBounds: XYCoord): ItemWithContext[] =>  {
+		let tables: ItemWithContext[] = [];
+		let chairsN: ItemWithContext[] = [];
+		let chairsS: ItemWithContext[] = [];
+		if ( placementBounds.y < 2 || placementBounds.x < 4 ) { return []; }
+		let tableCount = Math.floor(placementBounds.x / 2) - 1;
+		for (let i = 1; i <= tableCount; i++) {
+			let item = "diningTableMid";
+			let rot = 0;i === 1 ? 0 : 2;
+			if (i === 1) {
+				rot = 2;
+				item = "diningTableHalf";
+			} else if (i === tableCount) {
+				item = "diningTableHalf";
+			}
+			tables.push({
+				occupiedCoords: [
+					{ x: -0.5, y: -0.5 },
+					{ x: 0.5, y: -0.5 },
+					{ x: -0.5, y: 0.5 },
+					{ x: 0.5, y: 0.5 },
+				],
+				itemCenterCoord: {x: 0, y: 0},
+				itemName: item,
+				children: [],
+				rot,
+			})
+			
+		}
+		const chairRate = 0.95;
+		for (let i = 1; i <= tableCount*2; i++) {
+			chairsN.push({
+				occupiedCoords: [{x: 0, y: -1}],
+				itemCenterCoord: {x: 0, y: -1},
+				itemName: rand() < chairRate ? 'chair' : 'EMPTY',
+				children: [],
+				rot: 0,
+			})
+			chairsS.push({
+				occupiedCoords: [{x: 0, y: 1}],
+				itemCenterCoord: {x: 0, y: 1},
+				itemName: rand() < chairRate ? 'chair' : 'EMPTY',
+				children: [],
+				rot: 2,
+			})
+		}
+		tables = spreadItemsOnAxis(tables, 'x', 2);
+		chairsN = spreadItemsOnAxis(chairsN, 'x', 1);
+		chairsS = spreadItemsOnAxis(chairsS, 'x', 1);
+		let ret = tables.concat(chairsN);
+		if (placementBounds.x > 2) {
+			ret = ret.concat(chairsS);
+		}
+		ret.forEach(item=>{
+			console.log(
+				item.itemCenterCoord.x+','
+				+item.itemCenterCoord.y+': '
+				+item.itemName
+				+` (rot: ${item.rot})`
+			);
+		})
+		return ret;
+	}
+}
+
 export const populateCenterObjects = (roomData: RoomWorkingData, roomType: string) => {
 	// todo: move wall stuff to here, where it'll work better
 	let possibleStuff = ROOM_CONTENTS2[roomType];
 	let decidedStuff: ItemWithContext[] = [];
-	let floors = roomData.floors;
 	let requiredCenterStuff = possibleStuff.filter(item => item.count);
-	let floorCoords = floors.map(floor => {
+	let floors = roomData.floors;
+	let floorCoords = floors.filter(floor=>floor.compositeInfo === 's').map(floor => {
 		return {
 			x: floor.x, y: floor.y,
 		}
 	})
 	let floorRange: XYRange = getXYRangeFromXYCoords(floorCoords);
-	let floorCenter: XYCoord = getCenterForXYRange(floorRange);
+	let floorCenterCoord: XYCoord = getCenterForXYRange(floorRange);
+	let paddingBetweenCenterAndWall = 1;
+	let floorSize = {
+		x: floorRange.x.max - floorRange.x.min + paddingBetweenCenterAndWall,
+		y: floorRange.y.max - floorRange.y.min + paddingBetweenCenterAndWall,
+	};
 
 	// try center stuff
 	let center = requiredCenterStuff.filter(item => {
@@ -56,6 +150,8 @@ export const populateCenterObjects = (roomData: RoomWorkingData, roomType: strin
 	return decidedStuff;
 };
 
+// let test = populateCenterObjects(testRoom, 'diningRoom');
+// let test2 = populateRoomCenter3(testRoom, "diningRoom")
 
-let test = populateCenterObjects(testRoom, 'diningRoom');
-
+// console.log(test)
+// console.log("BREAKME")

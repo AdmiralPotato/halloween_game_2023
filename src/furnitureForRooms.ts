@@ -19,7 +19,7 @@ const transformations: Record<string, XYCoord> = {
 	se: { x: 0.5, y: 0.5 },
 };
 
-const padRoom = (tiles: Tile[]): Tile[] => {
+export const padRoom = (tiles: Tile[]): Tile[] => {
 	let ret: Tile[] = [];
 	tiles.forEach(tile => {
 		Object.keys(transformations).forEach((dir: string) => {
@@ -216,6 +216,11 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 		asset: 'tableLongEnd',
 		dimensions: { width: 2, depth: 2, height: 1 },
 	},
+	diningTableMid: {
+		placement: 'center', placementContext: '',
+		asset: 'tableLongMid',
+		dimensions: { width: 2, depth: 2, height: 1 },
+	},
 	paintingTall0: {
 		placement: 'wall', placementContext: '',
 		asset: 'paintingBig_primitive0',
@@ -299,7 +304,7 @@ export const ROOM_CONTENTS2: Record<string, FurnitureWeight[]> = {
 	]
 };
 
-interface ChildInfo {
+export interface ChildInfo {
 	item: string;
 	pos: string;
 	rot: number;
@@ -353,7 +358,7 @@ const getChildren: Record<string, Function> = {
 		];
 	},
 	couchCenter: (): ChildInfo[] => {
-		return rand() < 0 ? [] : [{ item: 'dresser', pos: 'n', rot: 2 }];
+		return rand() < 0.3 ? [] : [{ item: 'dresser', pos: 'n', rot: 2 }];
 	},
 	roundTable: (): ChildInfo[] => {
 		let dirs = scrambleArray(DIRECTIONS);
@@ -392,7 +397,7 @@ const getChildren: Record<string, Function> = {
 	// },
 };
 
-const spreadItemsOnAxis = (items: ItemWithContext[], axis: string, itemSize: number): ItemWithContext[] => {
+export const spreadItemsOnAxis = (items: ItemWithContext[], axis: string, itemSize: number): ItemWithContext[] => {
 	if (items.length < 1) {
 		return items;
 	}
@@ -403,7 +408,7 @@ const spreadItemsOnAxis = (items: ItemWithContext[], axis: string, itemSize: num
 	let initial = (-itemSize * (items.length - 1)) / 2
 	for (
 		let i = initial;
-		i < items.length - 2;
+		i < items.length;
 		i += itemSize
 	) {
 		let thisTranslation = JSON.parse(JSON.stringify(rawTranslation));

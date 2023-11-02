@@ -4,7 +4,7 @@ import { ROOM_CONTENTS, ROOMS, Tile } from './rooms';
 import { Furnishing } from './LevelBuilder';
 import { rand, randomIndex, scrambleArray, getRandomWithWeight, RandomWeight } from './utilities';
 import { Room } from './LevelBuilder';
-import { populateCenterObjects } from './roomFurnishing';
+import { populateCenterObjects, populateRoomCenter3 } from './roomFurnishing';
 import { FURNISHINGS2, ItemWithContext } from './furnitureForRooms';
 
 export const makeRoomsWithSeed = (seed: string): Room[] => {
@@ -229,7 +229,10 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 		});
 
 		const convertNewThingToOld = (thing: ItemWithContext) => {
-			rooms[roomID].furnishings.push({
+			if (!FURNISHINGS2[thing.itemName]) {
+				throw new Error("Could not find furniture called " + thing.itemName)
+			}
+			let item = {
 				label: '',
 				asset: thing.itemName,
 				name: FURNISHINGS2[thing.itemName].asset,
@@ -240,12 +243,23 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 				h: FURNISHINGS2[thing.itemName].dimensions.height,
 				rot: thing.rot,
 				hasCandy: rand() < 0.3,
-			});
+			};
+			if (item.asset !== 'EMPTY') {
+				rooms[roomID].furnishings.push(item);
+			}
 		};
-		populateCenterObjects(rooms[roomID], roomType).map(newThing => {
-			convertNewThingToOld(newThing);
-			newThing.children.forEach(child => convertNewThingToOld(child));
-		});
+		if (roomType === 'diningRoom') {
+			let newStuff = populateRoomCenter3(rooms[roomID], roomType);
+			newStuff.forEach((item: ItemWithContext)=>{
+					convertNewThingToOld(item);
+				});
+			// console.log("DINING ROOM TIME")
+		} else {
+			populateCenterObjects(rooms[roomID], roomType).map(newThing => {
+				convertNewThingToOld(newThing);
+				newThing.children.forEach(child => convertNewThingToOld(child));
+			});
+		}
 	});
 	return Object.values(rooms);
 };
