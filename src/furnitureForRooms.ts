@@ -127,12 +127,12 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 		dimensions: { width: 2, depth: 2, height: 2 },
 	},
 	endTable0: {
-		placement: 'free', placementContext: '',
+		placement: 'free', placementContext: 'corner',
 		asset: 'endtable',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	endTable1: {
-		placement: 'free', placementContext: '',
+		placement: 'free', placementContext: 'corner',
 		asset: 'endtable',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
@@ -152,12 +152,12 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 		dimensions: { width: 2, depth: 1, height: 2 },
 	},
 	pottedPlant: {
-		placement: 'free', placementContext: '',
+		placement: 'free', placementContext: 'corner',
 		asset: 'pottedPlant',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	gargoyle: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall', placementContext: 'corner',
 		asset: 'gargoyle',
 		dimensions: { width: 1, depth: 1, height: 2 },
 	},
@@ -172,7 +172,7 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 		dimensions: { width: 2, depth: 1, height: 1 },
 	},
 	chest: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall', placementContext: 'corner',
 		asset: 'chest',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
@@ -221,14 +221,9 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 		asset: 'tableLongMid',
 		dimensions: { width: 2, depth: 2, height: 1 },
 	},
-	paintingTall0: {
+	paintingTall: {
 		placement: 'wall', placementContext: '',
-		asset: 'paintingBig_primitive0',
-		dimensions: { width: 1, depth: 1, height: 2 },
-	},
-	paintingTall1: {
-		placement: 'wall', placementContext: '',
-		asset: 'paintingBig_primitive1',
+		asset: 'paintingBig',
 		dimensions: { width: 1, depth: 1, height: 2 },
 	},
 	doorFrame: {
@@ -248,8 +243,7 @@ export interface FurnitureWeight {
 
 const commonStuff: FurnitureWeight[] = [
 	{ item: 'pottedPlant', weight: 2, count: NaN },
-	{ item: 'paintingTall0', weight: 1, count: NaN },
-	{ item: 'paintingTall1', weight: 1, count: NaN },
+	{ item: 'paintingTall', weight: 1, count: NaN },
 	{ item: 'cobwebEdge', weight: 4, count: NaN },
 	{ item: 'cobwebCorner', weight: 4, count: NaN },
 	{ item: 'candelabra', weight: 2, count: NaN },

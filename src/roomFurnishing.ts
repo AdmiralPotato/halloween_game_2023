@@ -1,6 +1,7 @@
-import { ItemWithContext, padRoom, spreadItemsOnAxis, translateItemAndChildren } from './furnitureForRooms';
+import { FURNISHINGS } from './furnishings';
+import { FurnitureWeight, ItemWithContext, ROOM_CONTENTS2, FURNISHINGS2, padRoom, spreadItemsOnAxis, translateItemAndChildren } from './furnitureForRooms';
 import { RoomWorkingData, Tile } from './rooms';
-import { getXYRangeFromXYCoords, XYCoord, XYRange, rand, DIRECTIONS, getScrambledDirs, scrambleArray, averageXYCoords, scaleXY, getNFromDir } from './utilities';
+import { getXYRangeFromXYCoords, XYCoord, XYRange, rand, DIRECTIONS, getScrambledDirs, scrambleArray, averageXYCoords, scaleXY, getNFromDir, getRandomWithWeight } from './utilities';
 
 let testRoom: RoomWorkingData = {
 	"width": 14,
@@ -19,7 +20,8 @@ let testRoom: RoomWorkingData = {
 	"furnishings": []
 };
 
-export const populateRoomCenter3 = (roomData: RoomWorkingData, roomName: string): ItemWithContext[] => {
+export const furnishCenter = (roomData: RoomWorkingData, roomName: string): ItemWithContext[] => {
+	// previously called `populateRoomCenter3`
 	let floors: Tile[] = roomData.floors;
 	let floorCoords = padRoom(floors)
 		.filter((tile: Tile) => {
@@ -39,6 +41,31 @@ export const populateRoomCenter3 = (roomData: RoomWorkingData, roomName: string)
 	};
 	let ret = generateCenterFurniture[roomName](floorSize);
 	ret = ret.filter((item: ItemWithContext) => (item.name !== "EMPTY"))
+	return ret;
+};
+
+export const furnishCorners = (roomData: RoomWorkingData, roomName: string): ItemWithContext[] => {
+	let floors: Tile[] = roomData.floors;
+	let corners = ['q', 'e'];
+	let floorTiles = padRoom(floors)
+		.filter((tile: Tile) => {
+			return corners.includes(tile.compositeInfo) && tile.asset.includes('floor');
+		});
+
+	let possibleFurniture: FurnitureWeight[] = ROOM_CONTENTS2[roomName]
+		.filter(item => {
+			return FURNISHINGS2[item.item].placementContext.includes('corner');
+		});
+	let ret: ItemWithContext[] = floorTiles.map((tile: Tile) => {
+		let furnitureName = getRandomWithWeight(possibleFurniture);
+		return {
+			occupiedCoords: [{ x: tile.x, y: tile.y }],
+			itemCenterCoord: { x: tile.x, y: tile.y },
+			name: furnitureName,
+			children: [],
+			rot: furnitureName === 'cobwebCorner' && tile.compositeInfo === 'e' ? 1 : 0, // TODO fix this when you fix the rotation / x axis of everything
+		};
+	});
 	return ret;
 };
 
@@ -180,8 +207,7 @@ const getLineOfBookcases = (length: number, axis: string) => {
 	})
 	return ret;
 }
-
-const getBookcaseIsland = (length: number, axis: string) => {
+const spawnBookcaseIsland = (length: number, axis: string) => {
 	// const antiAxis: string = axis === 'x' ? 'y' : 'x';
 	let bookcases1: ItemWithContext[] = getLineOfBookcases(length, axis);
 	let bookcases2: ItemWithContext[] = getLineOfBookcases(length, axis)
@@ -219,7 +245,7 @@ const generateCenterFurniture: Record<string, Function> = {
 		for (let i = 0; i < blocksCount; i++) {
 			let axis = rand() < 0.5 ? 'x' : 'y';
 			let length = axis === 'x' ? Math.floor(width / 2) : depth;
-			let working: ItemWithContext[] = getBookcaseIsland(length, axis);
+			let working: ItemWithContext[] = spawnBookcaseIsland(length, axis);
 			let translated: ItemWithContext[] = working.map(item => {
 				return translateItemAndChildren(item, centers[i])
 			});

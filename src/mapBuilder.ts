@@ -506,7 +506,8 @@ export const buildMapFromSeed = (seed: string) => {
 
 	return {
 		rooms: roomWorkingData,
-		printMap: doubledMap.map(line => line.split('').reverse().join('')).join('\n'),
+		// printMap: doubledMap.map(line => line.split('').reverse().join('')).join('\n'),
+		printMap: doubledMap.join('\n'),
 	};
 };
 

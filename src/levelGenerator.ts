@@ -2,9 +2,9 @@ import { buildMapFromSeed } from './mapBuilder';
 import { FURNISHINGS } from './furnishings';
 import { ROOM_CONTENTS, ROOMS, Tile } from './rooms';
 import { Furnishing } from './LevelBuilder';
-import { rand, randomIndex, scrambleArray, getRandomWithWeight, RandomWeight, getOppositeDir, getOppositeDirN } from './utilities';
+import { rand, randomIndex, scrambleArray, getRandomWithWeight, RandomWeight, getOppositeDir, getOppositeDirN, getNFromDir } from './utilities';
 import { Room } from './LevelBuilder';
-import { populateRoomCenter3 } from './roomFurnishing';
+import { furnishCenter, furnishCorners } from './roomFurnishing';
 import { FURNISHINGS2, ItemWithContext } from './furnitureForRooms';
 
 export const makeRoomsWithSeed = (seed: string): Room[] => {
@@ -43,11 +43,11 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 	const getWalls = (inputFloors: Tile[]): Record<string, Tile[]> => {
 		let floors = inputFloors.filter(item => item.name.includes('wall'));
 		let ret: Record<string, Tile[]> = {
-			e: floors.filter((item) => item.compositeInfo === 'd' || item.compositeInfo === 'c'),
-			// ne: floors.filter((item) => item.compositeInfo === 'e'),
-			n: floors.filter((item) => item.compositeInfo === 'w'),
-			// nw: floors.filter((item) => item.compositeInfo === 'q'),
 			w: floors.filter((item) => item.compositeInfo === 'a' || item.compositeInfo === 'z'),
+			// nw: floors.filter((item) => item.compositeInfo === 'q'),
+			n: floors.filter((item) => item.compositeInfo === 'w'),
+			// ne: floors.filter((item) => item.compositeInfo === 'e'),
+			e: floors.filter((item) => item.compositeInfo === 'd' || item.compositeInfo === 'c'),
 		};
 		Object.keys(ret).forEach((wallDir) => {
 			// get rid of it if it's empty (i.e. if it's 100% door)
@@ -58,13 +58,13 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 		Object.keys(ret).forEach((wallDir) => {
 			ret[wallDir] = padWall(ret[wallDir]);
 			const adjustMap: Record<string, number[]> = {
-				n: [0, -0.5],
 				w: [-0.5, 0],
+				n: [0, -0.5],
 				e: [0.5, 0],
 			};
 			const rotMap: Record<string, number> = {
-				n: 0,
 				w: 3,
+				n: 0,
 				e: 1,
 			};
 			const adjust = adjustMap[wallDir];
@@ -155,6 +155,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 		// state stuff
 		let doodads = [];
 		let remainingWalls = Object.entries(walls).map(([wallDir, arr]) => {
+			// labelling the walls with the direction of wall they are
 			return arr.map((item) => {
 				return Object.assign({ wallDir }, item);
 			});
@@ -248,9 +249,9 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 		};
 		let newThings: ItemWithContext[] = [];
 		// put the center objects in
-		let newFurniture: ItemWithContext[] = populateRoomCenter3(rooms[roomID], roomType)
-
-
+		let centerFurniture: ItemWithContext[] = furnishCenter(rooms[roomID], roomType);
+		// put the corner objects in
+		let cornerFurniture: ItemWithContext[] = furnishCorners(rooms[roomID], roomType);
 		// Add doorframes
 		let doorFrames: ItemWithContext[] = rooms[roomID].doors
 			.map((tile: Tile) => {
@@ -262,8 +263,13 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 					rot: (tile.rot % 2 === 0) ? tile.rot : getOppositeDirN(tile.rot),
 				}
 			});
+		// Add corner furniture
+
 		// combine the above
-		newThings = newThings.concat(newFurniture).concat(doorFrames);
+		newThings = newThings
+			.concat(centerFurniture)
+			.concat(cornerFurniture)
+			.concat(doorFrames);
 		// get rid of null furniture
 		newThings = newThings.filter((item: ItemWithContext) => item.name !== "EMPTY");
 		// convert furniture to the old shape

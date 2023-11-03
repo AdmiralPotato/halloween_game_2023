@@ -91,7 +91,7 @@ export const randomFromArray = <T>(array: T[]): T | null => {
 };
 export const scrambleArray = <T>(arr: T[]): T[] => {
 	const ret = [];
-	let workingArr = arr.slice();
+	let workingArr = JSON.parse(JSON.stringify(arr));
 	while (workingArr.length) {
 		let i = randomIndex(workingArr.length);
 		ret.push(workingArr.splice(i, 1)[0]);
