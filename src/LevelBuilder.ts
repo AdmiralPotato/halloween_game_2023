@@ -94,7 +94,7 @@ export class LevelBuilder {
 				floor.addChild(doodad);
 				doodad.position.x = door.x;
 				doodad.position.z = door.y;
-				doodad.rotate(Axis.Y, door.rot * -RIGHT_ANGLE);
+				doodad.rotate(Axis.Y, door.rot * RIGHT_ANGLE);
 				doodad.renderOutline = true;
 				doodad.receiveShadows = true;
 				doodad.outlineColor = new Color3(0, 1, 1);
@@ -113,7 +113,7 @@ export class LevelBuilder {
 				floor.addChild(doodad);
 				doodad.position.x = floorOrWallConfig.x;
 				doodad.position.z = floorOrWallConfig.y;
-				doodad.rotate(Axis.Y, floorOrWallConfig.rot * -RIGHT_ANGLE);
+				doodad.rotate(Axis.Y, floorOrWallConfig.rot * RIGHT_ANGLE);
 				doodad.renderOutline = true;
 				doodad.receiveShadows = true;
 				doodad.outlineColor = new Color3(0, 1, 1);

@@ -1,6 +1,6 @@
 import { ItemWithContext, padRoom, spreadItemsOnAxis, translateItemAndChildren } from './furnitureForRooms';
 import { RoomWorkingData, Tile } from './rooms';
-import { getXYRangeFromXYCoords, XYCoord, XYRange, rand, DIRECTIONS, scrambleArray, averageXYCoords, scaleXY } from './utilities';
+import { getXYRangeFromXYCoords, XYCoord, XYRange, rand, DIRECTIONS, getScrambledDirs, scrambleArray, averageXYCoords, scaleXY, getNFromDir } from './utilities';
 
 let testRoom: RoomWorkingData = {
 	"width": 14,
@@ -120,16 +120,16 @@ const spawnRoundTable = (): ItemWithContext[] => {
 		{ x: dist, y: dist },
 		{ x: -dist, y: dist },
 	]
-	let scrambledDirs = scrambleArray(DIRECTIONS);
-	if (scrambledDirs.length < 4) { throw new Error("DIRECTIONS doesn't have four elements???") }
+	let scrambledDirs = getScrambledDirs();
+	if (scrambledDirs.length < 4) { throw new Error("ASSERT LOL") }
 
 	// always at least one chair
 	let dir1 = scrambledDirs[0];
 	ret.push({
 		occupiedCoords: [], // covered by the table itself, since the chairs are scooted
-		itemCenterCoord: diagSpread[DIRECTIONS.indexOf(dir1)],
+		itemCenterCoord: diagSpread[getNFromDir(dir1)],
 		name: 'chair',
-		children: [], rot: DIRECTIONS.indexOf(dir1) - 0.5,
+		children: [], rot: getNFromDir(dir1) - 0.5,
 	})
 	// but up to four chairs:
 	for (let i = 1; i < scrambledDirs.length; i++) {
@@ -137,10 +137,10 @@ const spawnRoundTable = (): ItemWithContext[] => {
 			let dir = scrambledDirs[i];
 			ret.push({
 				occupiedCoords: [],
-				itemCenterCoord: diagSpread[DIRECTIONS.indexOf(dir)],
+				itemCenterCoord: diagSpread[getNFromDir(dir)],
 				name: 'chair',
 				children: [],
-				rot: DIRECTIONS.indexOf(dir) - 0.5,
+				rot: getNFromDir(dir) - 0.5,
 			});
 		}
 	}

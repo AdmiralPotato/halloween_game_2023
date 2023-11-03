@@ -259,5 +259,5 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 let seed = '1111';
 const mapWithRooms = makeRoomsWithSeed(seed);
 
-console.log(JSON.stringify(mapWithRooms, null, '\t'));
+// console.log(JSON.stringify(mapWithRooms, null, '\t'));
 console.log('breakme');

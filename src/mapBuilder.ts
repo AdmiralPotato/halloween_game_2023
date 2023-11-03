@@ -9,7 +9,9 @@ import {
 	translateXY,
 	compareXY,
 	getCenterForXYRange,
-	DIRECTIONS
+	DIRECTIONS,
+	scaleXY,
+	getNFromDir
 } from './utilities';
 import {
 	ROOMS,
@@ -306,7 +308,6 @@ export const buildMapFromSeed = (seed: string) => {
 		}
 	});
 
-
 	const SCALE = 2;
 	// doubling the coordinates now
 	roomTileEdges = roomTileEdges.map(tile => {
@@ -319,10 +320,10 @@ export const buildMapFromSeed = (seed: string) => {
 		roomWorkingData[roomID].depth *= SCALE;
 	});
 	Object.keys(roomCorners).forEach(roomID => {
-		roomCorners[roomID].x.min *= 2;
-		roomCorners[roomID].y.min *= 2;
-		roomCorners[roomID].x.max *= 2;
-		roomCorners[roomID].y.max *= 2;
+		roomCorners[roomID].x.min *= SCALE;
+		roomCorners[roomID].y.min *= SCALE;
+		roomCorners[roomID].x.max *= SCALE;
+		roomCorners[roomID].y.max *= SCALE;
 	});
 
 	// getting the door info
@@ -382,6 +383,9 @@ export const buildMapFromSeed = (seed: string) => {
 			.filter(tile => tile.roomID === roomID);
 		let floorTiles: Tile[] = [];
 		let doorTiles: Tile[] = [];
+		const calculateWallDir = (string: string) => {
+			return getNFromDir(string);
+		};
 		//floors
 		workingRoomTileEdges
 			.forEach((tileInfo: Edge) => {
@@ -411,7 +415,7 @@ export const buildMapFromSeed = (seed: string) => {
 						asset: tileAssets.wall,
 						x: tileInfo.pos.x,
 						y: tileInfo.pos.y,
-						rot: DIRECTIONS.indexOf(dir),
+						rot: calculateWallDir(dir),
 						destination: '',
 						wallDir: '',
 						compositeInfo: tileInfo.compositeInfo,
@@ -428,7 +432,7 @@ export const buildMapFromSeed = (seed: string) => {
 				type: 'door',
 				x: tileInfo.pos.x,
 				y: tileInfo.pos.y,
-				rot: DIRECTIONS.indexOf(tileInfo.doorDir),
+				rot: calculateWallDir(tileInfo.doorDir),
 				destination: tileInfo.destination,
 				wallDir: '',
 				compositeInfo: tileInfo.compositeInfo,
@@ -442,7 +446,7 @@ export const buildMapFromSeed = (seed: string) => {
 					asset: tileAssets.wall,
 					x: tileInfo.pos.x,
 					y: tileInfo.pos.y,
-					rot: DIRECTIONS.indexOf(dir),
+					rot: calculateWallDir(dir),
 					destination: '',
 					wallDir: '',
 					compositeInfo: tileInfo.compositeInfo,
@@ -500,7 +504,7 @@ export const buildMapFromSeed = (seed: string) => {
 
 	return {
 		rooms: roomWorkingData,
-		printMap: doubledMap.join('\n'),
+		printMap: doubledMap.map(line => line.split('').reverse().join('')).join('\n'),
 	};
 };
 

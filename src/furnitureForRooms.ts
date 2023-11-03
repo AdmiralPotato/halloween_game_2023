@@ -1,5 +1,5 @@
 import { Tile } from './rooms';
-import { rand, scrambleArray, getRandomWithWeight, getXYRangeFromXYCoords, translateXY, XYCoord, getOppositeDir, DIRECTIONS, averageXYCoords, scaleXY, compareXY, XYRange, getCenterForXYRange } from './utilities';
+import { rand, getRandomWithWeight, getXYRangeFromXYCoords, translateXY, XYCoord, getOppositeDir, DIRECTIONS, averageXYCoords, scaleXY, compareXY, XYRange, getCenterForXYRange, getNFromDir, getScrambledDirs } from './utilities';
 
 const cNeighborMap: Record<string, Record<string, string>> = {
 	q: { nw: 'q', ne: 'w', sw: 'a', se: 's', },
@@ -362,12 +362,18 @@ const getChildren: Record<string, Function> = {
 		return rand() < 0.3 ? [] : [{ item: 'dresser', pos: 'n', rot: 2 }];
 	},
 	roundTable: (): ChildInfo[] => {
-		let dirs = scrambleArray(DIRECTIONS);
-		if (dirs.length < 4) { throw new Error("DIRECTIONS doesn't have four elements???") }
-		let ret: ChildInfo[] = [{ item: 'chair', pos: dirs[0], rot: DIRECTIONS.indexOf(dirs[0]) }];
+		let scrambledDirs = getScrambledDirs();
+		if (scrambledDirs.length < 4) { throw new Error("ASSERT LOL") }
+		let ret: ChildInfo[] = [{
+			item: 'chair', pos: scrambledDirs[0],
+			rot: getNFromDir(scrambledDirs[0])
+		}];
 		for (let i = 1; i <= 3; i++) {
 			if (rand() < 0.6) {
-				ret.push({ item: 'chair', pos: dirs[i], rot: DIRECTIONS.indexOf(dirs[i]) });
+				ret.push({
+					item: 'chair', pos: scrambledDirs[i],
+					rot: getNFromDir(scrambledDirs[i])
+				});
 			}
 		}
 		return ret;
