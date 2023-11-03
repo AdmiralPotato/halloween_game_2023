@@ -2,7 +2,7 @@ import { buildMapFromSeed } from './mapBuilder';
 import { FURNISHINGS } from './furnishings';
 import { ROOM_CONTENTS, ROOMS, Tile } from './rooms';
 import { Furnishing } from './LevelBuilder';
-import { rand, randomIndex, scrambleArray, getRandomWithWeight, RandomWeight } from './utilities';
+import { rand, randomIndex, scrambleArray, getRandomWithWeight, RandomWeight, getOppositeDir, getOppositeDirN } from './utilities';
 import { Room } from './LevelBuilder';
 import { populateRoomCenter3 } from './roomFurnishing';
 import { FURNISHINGS2, ItemWithContext } from './furnitureForRooms';
@@ -228,8 +228,8 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 			};
 		});
 
-		// put the center objects in
-		const convertNewThingToOld = (thing: ItemWithContext): Furnishing => {
+		// BODGE FOR NEW STUFF + TURNING IT INTO OLD STUFF
+		const convertNewThingToOld = (thing: ItemWithContext): Furnishing => { // BODGE
 			if (!FURNISHINGS2[thing.name]) {
 				throw new Error("Could not find furniture called " + thing.name)
 			}
@@ -246,11 +246,31 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 				hasCandy: rand() < 0.3,
 			};
 		};
-		let converted: Furnishing[] = populateRoomCenter3(rooms[roomID], roomType)
-			.filter((item: ItemWithContext) => item.name !== "EMPTY")
-			.map((item: ItemWithContext) => {
-				return convertNewThingToOld(item);
+		let newThings: ItemWithContext[] = [];
+		// put the center objects in
+		let newFurniture: ItemWithContext[] = populateRoomCenter3(rooms[roomID], roomType)
+
+
+		// Add doorframes
+		let doorFrames: ItemWithContext[] = rooms[roomID].doors
+			.map((tile: Tile) => {
+				return {
+					occupiedCoords: [{ x: tile.x, y: tile.y }],
+					itemCenterCoord: { x: tile.x, y: tile.y },
+					name: 'doorFrame',
+					children: [],
+					rot: (tile.rot % 2 === 0) ? tile.rot : getOppositeDirN(tile.rot),
+				}
 			});
+		// combine the above
+		newThings = newThings.concat(newFurniture).concat(doorFrames);
+		// get rid of null furniture
+		newThings = newThings.filter((item: ItemWithContext) => item.name !== "EMPTY");
+		// convert furniture to the old shape
+		let converted = newThings.map((item: ItemWithContext) => {
+			return convertNewThingToOld(item);
+		});
+		// shove them in the old place
 		rooms[roomID].furnishings = rooms[roomID].furnishings.concat(converted);
 	});
 	return Object.values(rooms);

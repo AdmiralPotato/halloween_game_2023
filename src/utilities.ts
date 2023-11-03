@@ -105,6 +105,9 @@ export const getRandomDir = (): string => {
 export const getOppositeDir = (s: string): string => {
 	return DIRECTIONS[(DIRECTIONS.indexOf(s) + 2) % 4];
 };
+export const getOppositeDirN = (n: number): number => {
+	return (n + 2) % 4;
+};
 export const rotateDir = (s: string, n: number): string => {
 	return DIRECTIONS[(DIRECTIONS.indexOf(s) + n) % 4];
 };

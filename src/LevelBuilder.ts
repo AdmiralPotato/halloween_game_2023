@@ -97,6 +97,7 @@ export class LevelBuilder {
 				doodad.rotate(Axis.Y, door.rot * RIGHT_ANGLE);
 				doodad.renderOutline = true;
 				doodad.receiveShadows = true;
+				shadowGenerator.addShadowCaster(doodad);
 				doodad.outlineColor = new Color3(0, 1, 1);
 				doodad.outlineWidth = 0.01;
 			});
@@ -116,6 +117,7 @@ export class LevelBuilder {
 				doodad.rotate(Axis.Y, floorOrWallConfig.rot * RIGHT_ANGLE);
 				doodad.renderOutline = true;
 				doodad.receiveShadows = true;
+				shadowGenerator.addShadowCaster(doodad);
 				doodad.outlineColor = new Color3(0, 1, 1);
 				doodad.outlineWidth = 0.01;
 			});

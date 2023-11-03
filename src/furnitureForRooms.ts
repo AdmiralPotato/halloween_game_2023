@@ -209,7 +209,7 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 	doorframe: {
 		placement: 'wall', placementContext: '',
 		asset: 'doorframe',
-		dimensions: { width: 2, depth: 1, height: 2 },
+		dimensions: { width: 2, depth: 2, height: 2 },
 	},
 	diningTableHalf: {
 		placement: 'center', placementContext: '',
@@ -230,6 +230,11 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 		placement: 'wall', placementContext: '',
 		asset: 'paintingBig_primitive1',
 		dimensions: { width: 1, depth: 1, height: 2 },
+	},
+	doorFrame: {
+		placement: 'special', placementContext: '',
+		asset: 'doorframe',
+		dimensions: { width: 2, depth: 1, height: 2 },
 	},
 };
 /* WISHLIST
