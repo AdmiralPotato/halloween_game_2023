@@ -38,7 +38,7 @@ export const FURNISHINGS: Record<string, FurnishingInfo> = {
 	tableRound: { position: 'freeStanding', w: 2, d: 2, h: 1 },
 	diningTable3: { position: 'freeStanding', w: 4, d: 1, h: 1 },
 	diningTable4: { position: 'freeStanding', w: 3, d: 1, h: 1 },
-	endtable_primitive0: { position: 'freeStanding', w: 1, d: 1, h: 1 },
+	endtable: { position: 'wallEdge', w: 1, d: 1, h: 1 },
 };
 
 

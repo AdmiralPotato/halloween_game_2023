@@ -92,8 +92,9 @@ export class LevelBuilder {
 				floor.addChild(doodad);
 				doodad.position.x = door.x;
 				doodad.position.z = door.y;
-				doodad.rotate(Axis.Y, door.rot * -RIGHT_ANGLE);
+				doodad.rotate(Axis.Y, door.rot * RIGHT_ANGLE);
 				doodad.receiveShadows = true;
+				shadowGenerator.addShadowCaster(doodad);
 			});
 			room.floors.forEach((floorOrWallConfig) => {
 				if (!floorOrWallConfig.asset) {
@@ -108,8 +109,10 @@ export class LevelBuilder {
 				floor.addChild(doodad);
 				doodad.position.x = floorOrWallConfig.x;
 				doodad.position.z = floorOrWallConfig.y;
-				doodad.rotate(Axis.Y, floorOrWallConfig.rot * -RIGHT_ANGLE);
+				doodad.rotate(Axis.Y, floorOrWallConfig.rot * RIGHT_ANGLE);
+				doodad.renderOutline = true;
 				doodad.receiveShadows = true;
+				shadowGenerator.addShadowCaster(doodad);
 			});
 		});
 		return base;

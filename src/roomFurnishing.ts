@@ -1,6 +1,7 @@
-import { ItemWithContext, padRoom, spreadItemsOnAxis, translateItemAndChildren } from './furnitureForRooms';
+import { FURNISHINGS } from './furnishings';
+import { FurnitureWeight, ItemWithContext, ROOM_CONTENTS2, FURNISHINGS2, padRoom, spreadItemsOnAxis, translateItemAndChildren } from './furnitureForRooms';
 import { RoomWorkingData, Tile } from './rooms';
-import { getXYRangeFromXYCoords, XYCoord, XYRange, rand, DIRECTIONS, scrambleArray, averageXYCoords, scaleXY } from './utilities';
+import { getXYRangeFromXYCoords, XYCoord, XYRange, rand, DIRECTIONS, getScrambledDirs, scrambleArray, averageXYCoords, scaleXY, getNFromDir, getRandomWithWeight } from './utilities';
 
 let testRoom: RoomWorkingData = {
 	"width": 14,
@@ -19,7 +20,8 @@ let testRoom: RoomWorkingData = {
 	"furnishings": []
 };
 
-export const populateRoomCenter3 = (roomData: RoomWorkingData, roomName: string): ItemWithContext[] => {
+export const furnishCenter = (roomData: RoomWorkingData, roomName: string): ItemWithContext[] => {
+	// previously called `populateRoomCenter3`
 	let floors: Tile[] = roomData.floors;
 	let floorCoords = padRoom(floors)
 		.filter((tile: Tile) => {
@@ -39,6 +41,31 @@ export const populateRoomCenter3 = (roomData: RoomWorkingData, roomName: string)
 	};
 	let ret = generateCenterFurniture[roomName](floorSize);
 	ret = ret.filter((item: ItemWithContext) => (item.name !== "EMPTY"))
+	return ret;
+};
+
+export const furnishCorners = (roomData: RoomWorkingData, roomName: string): ItemWithContext[] => {
+	let floors: Tile[] = roomData.floors;
+	let corners = ['q', 'e'];
+	let floorTiles = padRoom(floors)
+		.filter((tile: Tile) => {
+			return corners.includes(tile.compositeInfo) && tile.asset.includes('floor');
+		});
+
+	let possibleFurniture: FurnitureWeight[] = ROOM_CONTENTS2[roomName]
+		.filter(item => {
+			return FURNISHINGS2[item.item].placementContext.includes('corner');
+		});
+	let ret: ItemWithContext[] = floorTiles.map((tile: Tile) => {
+		let furnitureName = getRandomWithWeight(possibleFurniture);
+		return {
+			occupiedCoords: [{ x: tile.x, y: tile.y }],
+			itemCenterCoord: { x: tile.x, y: tile.y },
+			name: furnitureName,
+			children: [],
+			rot: furnitureName === 'cobwebCorner' && tile.compositeInfo === 'e' ? 1 : 0, // TODO fix this when you fix the rotation / x axis of everything
+		};
+	});
 	return ret;
 };
 
@@ -120,16 +147,16 @@ const spawnRoundTable = (): ItemWithContext[] => {
 		{ x: dist, y: dist },
 		{ x: -dist, y: dist },
 	]
-	let scrambledDirs = scrambleArray(DIRECTIONS);
-	if (scrambledDirs.length < 4) { throw new Error("DIRECTIONS doesn't have four elements???") }
+	let scrambledDirs = getScrambledDirs();
+	if (scrambledDirs.length < 4) { throw new Error("ASSERT LOL") }
 
 	// always at least one chair
 	let dir1 = scrambledDirs[0];
 	ret.push({
 		occupiedCoords: [], // covered by the table itself, since the chairs are scooted
-		itemCenterCoord: diagSpread[DIRECTIONS.indexOf(dir1)],
+		itemCenterCoord: diagSpread[getNFromDir(dir1)],
 		name: 'chair',
-		children: [], rot: DIRECTIONS.indexOf(dir1) - 0.5,
+		children: [], rot: getNFromDir(dir1) - 0.5,
 	})
 	// but up to four chairs:
 	for (let i = 1; i < scrambledDirs.length; i++) {
@@ -137,10 +164,10 @@ const spawnRoundTable = (): ItemWithContext[] => {
 			let dir = scrambledDirs[i];
 			ret.push({
 				occupiedCoords: [],
-				itemCenterCoord: diagSpread[DIRECTIONS.indexOf(dir)],
+				itemCenterCoord: diagSpread[getNFromDir(dir)],
 				name: 'chair',
 				children: [],
-				rot: DIRECTIONS.indexOf(dir) - 0.5,
+				rot: getNFromDir(dir) - 0.5,
 			});
 		}
 	}
@@ -180,8 +207,7 @@ const getLineOfBookcases = (length: number, axis: string) => {
 	})
 	return ret;
 }
-
-const getBookcaseIsland = (length: number, axis: string) => {
+const spawnBookcaseIsland = (length: number, axis: string) => {
 	// const antiAxis: string = axis === 'x' ? 'y' : 'x';
 	let bookcases1: ItemWithContext[] = getLineOfBookcases(length, axis);
 	let bookcases2: ItemWithContext[] = getLineOfBookcases(length, axis)
@@ -219,8 +245,10 @@ const generateCenterFurniture: Record<string, Function> = {
 		for (let i = 0; i < blocksCount; i++) {
 			let axis = rand() < 0.5 ? 'x' : 'y';
 			let length = axis === 'x' ? Math.floor(width / 2) : depth;
-			let working: ItemWithContext[] = getBookcaseIsland(length, axis);
-			let translated: ItemWithContext[] = working.map(item => translateItemAndChildren(item, centers[i]));
+			let working: ItemWithContext[] = spawnBookcaseIsland(length, axis);
+			let translated: ItemWithContext[] = working.map(item => {
+				return translateItemAndChildren(item, centers[i])
+			});
 			ret = ret.concat(translated);
 		}
 		return ret;
@@ -228,8 +256,19 @@ const generateCenterFurniture: Record<string, Function> = {
 	hallway: () => { return []; },
 	bedroom: () => { return [] },
 	livingRoom: (): ItemWithContext[] => {
-		let roundTable = spawnRoundTable();
-		return roundTable;
+		let translations = [
+			{ x: 3, y: 0 },
+			{ x: -3, y: 0 },
+		]
+		let roundTable1 = spawnRoundTable().map(item => {
+			item = translateItemAndChildren(item, translations[0]);
+			return item;
+		});
+		let roundTable2 = spawnRoundTable().map(item => {
+			item = translateItemAndChildren(item, translations[1]);
+			return item;
+		});
+		return roundTable1.concat(roundTable2);
 	},
 }
 

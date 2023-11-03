@@ -1,5 +1,5 @@
 import { Tile } from './rooms';
-import { rand, scrambleArray, getRandomWithWeight, getXYRangeFromXYCoords, translateXY, XYCoord, getOppositeDir, DIRECTIONS, averageXYCoords, scaleXY, compareXY, XYRange, getCenterForXYRange } from './utilities';
+import { rand, getRandomWithWeight, getXYRangeFromXYCoords, translateXY, XYCoord, getOppositeDir, DIRECTIONS, averageXYCoords, scaleXY, compareXY, XYRange, getCenterForXYRange, getNFromDir, getScrambledDirs } from './utilities';
 
 const cNeighborMap: Record<string, Record<string, string>> = {
 	q: { nw: 'q', ne: 'w', sw: 'a', se: 's', },
@@ -127,12 +127,12 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 		dimensions: { width: 2, depth: 2, height: 2 },
 	},
 	endTable0: {
-		placement: 'free', placementContext: '',
+		placement: 'free', placementContext: 'corner',
 		asset: 'endtable',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	endTable1: {
-		placement: 'free', placementContext: '',
+		placement: 'free', placementContext: 'corner',
 		asset: 'endtable',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
@@ -152,12 +152,12 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 		dimensions: { width: 2, depth: 1, height: 2 },
 	},
 	pottedPlant: {
-		placement: 'free', placementContext: '',
+		placement: 'free', placementContext: 'corner',
 		asset: 'pottedPlant',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	gargoyle: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall', placementContext: 'corner',
 		asset: 'gargoyle',
 		dimensions: { width: 1, depth: 1, height: 2 },
 	},
@@ -172,7 +172,7 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 		dimensions: { width: 2, depth: 1, height: 1 },
 	},
 	chest: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall', placementContext: 'corner',
 		asset: 'chest',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
@@ -209,7 +209,7 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 	doorframe: {
 		placement: 'wall', placementContext: '',
 		asset: 'doorframe',
-		dimensions: { width: 2, depth: 1, height: 2 },
+		dimensions: { width: 2, depth: 2, height: 2 },
 	},
 	diningTableHalf: {
 		placement: 'center', placementContext: '',
@@ -221,15 +221,15 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 		asset: 'tableLongMid',
 		dimensions: { width: 2, depth: 2, height: 1 },
 	},
-	paintingTall0: {
+	paintingTall: {
 		placement: 'wall', placementContext: '',
-		asset: 'paintingBig_primitive0',
+		asset: 'paintingBig',
 		dimensions: { width: 1, depth: 1, height: 2 },
 	},
-	paintingTall1: {
-		placement: 'wall', placementContext: '',
-		asset: 'paintingBig_primitive1',
-		dimensions: { width: 1, depth: 1, height: 2 },
+	doorFrame: {
+		placement: 'special', placementContext: '',
+		asset: 'doorframe',
+		dimensions: { width: 2, depth: 1, height: 2 },
 	},
 };
 /* WISHLIST
@@ -243,8 +243,7 @@ export interface FurnitureWeight {
 
 const commonStuff: FurnitureWeight[] = [
 	{ item: 'pottedPlant', weight: 2, count: NaN },
-	{ item: 'paintingTall0', weight: 1, count: NaN },
-	{ item: 'paintingTall1', weight: 1, count: NaN },
+	{ item: 'paintingTall', weight: 1, count: NaN },
 	{ item: 'cobwebEdge', weight: 4, count: NaN },
 	{ item: 'cobwebCorner', weight: 4, count: NaN },
 	{ item: 'candelabra', weight: 2, count: NaN },
@@ -362,12 +361,18 @@ const getChildren: Record<string, Function> = {
 		return rand() < 0.3 ? [] : [{ item: 'dresser', pos: 'n', rot: 2 }];
 	},
 	roundTable: (): ChildInfo[] => {
-		let dirs = scrambleArray(DIRECTIONS);
-		if (dirs.length < 4) { throw new Error("DIRECTIONS doesn't have four elements???") }
-		let ret: ChildInfo[] = [{ item: 'chair', pos: dirs[0], rot: DIRECTIONS.indexOf(dirs[0]) }];
+		let scrambledDirs = getScrambledDirs();
+		if (scrambledDirs.length < 4) { throw new Error("ASSERT LOL") }
+		let ret: ChildInfo[] = [{
+			item: 'chair', pos: scrambledDirs[0],
+			rot: getNFromDir(scrambledDirs[0])
+		}];
 		for (let i = 1; i <= 3; i++) {
 			if (rand() < 0.6) {
-				ret.push({ item: 'chair', pos: dirs[i], rot: DIRECTIONS.indexOf(dirs[i]) });
+				ret.push({
+					item: 'chair', pos: scrambledDirs[i],
+					rot: getNFromDir(scrambledDirs[i])
+				});
 			}
 		}
 		return ret;

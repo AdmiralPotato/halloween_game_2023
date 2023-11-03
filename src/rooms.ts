@@ -112,7 +112,7 @@ const everyRoomStuff: RandomWeight[] = [
 	{ item: 'gargoyle', weight: 1 },
 	{ item: 'grandfatherClock', weight: 1 },
 	{ item: 'candelabra', weight: 2 },
-	{ item: 'endtable_primitive0', weight: 1 },
+	{ item: 'endtable', weight: 1 },
 	{ item: 'EMPTY', weight: 2 },
 ];
 

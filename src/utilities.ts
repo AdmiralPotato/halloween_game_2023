@@ -91,20 +91,35 @@ export const randomFromArray = <T>(array: T[]): T | null => {
 };
 export const scrambleArray = <T>(arr: T[]): T[] => {
 	const ret = [];
-	let workingArr = arr.slice();
+	let workingArr = JSON.parse(JSON.stringify(arr));
 	while (workingArr.length) {
 		let i = randomIndex(workingArr.length);
 		ret.push(workingArr.splice(i, 1)[0]);
 	}
 	return ret;
 };
-export const DIRECTIONS = ['n', 'e', 's', 'w'];
+export const DIRECTIONS = ['n', 'w', 's', 'e']; // should be nesw, but wall rot was wrong otherwise? TODO pls investigate?
 export const getRandomDir = (): string => {
 	return DIRECTIONS[randomIndex(4)];
 };
-export const getOppositeDir = (dir: string): string => {
-	return DIRECTIONS[(DIRECTIONS.indexOf(dir) + 2) % 4];
+export const getOppositeDir = (s: string): string => {
+	return DIRECTIONS[(DIRECTIONS.indexOf(s) + 2) % 4];
 };
+export const getOppositeDirN = (n: number): number => {
+	return (n + 2) % 4;
+};
+export const rotateDir = (s: string, n: number): string => {
+	return DIRECTIONS[(DIRECTIONS.indexOf(s) + n) % 4];
+};
+export const getNFromDir = (s: string): number => {
+	return DIRECTIONS.indexOf(s);
+};
+export const makeDirFromN = (n: number): string => {
+	return DIRECTIONS[n];
+};
+export const getScrambledDirs = () => {
+	return scrambleArray(DIRECTIONS);
+}
 export interface RandomWeight {
 	weight?: number;
 	count?: number;
