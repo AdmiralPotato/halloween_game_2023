@@ -15,10 +15,11 @@ import '@babylonjs/core/Rendering/outlineRenderer';
 
 import { Room, LevelBuilder } from './LevelBuilder';
 import { makeRoomsWithSeed } from './levelGenerator';
+import { initCandySpawner } from './CandySpawner';
 
 import './styles.css';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import { AnimationGroup, ShadowGenerator, Texture } from '@babylonjs/core';
+import { type AnimationGroup, ShadowGenerator, Texture, TransformNode } from '@babylonjs/core';
 import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { setupUserInput } from './userInputState';
@@ -55,6 +56,7 @@ class App {
 		playerCharacterHolder.addChild(actionIntersectMeshParent);
 		let playerCharacterMesh: Mesh | null = null;
 		let playerCharacterMaterial: StandardMaterial | null = null;
+		const candyBucketTransformNode = new TransformNode('candyBucketTransformNode');
 		actionIntersectMeshParent.addChild(actionIntersectMesh);
 		actionIntersectMesh.billboardMode = 3;
 		const mat = new StandardMaterial('actionIntersectMeshMaterial');
@@ -147,6 +149,10 @@ class App {
 				// animations.run.loopAnimation = true;
 				console.log('What is animations?', characterAnimations);
 				const mageTransformNode = scene.getTransformNodeById('mage_bones');
+				const mageHandTransformNode = scene.getTransformNodeById('handItem_R');
+				candyBucketTransformNode.parent = mageHandTransformNode;
+				// move to the center of the pumpkin below the hand
+				candyBucketTransformNode.position.z -= 0.25;
 				console.log('What is a MAGE?!?', mageTransformNode);
 				mageTransformNode?.position.set(0, 0, 0);
 				// mageTransformNode?.scaling.set(4, 4, 4);
@@ -201,11 +207,6 @@ class App {
 
 		const assetLoadingPromises = [magePromise, environmentPromise, doodadsPromise];
 		let rooms: Room[] | null;
-		Promise.all(assetLoadingPromises).then(() => {
-			console.log('What is meshMap after all is loaded?', meshMap);
-			initLevelFromSeed('bob');
-			// scene.createDefaultCamera(true, true, true);
-		});
 
 		const { buttonStateMap, joystick } = setupUserInput();
 
@@ -235,10 +236,7 @@ class App {
 			}
 		};
 
-		let lastLogicTick = window.performance.now();
-		const motionDrag = 0.85;
-		const motionDragVector = new Vector3(motionDrag, motionDrag, motionDrag);
-		let motionVector = Vector3.Zero();
+		const { spawnCandy, tickCandies } = initCandySpawner(scene);
 
 		const doActionIntersect = (didAction: boolean) => {
 			const interactVector = actionIntersectMesh
@@ -262,6 +260,9 @@ class App {
 								doodad.outlineColor = furnishing.hasCandy
 									? COLOR_YES_CANDY
 									: COLOR_NO_CANDY;
+								if (furnishing.hasCandy) {
+									spawnCandy(doodad, candyBucketTransformNode);
+								}
 							}
 						}
 					} else {
@@ -273,6 +274,10 @@ class App {
 			}
 		};
 
+		let lastLogicTick = window.performance.now();
+		const motionDrag = 0.85;
+		const motionDragVector = new Vector3(motionDrag, motionDrag, motionDrag);
+		let motionVector = Vector3.Zero();
 		const gameLogicLoop = () => {
 			const now = window.performance.now();
 			// should be in the scale of seconds?
@@ -336,18 +341,26 @@ class App {
 			}
 
 			playerCharacterHolder.getWorldMatrix().getTranslationToRef(cameraTarget.position);
+			cameraTarget.position.y += 0.5;
 			hideRoomsPlayerIsNotInside();
 			actionIntersectMesh.rotate(new Vector3(0, 0, 1), delta * 5);
 
-			doActionIntersect(didAction);
+			tickCandies(now);
 
+			doActionIntersect(didAction);
 			lastLogicTick = now;
 		};
-		// Let's separate out a game state loop even if rendering is hitching.
-		scene.registerBeforeRender(gameLogicLoop);
 		engine.runRenderLoop(() => {
 			engine.resize();
 			scene.render();
+		});
+
+		Promise.all(assetLoadingPromises).then(() => {
+			console.log('What is meshMap after all is loaded?', meshMap);
+			initLevelFromSeed('bob');
+			// Let's separate out a game state loop even if rendering is hitching.
+			scene.registerBeforeRender(gameLogicLoop);
+			// scene.createDefaultCamera(true, true, true);
 		});
 	}
 }

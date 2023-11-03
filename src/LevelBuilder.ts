@@ -1,9 +1,8 @@
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import { Scene } from '@babylonjs/core/scene';
+import { type Scene } from '@babylonjs/core/scene';
 import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder';
-import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { Axis } from '@babylonjs/core/Maths/math.axis';
-import { ShadowGenerator } from '@babylonjs/core';
+import { type ShadowGenerator } from '@babylonjs/core';
 const RIGHT_ANGLE = Math.PI / 2;
 
 interface Door {
@@ -72,8 +71,7 @@ export class LevelBuilder {
 			floor.position.y = 0.95; // let the mesh sink a little below the player, for "isInRoom" check
 			floor.receiveShadows = true;
 			floor.visibility = 0;
-			// floor.renderOutline = true;
-			// floor.outlineColor = new Color3(0, 1, 0);
+			// floor.outlineColor = new Color3(0, 1, 1);
 			// floor.outlineWidth = 0.01;
 			room.roomMesh = floor;
 			base.addChild(floor);
@@ -95,10 +93,7 @@ export class LevelBuilder {
 				doodad.position.x = door.x;
 				doodad.position.z = door.y;
 				doodad.rotate(Axis.Y, door.rot * -RIGHT_ANGLE);
-				doodad.renderOutline = true;
 				doodad.receiveShadows = true;
-				doodad.outlineColor = new Color3(0, 1, 1);
-				doodad.outlineWidth = 0.01;
 			});
 			room.floors.forEach((floorOrWallConfig) => {
 				if (!floorOrWallConfig.asset) {
@@ -114,10 +109,7 @@ export class LevelBuilder {
 				doodad.position.x = floorOrWallConfig.x;
 				doodad.position.z = floorOrWallConfig.y;
 				doodad.rotate(Axis.Y, floorOrWallConfig.rot * -RIGHT_ANGLE);
-				doodad.renderOutline = true;
 				doodad.receiveShadows = true;
-				doodad.outlineColor = new Color3(0, 1, 1);
-				doodad.outlineWidth = 0.01;
 			});
 		});
 		return base;
