@@ -1,15 +1,13 @@
 import { type Scene } from '@babylonjs/core/scene';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import { type InstancedMesh } from '@babylonjs/core/Meshes/instancedMesh';
-import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
-import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
-import { Texture, type TransformNode } from '@babylonjs/core';
-import { Engine } from '@babylonjs/core/Engines/engine';
+import { type TransformNode } from '@babylonjs/core';
+import { Sprite } from '@babylonjs/core/Sprites/sprite';
+import { SpriteManager } from '@babylonjs/core/Sprites/spriteManager';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 
 interface CandyState {
 	startPosition: Vector3;
-	candyMesh: InstancedMesh;
+	candyMesh: Sprite;
 	targetMesh: TransformNode;
 	startTime: number;
 	endTime: number;
@@ -17,17 +15,7 @@ interface CandyState {
 const candyTweenTime = 2000;
 
 export const initCandySpawner = (scene: Scene) => {
-	const protoCandy = CreatePlane('protoCandy', {
-		size: 0.25,
-		sideOrientation: Mesh.DOUBLESIDE,
-	});
-	scene.removeMesh(protoCandy); // BAD! DO NOT attach to default scene!
-	const candyMaterial = new StandardMaterial('actionIntersectMeshMaterial');
-	const sparkTexture = new Texture('./assets/spark.png');
-	candyMaterial.diffuseTexture = sparkTexture;
-	protoCandy.material = candyMaterial;
-	candyMaterial.alphaMode = Engine.ALPHA_ADD;
-	candyMaterial.opacityTexture = sparkTexture;
+	const candySpriteManager = new SpriteManager('candy', './assets/candy.png', 50, 256, scene);
 	const candyOffsetMesh = new Mesh('candyOffsetMesh');
 
 	let candyStates: CandyState[] = [];
@@ -50,7 +38,6 @@ export const initCandySpawner = (scene: Scene) => {
 				const closeEnough = distance.length() < 0.01;
 				if (expired || closeEnough) {
 					console.log('Candy removed', state, { expired, closeEnough });
-					scene.removeMesh(state.candyMesh);
 					state.candyMesh.dispose();
 				} else {
 					nextCandyStates.push(state);
@@ -65,8 +52,9 @@ export const initCandySpawner = (scene: Scene) => {
 			// Without running this, we don't get updated transforms this tick!
 			candyOffsetMesh.computeWorldMatrix();
 			console.log('targetObject.getWorldMatrix()', spawnPointMesh.getWorldMatrix());
-			const candy = protoCandy.createInstance('candy-' + Math.random().toString());
-			scene.addMesh(candy);
+			const candy = new Sprite('candy-' + Math.random().toString(), candySpriteManager);
+			candy.size = 0.5;
+			candy.cellIndex = Math.floor(Math.random() * 9);
 			candy.position = candyOffsetMesh.getWorldMatrix().getTranslationToRef(Vector3.Zero());
 			// console.log('candy.position', candy.position);
 			// candyOffsetMesh.addChild(candy);
