@@ -300,6 +300,7 @@ export const ROOM_CONTENTS2: Record<string, FurnitureWeight[]> = {
 		{ item: 'bookcaseTallNarrow', weight: 8, count: NaN },
 		{ item: 'bookcaseShortWide', weight: 3, count: NaN },
 		{ item: 'bookcaseShortNarrow', weight: 3, count: NaN },
+		{ item: 'candelabra', weight: 8, count: NaN }, // also in common stuff
 		...commonStuff,
 	]
 };
@@ -370,20 +371,6 @@ const getChildren: Record<string, Function> = {
 			}
 		}
 		return ret;
-	},
-	diningTableHalf: (): ChildInfo[] => {
-		const missing = 0.05;
-		let children: ChildInfo[] = [];
-		['n0', 'n1', 'n2', 'n3', 's0', 's1', 's2', 's3',].forEach(pos => {
-			let rot: number = pos.includes('n') ? 0 : 2;
-			let insert = { item: rand() < missing ? 'EMPTY' : 'chair', pos, rot };
-			children.push(insert);
-		});
-		['n4', 'n5', 's4', 's5',].forEach(pos => {
-			children.push({ item: 'EMPTY', pos, rot: 0 })
-		});
-		children.push({ item: 'diningTableHalf', pos: 'w', rot: 2 });
-		return children;
 	},
 	// squareTable: () => { // NOTE: OLD STYLE OF DATA
 	// 	// 1 chair minimum; 2 chairs sometimes (edges chosen is random)

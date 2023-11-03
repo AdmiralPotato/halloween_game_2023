@@ -1,6 +1,6 @@
-import { ChildInfo, FURNISHINGS2, ItemWithContext, ROOM_CONTENTS2, getItemInfo, padRoom, printRoom, spreadItemsOnAxis, translateItemAndChildren } from './furnitureForRooms';
+import { ItemWithContext, padRoom, spreadItemsOnAxis, translateItemAndChildren } from './furnitureForRooms';
 import { RoomWorkingData, Tile } from './rooms';
-import { getXYRangeFromXYCoords, XYCoord, XYRange, getCenterForXYRange, rand } from './utilities';
+import { getXYRangeFromXYCoords, XYCoord, XYRange, rand, DIRECTIONS, scrambleArray, averageXYCoords, scaleXY } from './utilities';
 
 let testRoom: RoomWorkingData = {
 	"width": 14,
@@ -42,74 +42,195 @@ export const populateRoomCenter3 = (roomData: RoomWorkingData, roomName: string)
 	return ret;
 };
 
-const generateCenterFurniture: Record<string, Function> = {
-	diningRoom: (placementBounds: XYCoord): ItemWithContext[] => {
-		let tables: ItemWithContext[] = [];
-		let chairsN: ItemWithContext[] = [];
-		let chairsS: ItemWithContext[] = [];
-		if (placementBounds.y < 2 || placementBounds.x < 4) { return []; }
-		let tableCount = Math.floor(placementBounds.x / 2) - 1;
-		for (let i = 1; i <= tableCount; i++) {
-			let item = "diningTableMid";
-			let rot = 0; i === 1 ? 0 : 2;
-			if (i === 1) {
-				rot = 2;
-				item = "diningTableHalf";
-			} else if (i === tableCount) {
-				item = "diningTableHalf";
-			}
-			tables.push({
-				occupiedCoords: [
-					{ x: -0.5, y: -0.5 },
-					{ x: 0.5, y: -0.5 },
-					{ x: -0.5, y: 0.5 },
-					{ x: 0.5, y: 0.5 },
-				],
-				itemCenterCoord: { x: 0, y: 0 },
-				name: item,
-				children: [],
-				rot,
-			})
+const twoByTwoCoords = [
+	{ x: -0.5, y: -0.5 },
+	{ x: 0.5, y: -0.5 },
+	{ x: -0.5, y: 0.5 },
+	{ x: 0.5, y: 0.5 },
+];
+const twoByOneCoords = [
+	{ x: -0.5, y: 0 },
+	{ x: 0.5, y: 0 },
+];
 
+const spawnDiningTable = (placementBounds: XYCoord): ItemWithContext[] => {
+	let tables: ItemWithContext[] = [];
+	let chairsN: ItemWithContext[] = [];
+	let chairsS: ItemWithContext[] = [];
+	if (placementBounds.y < 2 || placementBounds.x < 4) { return []; }
+	let tableCount = Math.floor(placementBounds.x / 2) - 1;
+	for (let i = 1; i <= tableCount; i++) {
+		let item = "diningTableMid";
+		let rot = 0; i === 1 ? 0 : 2;
+		if (i === 1) {
+			rot = 2;
+			item = "diningTableHalf";
+		} else if (i === tableCount) {
+			item = "diningTableHalf";
 		}
-		const chairRate = 0.95;
-		for (let i = 1; i <= tableCount * 2; i++) {
-			chairsN.push({
-				occupiedCoords: [{ x: 0, y: -.5 }],
-				itemCenterCoord: { x: 0, y: -.5 },
-				name: rand() < chairRate ? 'chair' : 'EMPTY',
+		tables.push({
+			occupiedCoords: twoByOneCoords,
+			itemCenterCoord: { x: 0, y: 0 },
+			name: item,
+			children: [],
+			rot,
+		})
+
+	}
+	const chairRate = 0.95;
+	for (let i = 1; i <= tableCount * 2; i++) {
+		chairsN.push({
+			occupiedCoords: [{ x: 0, y: -.5 }],
+			itemCenterCoord: { x: 0, y: -.5 },
+			name: rand() < chairRate ? 'chair' : 'EMPTY',
+			children: [],
+			rot: 0,
+		})
+		chairsS.push({
+			occupiedCoords: [{ x: 0, y: .5 }],
+			itemCenterCoord: { x: 0, y: .5 },
+			name: rand() < chairRate ? 'chair' : 'EMPTY',
+			children: [],
+			rot: 2,
+		})
+	}
+	tables = spreadItemsOnAxis(tables, 'x', 2);
+	chairsN = spreadItemsOnAxis(chairsN, 'x', 1);
+	chairsS = spreadItemsOnAxis(chairsS, 'x', 1);
+	let ret = tables.concat(chairsN);
+	if (placementBounds.x > 2) {
+		ret = ret.concat(chairsS);
+	}
+	return ret;
+};
+
+const spawnRoundTable = (): ItemWithContext[] => {
+	let ret: ItemWithContext[] = [
+		{
+			occupiedCoords: twoByTwoCoords,
+			itemCenterCoord: { x: 0, y: 0 },
+			name: 'roundTable',
+			children: [], rot: 0,
+		},
+	];
+	const dist = 0.6
+	const diagSpread = [
+		{ x: -dist, y: -dist },
+		{ x: dist, y: -dist },
+		{ x: dist, y: dist },
+		{ x: -dist, y: dist },
+	]
+	let scrambledDirs = scrambleArray(DIRECTIONS);
+	if (scrambledDirs.length < 4) { throw new Error("DIRECTIONS doesn't have four elements???") }
+
+	// always at least one chair
+	let dir1 = scrambledDirs[0];
+	ret.push({
+		occupiedCoords: [], // covered by the table itself, since the chairs are scooted
+		itemCenterCoord: diagSpread[DIRECTIONS.indexOf(dir1)],
+		name: 'chair',
+		children: [], rot: DIRECTIONS.indexOf(dir1) - 0.5,
+	})
+	// but up to four chairs:
+	for (let i = 1; i < scrambledDirs.length; i++) {
+		if (rand() < 0.6) {
+			let dir = scrambledDirs[i];
+			ret.push({
+				occupiedCoords: [],
+				itemCenterCoord: diagSpread[DIRECTIONS.indexOf(dir)],
+				name: 'chair',
 				children: [],
-				rot: 0,
-			})
-			chairsS.push({
-				occupiedCoords: [{ x: 0, y: .5 }],
-				itemCenterCoord: { x: 0, y: .5 },
-				name: rand() < chairRate ? 'chair' : 'EMPTY',
-				children: [],
-				rot: 2,
-			})
+				rot: DIRECTIONS.indexOf(dir) - 0.5,
+			});
 		}
-		tables = spreadItemsOnAxis(tables, 'x', 2);
-		chairsN = spreadItemsOnAxis(chairsN, 'x', 1);
-		chairsS = spreadItemsOnAxis(chairsS, 'x', 1);
-		let ret = tables.concat(chairsN);
-		if (placementBounds.x > 2) {
-			ret = ret.concat(chairsS);
+	}
+	return ret;
+};
+
+const getBookcasesSizes = (length: number) => {
+	const remainder = (length / 2) % 2;
+	const wideCount = Math.floor(length / 2);
+	const bookcaseSizes = new Array(wideCount);
+	bookcaseSizes.fill(2);
+	if (remainder) { bookcaseSizes.push(1); }
+	return scrambleArray(bookcaseSizes);
+}
+const getLineOfBookcases = (length: number, axis: string) => {
+	const sizes = getBookcasesSizes(length);
+	let ret = [];
+	let dummyItems = new Array(length) // to get occupied coords
+	dummyItems.fill({
+		occupiedCoords: { x: 0, y: 0 },
+		itemCenterCoord: { x: 0, y: 0 },
+		name: '',
+		children: [],
+		rot: 0,
+	})
+	let spreadItems: ItemWithContext[] = spreadItemsOnAxis(dummyItems, axis, 1);
+	ret = sizes.map(size => {
+		let dummies = spreadItems.splice(0, size);
+		let occupiedCoords = dummies.map(item => item.itemCenterCoord);
+		return {
+			occupiedCoords,
+			itemCenterCoord: averageXYCoords(occupiedCoords),
+			name: size === 1 ? 'bookcaseTallNarrow' : 'bookcaseTallWide',
+			children: [],
+			rot: axis === 'x' ? 0 : 3,
 		}
-		// ret.forEach(item => {
-		// 	console.log(
-		// 		item.itemCenterCoord.x + ','
-		// 		+ item.itemCenterCoord.y + ': '
-		// 		+ item.name
-		// 		+ ` (rot: ${item.rot})`
-		// 	);
-		// })
+	})
+	return ret;
+}
+
+const getBookcaseIsland = (length: number, axis: string) => {
+	// const antiAxis: string = axis === 'x' ? 'y' : 'x';
+	let bookcases1: ItemWithContext[] = getLineOfBookcases(length, axis);
+	let bookcases2: ItemWithContext[] = getLineOfBookcases(length, axis)
+	let translation: XYCoord = { x: 0, y: 0 };
+	if (axis === 'x') {
+		translation.y += 0.25;
+	} else {
+		translation.x += 0.25;
+	}
+	bookcases1 = bookcases1.map(item => {
+		return translateItemAndChildren(item, translation);
+	})
+	translation = scaleXY(translation, -1);
+	bookcases2 = bookcases2.map(item => {
+		return translateItemAndChildren(item, translation);
+	}).map(item => {
+		item.rot = (item.rot + 2) % 4
+		return translateItemAndChildren(item, translation);
+	})
+	return bookcases1.concat(bookcases2);
+};
+
+const generateCenterFurniture: Record<string, Function> = {
+	diningRoom: spawnDiningTable,
+	library: (placementBounds: XYCoord): ItemWithContext[] => {
+		let ret: ItemWithContext[] = [];
+		let depth = placementBounds.y - 2;
+		let width = placementBounds.x - 3;
+		// let blocksCount = Math.floor(width / depth);
+		let blocksCount = 2; // temp
+		let centers: XYCoord[] = [
+			{ x: -width / 4, y: 0 },
+			{ x: width / 4, y: 0 },
+		]
+		for (let i = 0; i < blocksCount; i++) {
+			let axis = rand() < 0.5 ? 'x' : 'y';
+			let length = axis === 'x' ? Math.floor(width / 2) : depth;
+			let working: ItemWithContext[] = getBookcaseIsland(length, axis);
+			let translated: ItemWithContext[] = working.map(item => translateItemAndChildren(item, centers[i]));
+			ret = ret.concat(translated);
+		}
 		return ret;
 	},
-	library: () => { return [] },
-	hallway: () => { return [] },
+	hallway: () => { return []; },
 	bedroom: () => { return [] },
-	livingRoom: () => { return [] },
+	livingRoom: (): ItemWithContext[] => {
+		let roundTable = spawnRoundTable();
+		return roundTable;
+	},
 }
 
 // let test2 = populateRoomCenter3(testRoom, "diningRoom")

@@ -251,8 +251,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 			.map((item: ItemWithContext) => {
 				return convertNewThingToOld(item);
 			});
-		let thingsInRoom = rooms[roomID].furnishings
-		thingsInRoom = thingsInRoom.concat(converted);
+		rooms[roomID].furnishings = rooms[roomID].furnishings.concat(converted);
 	});
 	return Object.values(rooms);
 };
