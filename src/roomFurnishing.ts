@@ -220,7 +220,9 @@ const generateCenterFurniture: Record<string, Function> = {
 			let axis = rand() < 0.5 ? 'x' : 'y';
 			let length = axis === 'x' ? Math.floor(width / 2) : depth;
 			let working: ItemWithContext[] = getBookcaseIsland(length, axis);
-			let translated: ItemWithContext[] = working.map(item => translateItemAndChildren(item, centers[i]));
+			let translated: ItemWithContext[] = working.map(item => {
+				return translateItemAndChildren(item, centers[i])
+			});
 			ret = ret.concat(translated);
 		}
 		return ret;
@@ -228,8 +230,19 @@ const generateCenterFurniture: Record<string, Function> = {
 	hallway: () => { return []; },
 	bedroom: () => { return [] },
 	livingRoom: (): ItemWithContext[] => {
-		let roundTable = spawnRoundTable();
-		return roundTable;
+		let translations = [
+			{ x: 3, y: 0 },
+			{ x: -3, y: 0 },
+		]
+		let roundTable1 = spawnRoundTable().map(item => {
+			item = translateItemAndChildren(item, translations[0]);
+			return item;
+		});
+		let roundTable2 = spawnRoundTable().map(item => {
+			item = translateItemAndChildren(item, translations[1]);
+			return item;
+		});
+		return roundTable1.concat(roundTable2);
 	},
 }
 
