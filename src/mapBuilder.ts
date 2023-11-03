@@ -424,36 +424,38 @@ export const buildMapFromSeed = (seed: string) => {
 				});
 			});
 		//doors
-		roomDoors.forEach(tileInfo => {
-			let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':door' + '(' + tileInfo.compositeInfo + ')'
-			doorTiles.push({
-				name,
-				asset: '',
-				type: 'door',
-				x: tileInfo.pos.x,
-				y: tileInfo.pos.y,
-				rot: calculateWallDir(tileInfo.doorDir),
-				destination: tileInfo.destination,
-				wallDir: '',
-				compositeInfo: tileInfo.compositeInfo,
-				roomID,
-			});
-			tileInfo.wallDirs.forEach(dir => {
-				let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':wallForCornerDoor' + '(' + tileInfo.compositeInfo + ')'
-				floorTiles.push({
+		roomDoors
+			.filter(tile => tile.roomID === roomID)
+			.forEach(tileInfo => {
+				let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':door' + '(' + tileInfo.compositeInfo + ')'
+				doorTiles.push({
 					name,
-					type: 'wall',
-					asset: tileAssets.wall,
+					asset: '',
+					type: 'door',
 					x: tileInfo.pos.x,
 					y: tileInfo.pos.y,
-					rot: calculateWallDir(dir),
-					destination: '',
+					rot: calculateWallDir(tileInfo.doorDir),
+					destination: tileInfo.destination,
 					wallDir: '',
 					compositeInfo: tileInfo.compositeInfo,
 					roomID,
 				});
+				tileInfo.wallDirs.forEach(dir => {
+					let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':wallForCornerDoor' + '(' + tileInfo.compositeInfo + ')'
+					floorTiles.push({
+						name,
+						type: 'wall',
+						asset: tileAssets.wall,
+						x: tileInfo.pos.x,
+						y: tileInfo.pos.y,
+						rot: calculateWallDir(dir),
+						destination: '',
+						wallDir: '',
+						compositeInfo: tileInfo.compositeInfo,
+						roomID,
+					});
+				});
 			});
-		});
 		roomWorkingData[roomID].floors = floorTiles;
 		roomWorkingData[roomID].doors = doorTiles;
 	});
