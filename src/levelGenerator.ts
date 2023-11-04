@@ -1,7 +1,7 @@
 import { buildMapFromSeed } from './mapBuilder';
 import { Tile } from './rooms';
 import { Furnishing } from './LevelBuilder';
-import { rand, randomIndex, getOppositeDirN } from './utilities';
+import { rand, getOppositeDirN } from './utilities';
 import { Room } from './LevelBuilder';
 import { furnishCenter, furnishCorners, furnishEdges } from './roomFurnishing';
 import { FURNISHINGS2, ItemWithContext } from './furnitureForRooms';

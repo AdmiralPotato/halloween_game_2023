@@ -465,7 +465,6 @@ export interface ItemWithContext {
 	occupiedCoords: XYCoord[];
 	itemCenterCoord: XYCoord;
 	name: string;
-	children: ItemWithContext[];
 	rot: number;
 };
 export const getItemInfo = (name: string): ItemWithContext => {
@@ -520,11 +519,6 @@ export const pivotItemsAroundPoint = (items: ItemWithContext[], coord: XYCoord, 
 export const translateItemAndChildren = (item: ItemWithContext, translation: XYCoord): ItemWithContext => {
 	item.itemCenterCoord = translateXY(item.itemCenterCoord, translation);
 	item.occupiedCoords = item.occupiedCoords.map(inner => translateXY(inner, translation));
-	item.children = item.children.map(child => {
-		child.itemCenterCoord = translateXY(child.itemCenterCoord, translation);
-		child.occupiedCoords = child.occupiedCoords.map(inner => translateXY(inner, translation));
-		return child;
-	})
 	return item;
 }
 

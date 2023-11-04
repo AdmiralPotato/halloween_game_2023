@@ -265,7 +265,6 @@ const spawnDiningTable = (placementBounds: XYCoord): ItemWithContext[] => {
 			occupiedCoords: twoByOneCoords,
 			itemCenterCoord: { x: 0, y: 0 },
 			name: item,
-			children: [],
 			rot,
 		})
 
@@ -276,14 +275,12 @@ const spawnDiningTable = (placementBounds: XYCoord): ItemWithContext[] => {
 			occupiedCoords: [{ x: 0, y: -.5 }],
 			itemCenterCoord: { x: 0, y: -.5 },
 			name: rand() < chairRate ? 'chair' : 'EMPTY',
-			children: [],
 			rot: 0,
 		})
 		chairsS.push({
 			occupiedCoords: [{ x: 0, y: .5 }],
 			itemCenterCoord: { x: 0, y: .5 },
 			name: rand() < chairRate ? 'chair' : 'EMPTY',
-			children: [],
 			rot: 2,
 		})
 	}
@@ -303,7 +300,7 @@ const spawnRoundTable = (): ItemWithContext[] => {
 			occupiedCoords: twoByTwoCoords,
 			itemCenterCoord: { x: 0, y: 0 },
 			name: 'roundTable',
-			children: [], rot: 0,
+			rot: 0,
 		},
 	];
 	const dist = 0.6
@@ -322,7 +319,7 @@ const spawnRoundTable = (): ItemWithContext[] => {
 		occupiedCoords: [], // covered by the table itself, since the chairs are scooted
 		itemCenterCoord: diagSpread[getNFromDir(dir1)],
 		name: 'chair',
-		children: [], rot: getNFromDir(dir1) - 0.5,
+		rot: getNFromDir(dir1) - 0.5,
 	})
 	// but up to four chairs:
 	for (let i = 1; i < scrambledDirs.length; i++) {
@@ -332,7 +329,6 @@ const spawnRoundTable = (): ItemWithContext[] => {
 				occupiedCoords: [],
 				itemCenterCoord: diagSpread[getNFromDir(dir)],
 				name: 'chair',
-				children: [],
 				rot: getNFromDir(dir) - 0.5,
 			});
 		}
@@ -467,8 +463,7 @@ const getEndTablePadding = (
 		[{
 			occupiedCoords: rootItemOccupiedCoords,
 			itemCenterCoord: averageXYCoords(rootItemOccupiedCoords),
-			name: itemName,
-			children: [], rot: 0,
+			name: itemName, rot: 0,
 		}],
 		padItems,
 		padUntil,
@@ -502,7 +497,7 @@ const getWallCluster: Record<string, Function> = {
 				occupiedCoords: twoByTwoCoords,
 				itemCenterCoord: averageXYCoords(twoByTwoCoords),
 				name: 'bed',
-				children: [], rot: 0,
+				rot: 0,
 			}],
 			padItems,
 			padUntil,
