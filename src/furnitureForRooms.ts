@@ -85,6 +85,7 @@ export interface FurnishingInfo2 {
 	asset: string,
 	dimensions: Dimensions,
 }
+// TODO: weigh candy likelihood per item; e.g. treasure chests = 100% chance
 export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 	EMPTY: {
 		placement: 'free', placementContext: '',
@@ -126,12 +127,7 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 		asset: 'bed',
 		dimensions: { width: 2, depth: 2, height: 2 },
 	},
-	endTable0: {
-		placement: 'free', placementContext: 'corner',
-		asset: 'endtable',
-		dimensions: { width: 1, depth: 1, height: 1 },
-	},
-	endTable1: {
+	endTable: {
 		placement: 'free', placementContext: 'corner',
 		asset: 'endtable',
 		dimensions: { width: 1, depth: 1, height: 1 },
@@ -247,22 +243,20 @@ const commonStuff: FurnitureWeight[] = [
 	{ item: 'cobwebEdge', weight: 4, count: NaN },
 	{ item: 'cobwebCorner', weight: 4, count: NaN },
 	{ item: 'candelabra', weight: 2, count: NaN },
-	{ item: 'endTable0', weight: 2, count: NaN },
-	{ item: 'endTable1', weight: 2, count: NaN },
+	{ item: 'endTable', weight: 2, count: NaN },
 	{ item: 'EMPTY', weight: 1, count: NaN },
-	{ item: 'gargoyle', weight: 1, count: NaN },
+	{ item: 'gargoyle', weight: 3, count: NaN },
 	{ item: 'painting', weight: 1, count: NaN },
 ]
 
 export const ROOM_CONTENTS2: Record<string, FurnitureWeight[]> = {
 	livingRoom: [
 		{ item: 'fireplace', weight: 0, count: 1 },
-		{ item: 'couchCenter', weight: 0, count: 1 },
+		{ item: 'curtains', weight: 1, count: NaN },
 		{ item: 'couchWall', weight: 1, count: NaN },
 		{ item: 'armChair', weight: 2, count: NaN },
 		{ item: 'bookcaseTallWide', weight: 1, count: NaN },
 		{ item: 'bookcaseTallNarrow', weight: 2, count: NaN },
-		{ item: 'curtains', weight: 0, count: 1 },
 		...commonStuff,
 	],
 	hallway: [
@@ -272,28 +266,26 @@ export const ROOM_CONTENTS2: Record<string, FurnitureWeight[]> = {
 		...commonStuff,
 	],
 	diningRoom: [
+		{ item: 'curtains', weight: 1, count: NaN },
 		{ item: 'armChair', weight: 4, count: NaN },
-		{ item: 'diningTableHalf', weight: 0, count: 1 },
-		{ item: 'curtains', weight: 0, count: 1 },
 		...commonStuff,
 	],
 	bedroom: [
-		{ item: 'dresser', weight: 0, count: 1 },
 		{ item: 'bed', weight: 0, count: 1 },
 		{ item: 'wardrobe', weight: 0, count: 1 },
+		{ item: 'dresser', weight: 0, count: 1 },
 		{ item: 'fireplace', weight: 0, count: 1 },
+		{ item: 'curtains', weight: 1, count: NaN },
 		{ item: 'chest', weight: 3, count: NaN },
 		{ item: 'chair', weight: 2, count: NaN },
 		{ item: 'bookcaseShortWide', weight: 1, count: NaN },
 		{ item: 'bookcaseShortNarrow', weight: 1, count: NaN },
-		{ item: 'curtains', weight: 0, count: 1 },
 		...commonStuff,
 	],
 	library: [
 		{ item: 'chest', weight: 1, count: NaN },
-		{ item: 'curtains', weight: 0, count: 2 },
+		{ item: 'curtains', weight: 2, count: NaN },
 		{ item: 'couchWall', weight: 1, count: NaN },
-		{ item: 'couchCenter', weight: 0, count: 1 },
 		{ item: 'armChair', weight: 2, count: NaN },
 		{ item: 'bookcaseTallWide', weight: 10, count: NaN },
 		{ item: 'bookcaseTallNarrow', weight: 8, count: NaN },
@@ -313,8 +305,7 @@ export interface ChildInfo {
 const getChildren: Record<string, Function> = {
 	couchWall: (): ChildInfo[] => {
 		let weight = [
-			{ item: 'endTable0', weight: 3 },
-			{ item: 'endTable1', weight: 3 },
+			{ item: 'endTable', weight: 3 },
 			{ item: 'candelabra', weight: 1 },
 			{ item: 'pottedPlant', weight: 2 },
 			{ item: 'EMPTY', weight: 3 }
@@ -326,8 +317,7 @@ const getChildren: Record<string, Function> = {
 	},
 	armChair: (): ChildInfo[] => {
 		let weight = [
-			{ item: 'endTable0', weight: 2 },
-			{ item: 'endTable1', weight: 2 },
+			{ item: 'endTable', weight: 2 },
 			{ item: 'candelabra', weight: 1 },
 			{ item: 'pottedPlant', weight: 2 },
 			{ item: 'EMPTY', weight: 2 }
@@ -344,12 +334,12 @@ const getChildren: Record<string, Function> = {
 		let oppositeDir = getOppositeDir(randomDir);
 		return [
 			{
-				item: 'endTable0',
+				item: 'endTable',
 				pos: randomDir + '0',
 				rot: 0
 			},
 			{
-				item: rand() < 0.3 ? 'endTable0' : 'EMPTY',
+				item: rand() < 0.3 ? 'endTable' : 'EMPTY',
 				pos: oppositeDir + '1',
 				rot: 0
 			},
@@ -377,16 +367,6 @@ const getChildren: Record<string, Function> = {
 		}
 		return ret;
 	},
-	// squareTable: () => { // NOTE: OLD STYLE OF DATA
-	// 	// 1 chair minimum; 2 chairs sometimes (edges chosen is random)
-	// 	const dir = getRandomDir();
-	// 	const ret = [{ item: 'chair', pos: dir }];
-	// 	if (rand() < 0.3) {
-	// 		const opposite = getOppositeDir(dir);
-	// 		ret.push({ item: 'chair', pos: opposite });
-	// 	}
-	// 	return ret;
-	// },
 };
 
 export const spreadItemsOnAxis = (items: ItemWithContext[], axis: string, itemSize: number): ItemWithContext[] => {
@@ -533,7 +513,7 @@ const pivotItemAroundPoint = (item: ItemWithContext, coord: XYCoord, turns: numb
 	rotatingItem.itemCenterCoord.y += translation.y;
 	return rotatingItem;
 }
-const pivotItemsAroundPoint = (items: ItemWithContext[], coord: XYCoord, turns: number): ItemWithContext[] => {
+export const pivotItemsAroundPoint = (items: ItemWithContext[], coord: XYCoord, turns: number): ItemWithContext[] => {
 	return items.map((item: ItemWithContext) => pivotItemAroundPoint(item, coord, turns));
 }
 
@@ -547,9 +527,6 @@ export const translateItemAndChildren = (item: ItemWithContext, translation: XYC
 	})
 	return item;
 }
-
-// occupiedCoords: XYCoord[];
-// 	children: ItemWithContext[];
 
 // let test = getItemInfo("couchCenter");
 // console.log(test);

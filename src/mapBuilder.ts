@@ -9,8 +9,6 @@ import {
 	translateXY,
 	compareXY,
 	getCenterForXYRange,
-	DIRECTIONS,
-	scaleXY,
 	getNFromDir
 } from './utilities';
 import {

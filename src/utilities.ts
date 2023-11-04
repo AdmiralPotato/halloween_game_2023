@@ -1,7 +1,6 @@
 // @ts-ignore
 import seedrandom from 'seedrandom';
-import { Furnishing } from './LevelBuilder';
-import { Tile } from './rooms';
+import { ItemWithContext } from './furnitureForRooms';
 
 let randomizer = seedrandom('');
 
@@ -25,6 +24,15 @@ export interface XYCoord {
 export interface XYRange {
 	x: Range;
 	y: Range;
+}
+
+export const getWidthFromItemsWithContext = (items: ItemWithContext[]) => {
+	let range = getRangeFromItemsWithContext(items);
+	return range.x.max - range.x.min + 1;
+};
+export const getRangeFromItemsWithContext = (items: ItemWithContext[]): XYRange => {
+	let coords = items.map(item => item.occupiedCoords).flat();
+	return getXYRangeFromXYCoords(coords);
 }
 export const getXYRangeFromXYCoords = (coords: XYCoord[]) => {
 	return coords.map(tile => {
