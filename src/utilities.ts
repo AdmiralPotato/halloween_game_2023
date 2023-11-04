@@ -4,7 +4,7 @@ import { ItemWithContext } from './furnitureForRooms';
 
 let randomizer = seedrandom('');
 
-export const setSeed = (seed: string) => randomizer = seedrandom(seed);
+export const setSeed = (seed: string) => (randomizer = seedrandom(seed));
 export const rand = (): number => randomizer();
 export const randomIndex = (max: number): number => {
 	return Math.floor(rand() * max);
@@ -14,8 +14,8 @@ export const randomFromRange = (range: Range): number => {
 };
 
 export interface Range {
-	min: number,
-	max: number,
+	min: number;
+	max: number;
 }
 export interface XYCoord {
 	x: number;
@@ -27,71 +27,79 @@ export interface XYRange {
 }
 
 export const getWidthFromItemsWithContext = (items: ItemWithContext[]) => {
-	let range = getRangeFromItemsWithContext(items);
+	const range = getRangeFromItemsWithContext(items);
 	return range.x.max - range.x.min + 1;
 };
 export const getRangeFromItemsWithContext = (items: ItemWithContext[]): XYRange => {
-	let coords = items.map(item => item.occupiedCoords).flat();
+	const coords = items.map((item) => item.occupiedCoords).flat();
 	return getXYRangeFromXYCoords(coords);
-}
+};
 export const getXYRangeFromXYCoords = (coords: XYCoord[]) => {
-	return coords.map(tile => {
-		return {
-			x: { min: tile.x, max: tile.x },
-			y: { min: tile.y, max: tile.y }
-		};
-	}).reduce((range: XYRange, cur: XYRange) => {
-		return {
-			x: {
-				min: Math.min(range.x.min, cur.x.min),
-				max: Math.max(range.x.max, cur.x.max)
+	return coords
+		.map((tile) => {
+			return {
+				x: { min: tile.x, max: tile.x },
+				y: { min: tile.y, max: tile.y },
+			};
+		})
+		.reduce(
+			(range: XYRange, cur: XYRange) => {
+				return {
+					x: {
+						min: Math.min(range.x.min, cur.x.min),
+						max: Math.max(range.x.max, cur.x.max),
+					},
+					y: {
+						min: Math.min(range.y.min, cur.y.min),
+						max: Math.max(range.y.max, cur.y.max),
+					},
+				};
 			},
-			y: {
-				min: Math.min(range.y.min, cur.y.min),
-				max: Math.max(range.y.max, cur.y.max)
+			{
+				x: { min: Infinity, max: -Infinity },
+				y: { min: Infinity, max: -Infinity },
 			},
-		}
-	}, {
-		x: { min: Infinity, max: -Infinity },
-		y: { min: Infinity, max: -Infinity },
-	});
+		);
 };
 export const getCenterForXYRange = (range: XYRange): XYCoord => {
 	return {
 		x: (range.x.max + range.x.min) / 2,
 		y: (range.y.max + range.y.min) / 2,
-	}
-}
+	};
+};
 export const averageXYCoords = (arr: XYCoord[]): XYCoord => {
-	let coordsSum = arr.reduce((sum, v) => {
-		return { x: sum.x + v.x, y: sum.y + v.y };
-	}, { x: 0, y: 0 });
+	const coordsSum = arr.reduce(
+		(sum, v) => {
+			return { x: sum.x + v.x, y: sum.y + v.y };
+		},
+		{ x: 0, y: 0 },
+	);
 	return {
 		x: coordsSum.x / arr.length,
-		y: coordsSum.y / arr.length
-	}
-}
+		y: coordsSum.y / arr.length,
+	};
+};
 export const translateXY = (coord: XYCoord, moveBy: XYCoord): XYCoord => {
 	return {
 		x: coord.x + moveBy.x,
 		y: coord.y + moveBy.y,
-	}
-}
+	};
+};
 export const multiplyXYs = (coord: XYCoord, scaleXYBy: XYCoord): XYCoord => {
 	return {
 		x: coord.x * scaleXYBy.x,
 		y: coord.y * scaleXYBy.y,
-	}
-}
+	};
+};
 export const scaleXY = (coord: XYCoord, scale: number): XYCoord => {
 	return {
 		x: coord.x * scale,
 		y: coord.y * scale,
-	}
-}
+	};
+};
 export const compareXY = (coord1: XYCoord, coord2: XYCoord): boolean => {
 	return coord1.x === coord2.x && coord1.y === coord2.y;
-}
+};
 export const randomFromArray = <T>(array: T[]): T | null => {
 	if (array.length === 0) return null;
 	const i = randomIndex(array.length);
@@ -99,9 +107,9 @@ export const randomFromArray = <T>(array: T[]): T | null => {
 };
 export const scrambleArray = <T>(arr: T[]): T[] => {
 	const ret = [];
-	let workingArr = JSON.parse(JSON.stringify(arr));
+	const workingArr = JSON.parse(JSON.stringify(arr));
 	while (workingArr.length) {
-		let i = randomIndex(workingArr.length);
+		const i = randomIndex(workingArr.length);
 		ret.push(workingArr.splice(i, 1)[0]);
 	}
 	return ret;
@@ -127,7 +135,7 @@ export const makeDirFromN = (n: number): string => {
 };
 export const getScrambledDirs = () => {
 	return scrambleArray(DIRECTIONS);
-}
+};
 export interface RandomWeight {
 	weight?: number;
 	count?: number;
@@ -142,4 +150,39 @@ export const getRandomWithWeight = (input: RandomWeight[]): string => {
 		}
 	});
 	return pickFrom[randomIndex(pickFrom.length)];
+};
+
+export const clamp = (input: number, min: number, max: number): number => {
+	return input < min ? min : input > max ? max : input;
+};
+
+export const mapRange = (
+	current: number,
+	in_min: number,
+	in_max: number,
+	out_min: number,
+	out_max: number,
+): number => {
+	const mapped: number = ((current - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min;
+	return clamp(mapped, out_min, out_max);
+};
+
+export const PI = Math.PI;
+export const TAU = Math.PI * 2;
+export const angle_subtract = (a: number, b: number): number => {
+	const delta = a - b;
+	if (Math.abs(delta) >= PI) {
+		if (delta > 0.0) {
+			return delta - TAU;
+		} else {
+			return delta + TAU;
+		}
+	} else {
+		return delta;
+	}
+};
+
+export const angleLerp = (a: number, b: number, theta: number): number => {
+	const delta = angle_subtract(b, a);
+	return a + delta * theta;
 };

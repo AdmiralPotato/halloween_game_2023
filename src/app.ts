@@ -23,6 +23,11 @@ import { type AnimationGroup, ShadowGenerator, Texture, TransformNode } from '@b
 import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { setupUserInput } from './userInputState';
+import {
+	// angleLerp,
+	// mapRange,
+	PI
+} from './utilities';
 
 const COLOR_HIGHLIGHTED = new Color3(0, 1, 0);
 const COLOR_YES_CANDY = new Color3(1, 0, 0);
@@ -50,22 +55,32 @@ class App {
 		const cameraTarget = new Mesh('cameraTarget', scene);
 		const actionIntersectMeshParent = new Mesh('actionIntersectMeshParent');
 		const actionIntersectMesh = CreatePlane('actionIntersectMesh', {
-			size: 0.25,
+			size: 0.5,
 			sideOrientation: Mesh.DOUBLESIDE,
 		});
-		playerCharacterHolder.addChild(actionIntersectMeshParent);
+		const snapTargetMesh = CreatePlane('snapTargetMesh', {
+			size: 0.75,
+			sideOrientation: Mesh.DOUBLESIDE,
+		});
 		let playerCharacterMesh: Mesh | null = null;
 		let playerCharacterMaterial: StandardMaterial | null = null;
 		const candyBucketTransformNode = new TransformNode('candyBucketTransformNode');
 		actionIntersectMeshParent.addChild(actionIntersectMesh);
 		actionIntersectMesh.billboardMode = 3;
-		const mat = new StandardMaterial('actionIntersectMeshMaterial');
+		snapTargetMesh.billboardMode = 3;
+		snapTargetMesh.renderingGroupId = 1;
+		const actionTargetMaterial = new StandardMaterial('actionIntersectMeshMaterial');
 		const sparkTexture = new Texture('./assets/spark.png');
-		mat.diffuseTexture = sparkTexture;
+		actionTargetMaterial.diffuseTexture = sparkTexture;
+		actionTargetMaterial.alphaMode = Engine.ALPHA_ADD;
+		actionTargetMaterial.opacityTexture = sparkTexture;
 		// mat.diffuseColor = new Color3(0, 0.5, 0.9);
-		actionIntersectMesh.material = mat;
-		mat.alphaMode = Engine.ALPHA_ADD;
-		mat.opacityTexture = sparkTexture;
+		actionIntersectMesh.material = actionTargetMaterial;
+		const snapTargetMaterial = new StandardMaterial('actionIntersectMeshMaterial');
+		snapTargetMaterial.diffuseColor = Color3.Purple();
+		snapTargetMaterial.alphaMode = Engine.ALPHA_ADD;
+		snapTargetMaterial.opacityTexture = sparkTexture;
+		snapTargetMesh.material = snapTargetMaterial;
 		actionIntersectMeshParent.position.set(0, 0.5, 0.75);
 
 		const camera = new FollowCamera('Camera', Vector3.Zero(), scene, cameraTarget);
@@ -153,7 +168,9 @@ class App {
 				// move to the center of the pumpkin below the hand
 				candyBucketTransformNode.position.z -= 0.25;
 				console.log('What is a MAGE?!?', mageTransformNode);
+				playerCharacterMesh.addChild(actionIntersectMeshParent);
 				mageTransformNode?.position.set(0, 0, 0);
+				mageTransformNode?.addRotation(0, -PI / 2, 0); // character was designed facing -y, but 0 deg is +x
 				// mageTransformNode?.scaling.set(4, 4, 4);
 				mage.receiveShadows = true;
 				shadowGenerator.addShadowCaster(mage);
@@ -235,6 +252,69 @@ class App {
 			}
 		};
 
+		interface DistanceAndDifference {
+			distance: number;
+			difference: Vector3;
+			absolutePosition: Vector3;
+		}
+		const snapDistanceMax = 2;
+		// const snapDistanceMin = 1;
+		const snapPlayerTargetToNearestAvailableObject = () => {
+			// const motionVectorAngle = Math.atan2(-motionVector.z, motionVector.x);
+			// const rotation = playerCharacterHolder.rotation;
+			const interactVector = playerCharacterHolder
+				.getWorldMatrix()
+				.getTranslationToRef(Vector3.Zero());
+			if (currentRoom?.furnishingMeshes) {
+				const distancesAndDifferences: DistanceAndDifference[] = [];
+				currentRoom?.furnishingMeshes.forEach((doodad, index) => {
+					const furnishing = currentRoom?.furnishings[index];
+					if (!furnishing) {
+						throw new Error('Somehow we dont have furnishing???');
+					} else if (furnishing.checked) {
+						return; // don't snap to furniture already checked
+					}
+					const absoluteFurniturePosition = doodad
+						.getWorldMatrix()
+						.getTranslationToRef(Vector3.Zero());
+					absoluteFurniturePosition.y = 0.5;
+					const difference = absoluteFurniturePosition.subtract(interactVector);
+					const distance = difference.length();
+					if (distance < snapDistanceMax) {
+						distancesAndDifferences.push({
+							distance,
+							difference,
+							absolutePosition: absoluteFurniturePosition,
+						});
+					}
+				});
+				distancesAndDifferences.sort((a, b) => a.distance - b.distance);
+				if (distancesAndDifferences.length) {
+					const {
+						// distance,
+						difference,
+						absolutePosition,
+					} = distancesAndDifferences[0];
+					snapTargetMesh.position = absolutePosition;
+					// const influence = mapRange(distance, snapDistanceMax, snapDistanceMin, 0, 1);
+					const differenceAngle = Math.atan2(-difference.z, difference.x);
+					// const targetAngle = angleLerp(influence, motionVectorAngle, differenceAngle);
+					// console.log('distancesAndDifferences', {
+					// 	currentAngle: rotation.y,
+					// 	distance,
+					// 	difference,
+					// 	influence,
+					// 	differenceAngle,
+					// 	targetAngle,
+					// });
+					if (!snapTargetMesh.isEnabled()) {
+						snapTargetMesh.setEnabled(true);
+					}
+					playerCharacterHolder.rotation.set(0, differenceAngle, 0);
+				}
+			}
+		};
+
 		const { spawnCandy, tickCandies } = initCandySpawner(scene);
 
 		const doActionIntersect = (didAction: boolean) => {
@@ -259,6 +339,7 @@ class App {
 								doodad.outlineColor = furnishing.hasCandy
 									? COLOR_YES_CANDY
 									: COLOR_NO_CANDY;
+								snapTargetMesh.setEnabled(false);
 								if (furnishing.hasCandy) {
 									spawnCandy(doodad, candyBucketTransformNode);
 								}
@@ -329,7 +410,7 @@ class App {
 			}
 			if (motionLength > 0.005) {
 				playerCharacterHolder.position.addInPlace(motionVector);
-				const currentAngle = -Math.atan2(motionVector.z, motionVector.x) + Math.PI / 2;
+				const currentAngle = Math.atan2(-motionVector.z, motionVector.x);
 				playerCharacterHolder.rotation.set(0, currentAngle, 0);
 			}
 			if (playerCharacterHolder.position.y > 0.05) {
@@ -344,7 +425,7 @@ class App {
 			hideRoomsPlayerIsNotInside();
 			actionIntersectMesh.rotate(new Vector3(0, 0, 1), delta * 5);
 
-			//TODO !!!VERY IMPORTANT TODO!!! SNAP TO NEAREST OBJECT!!!
+			snapPlayerTargetToNearestAvailableObject();
 
 			tickCandies(now);
 
