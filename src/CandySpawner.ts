@@ -17,22 +17,24 @@ const candyTweenTime = 2000;
 export const initCandySpawner = (scene: Scene) => {
 	const candySpriteManager = new SpriteManager('candy', './assets/candy.png', 50, 256, scene);
 	const candyOffsetMesh = new Mesh('candyOffsetMesh');
+	candySpriteManager.renderingGroupId = 1;
 
 	let candyStates: CandyState[] = [];
 	return {
 		tickCandies: (now: number) => {
-			let nextCandyStates: CandyState[] = [];
+			const nextCandyStates: CandyState[] = [];
 			candyStates.forEach((state) => {
 				const targetPosition = state.targetMesh
 					.getWorldMatrix()
 					.getTranslationToRef(Vector3.Zero());
-				let timeRemaining = state.endTime - now;
+				const timeRemaining = state.endTime - now;
 				const progress = 1 - timeRemaining / candyTweenTime;
 				state.candyMesh.position = Vector3.Lerp(
 					state.candyMesh.position,
 					targetPosition,
 					progress,
 				);
+				state.candyMesh.size = Math.max(0, -progress * 4 + 1);
 				const expired = now > state.endTime;
 				const distance = state.candyMesh.position.subtract(targetPosition);
 				const closeEnough = distance.length() < 0.01;

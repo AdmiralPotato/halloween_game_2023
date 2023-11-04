@@ -128,7 +128,6 @@ class App {
 				const mageAnimationGroup = imported.animationGroups[0];
 				mageAnimationGroup.stop();
 				// console.log('What is a mageAnimationGroup?', mageAnimationGroup);
-				const mageSkeleton = imported.skeletons[0];
 				characterAnimations = {
 					idle: Object.assign(mageAnimationGroup.clone('Idle'), {
 						_loopAnimation: true,
@@ -277,7 +276,7 @@ class App {
 		let lastLogicTick = window.performance.now();
 		const motionDrag = 0.85;
 		const motionDragVector = new Vector3(motionDrag, motionDrag, motionDrag);
-		let motionVector = Vector3.Zero();
+		const motionVector = Vector3.Zero();
 		const gameLogicLoop = () => {
 			const now = window.performance.now();
 			// should be in the scale of seconds?
@@ -324,13 +323,13 @@ class App {
 			motionVector.multiplyInPlace(motionDragVector);
 			const motionLength = motionVector.length();
 			if (characterAnimations) {
-				let ratio = Math.max(0, Math.min(1, motionLength / movementSpeed));
+				const ratio = Math.max(0, Math.min(1, motionLength / movementSpeed));
 				characterAnimations.idle.weight = 1 - ratio;
 				characterAnimations.run.weight = ratio;
 			}
 			if (motionLength > 0.005) {
 				playerCharacterHolder.position.addInPlace(motionVector);
-				let currentAngle = -Math.atan2(motionVector.z, motionVector.x) + Math.PI / 2;
+				const currentAngle = -Math.atan2(motionVector.z, motionVector.x) + Math.PI / 2;
 				playerCharacterHolder.rotation.set(0, currentAngle, 0);
 			}
 			if (playerCharacterHolder.position.y > 0.05) {
@@ -344,6 +343,8 @@ class App {
 			cameraTarget.position.y += 0.5;
 			hideRoomsPlayerIsNotInside();
 			actionIntersectMesh.rotate(new Vector3(0, 0, 1), delta * 5);
+
+			//TODO !!!VERY IMPORTANT TODO!!! SNAP TO NEAREST OBJECT!!!
 
 			tickCandies(now);
 
