@@ -47,7 +47,6 @@ export const printRoom = (tiles: Tile[], stuff: ItemWithContext[]): string => {
 	let drawRange: XYRange = getXYRangeFromXYCoords(modifiedTiles);
 	let print = [];
 	let roomCorners = getXYRangeFromXYCoords(tiles.map(tile => { return { x: tile.x, y: tile.y } }));
-	let roomCenter = getCenterForXYRange(roomCorners);
 	for (let y = drawRange.y.min; y <= drawRange.y.max; y++) {
 		let line = '';
 		for (let x = drawRange.x.min; x <= drawRange.x.max; x++) {
@@ -70,23 +69,19 @@ export const printRoom = (tiles: Tile[], stuff: ItemWithContext[]): string => {
 	return print.join('\n');
 };
 
-
-
-/* -----------------NEW ONE------------------*/
-
 export interface Dimensions {
 	width: number,
 	depth: number,
 	height: number,
 }
-export interface FurnishingInfo2 {
+export interface FurnishingInfo {
 	placement: string,
 	placementContext: string,
 	asset: string,
 	dimensions: Dimensions,
 }
 // TODO: weigh candy likelihood per item; e.g. treasure chests = 100% chance
-export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
+export const FURNISHINGS2: Record<string, FurnishingInfo> = {
 	EMPTY: {
 		placement: 'free', placementContext: '',
 		asset: '',
@@ -104,11 +99,6 @@ export const FURNISHINGS2: Record<string, FurnishingInfo2> = {
 	},
 	couchWall: {
 		placement: 'wall', placementContext: '',
-		asset: 'couch',
-		dimensions: { width: 2, depth: 1, height: 1 },
-	},
-	couchCenter: {
-		placement: 'center', placementContext: '',
 		asset: 'couch',
 		dimensions: { width: 2, depth: 1, height: 1 },
 	},
@@ -296,88 +286,15 @@ export const ROOM_CONTENTS2: Record<string, FurnitureWeight[]> = {
 	]
 };
 
-export interface ChildInfo {
-	item: string;
-	pos: string;
-	rot: number;
-};
-
-const getChildren: Record<string, Function> = {
-	couchWall: (): ChildInfo[] => {
-		let weight = [
-			{ item: 'endTable', weight: 3 },
-			{ item: 'candelabra', weight: 1 },
-			{ item: 'pottedPlant', weight: 2 },
-			{ item: 'EMPTY', weight: 3 }
-		];
-		return [
-			{ item: getRandomWithWeight(weight), pos: 'w', rot: 0 },
-			{ item: getRandomWithWeight(weight), pos: 'e', rot: 0 },
-		];
-	},
-	armChair: (): ChildInfo[] => {
-		let weight = [
-			{ item: 'endTable', weight: 2 },
-			{ item: 'candelabra', weight: 1 },
-			{ item: 'pottedPlant', weight: 2 },
-			{ item: 'EMPTY', weight: 2 }
-		];
-		return [
-			{ item: getRandomWithWeight(weight), pos: 'w', rot: 0 },
-			{ item: getRandomWithWeight(weight), pos: 'e', rot: 0 },
-		];
-	},
-	bed: (): ChildInfo[] => {
-		// 100% of the time, end table on W or E; 30% of the time, another end table on the other side
-		let roll = rand();
-		let randomDir = roll > 0.5 ? 'e' : 'w';
-		let oppositeDir = getOppositeDir(randomDir);
-		return [
-			{
-				item: 'endTable',
-				pos: randomDir + '0',
-				rot: 0
-			},
-			{
-				item: rand() < 0.3 ? 'endTable' : 'EMPTY',
-				pos: oppositeDir + '1',
-				rot: 0
-			},
-			{ item: 'EMPTY', pos: randomDir + '1', rot: 0 },
-			{ item: 'EMPTY', pos: oppositeDir + '1', rot: 0 },
-		];
-	},
-	couchCenter: (): ChildInfo[] => {
-		return rand() < 0.3 ? [] : [{ item: 'dresser', pos: 'n', rot: 2 }];
-	},
-	roundTable: (): ChildInfo[] => {
-		let scrambledDirs = getScrambledDirs();
-		if (scrambledDirs.length < 4) { throw new Error("ASSERT LOL") }
-		let ret: ChildInfo[] = [{
-			item: 'chair', pos: scrambledDirs[0],
-			rot: getNFromDir(scrambledDirs[0])
-		}];
-		for (let i = 1; i <= 3; i++) {
-			if (rand() < 0.6) {
-				ret.push({
-					item: 'chair', pos: scrambledDirs[i],
-					rot: getNFromDir(scrambledDirs[i])
-				});
-			}
-		}
-		return ret;
-	},
-};
-
 export const spreadItemsOnAxis = (items: ItemWithContext[], axis: string, itemSize: number): ItemWithContext[] => {
 	if (items.length < 1) {
 		return items;
 	}
 	let ret: ItemWithContext[] = JSON.parse(JSON.stringify(items));
-	let translationSeries: XYCoord[] = [];
 	let centerCoord = averageXYCoords(items.map(item => item.itemCenterCoord));
 	let rawTranslation: XYCoord = { x: 0, y: 0 };
 	let initial = (-itemSize * (items.length - 1)) / 2
+	let translationSeries: XYCoord[] = [];
 	for (
 		let i = initial;
 		i < items.length;
@@ -408,58 +325,6 @@ export const spreadItemsOnAxis = (items: ItemWithContext[], axis: string, itemSi
 		return item;
 	});
 };
-const fillOutChildrenFromParent = (parent: ItemWithContext): ItemWithContext[] => {
-	let childrenGet = getChildren[parent.name];
-	if (!childrenGet) {
-		return [];
-	}
-	let childrenInfo = childrenGet();
-	let finalChildren: ItemWithContext[] = [];
-	let parentDimensions: Record<string, number> = {
-		x: FURNISHINGS2[parent.name].dimensions.width,
-		y: FURNISHINGS2[parent.name].dimensions.depth,
-	}
-	let normalizedTransforms: Record<string, XYCoord> = {
-		n: { x: 0, y: -1 },
-		e: { x: 1, y: 0 },
-		s: { x: 0, y: 1 },
-		w: { x: -1, y: 0 },
-	}
-	DIRECTIONS.forEach(dir => {
-		let filteredChildren = childrenInfo.filter((item: ChildInfo) => item.pos.includes(dir));
-		if (filteredChildren.length > 0) {
-			let axis: string = dir === 'n' || dir === 's' ? 'y' : 'x';
-			let childInfo = filteredChildren[0]
-			let childDimensions: Record<string, number> = {
-				x: FURNISHINGS2[childInfo.item].dimensions.width,
-				y: FURNISHINGS2[childInfo.item].dimensions.depth,
-			};
-			let margin = Math.abs(parentDimensions[axis] + childDimensions[axis]) / 2;
-			let naiveTranslation = scaleXY(
-				normalizedTransforms[dir],
-				margin
-			);
-			let children: ItemWithContext[] = filteredChildren.map((child: ChildInfo) => {
-				return {
-					occupiedCoords: [],
-					itemCenterCoord: {
-						x: parent.itemCenterCoord.x + naiveTranslation.x,
-						y: parent.itemCenterCoord.y + naiveTranslation.y,
-					},
-					name: child.item,
-					children: [],
-					rot: child.rot,
-				};
-			});
-			let spreadAxis: string = axis === 'y' ? 'x' : 'y';
-			let spreadJump = childDimensions[spreadAxis];
-			let spreadChildren = spreadItemsOnAxis(children, spreadAxis, spreadJump);
-			let pivotChildren = pivotItemsAroundPoint(spreadChildren, parent.itemCenterCoord, 0);
-			finalChildren = finalChildren.concat(pivotChildren);
-		}
-	})
-	return finalChildren.filter(item => !(item.name === "EMPTY"));
-};
 
 export interface ItemWithContext {
 	occupiedCoords: XYCoord[];
@@ -467,65 +332,15 @@ export interface ItemWithContext {
 	name: string;
 	rot: number;
 };
-export const getItemInfo = (name: string): ItemWithContext => {
-	let info = FURNISHINGS2[name];
-	let occupiedCoords: XYCoord[] = [];
-	for (let y = 0; y < info.dimensions.depth; y++) {
-		for (let x = 0; x < info.dimensions.width; x++) {
-			occupiedCoords.push({ x, y });
-		}
-	}
-	let parentInfo = {
-		occupiedCoords,
-		itemCenterCoord: averageXYCoords(occupiedCoords),
-		name,
-		children: [],
-		rot: 0,
-	};
-	// children!
-	let children = JSON.parse(JSON.stringify(fillOutChildrenFromParent(parentInfo)));
-	parentInfo.children = children;
-	children.forEach((child: ItemWithContext) => {
-		if (child.occupiedCoords.length)
-			parentInfo.occupiedCoords = parentInfo.occupiedCoords.concat(child.occupiedCoords);
-	})
-	return parentInfo;
-};
 
-const pivotItemAroundPoint = (item: ItemWithContext, coord: XYCoord, turns: number): ItemWithContext => {
-	// normalize
-	let translation = {
-		x: item.itemCenterCoord.x - coord.x,
-		y: item.itemCenterCoord.y - coord.y,
-	}
-	let rotatingItem = JSON.parse(JSON.stringify(item));
-	rotatingItem.itemCenterCoord.x -= translation.x;
-	rotatingItem.itemCenterCoord.y -= translation.y;
-	// rotate
-	for (let i = 0; i < turns; i++) {
-		rotatingItem.itemCenterCoord.x = -rotatingItem.itemCenterCoord.y;
-		rotatingItem.itemCenterCoord.y = rotatingItem.itemCenterCoord.x;
-		rotatingItem.rot = (rotatingItem.rot + 1) % 4;
-	}
-	// unnormalize
-	rotatingItem.itemCenterCoord.x += translation.x;
-	rotatingItem.itemCenterCoord.y += translation.y;
-	return rotatingItem;
-}
-export const pivotItemsAroundPoint = (items: ItemWithContext[], coord: XYCoord, turns: number): ItemWithContext[] => {
-	return items.map((item: ItemWithContext) => pivotItemAroundPoint(item, coord, turns));
-}
-
-export const translateItemAndChildren = (item: ItemWithContext, translation: XYCoord): ItemWithContext => {
+const translateItem = (item: ItemWithContext, translation: XYCoord): ItemWithContext => {
 	item.itemCenterCoord = translateXY(item.itemCenterCoord, translation);
 	item.occupiedCoords = item.occupiedCoords.map(inner => translateXY(inner, translation));
 	return item;
 }
-
-// let test = getItemInfo("couchCenter");
-// console.log(test);
-
-// fillOutChildrenFromParent(test)
+export const translateItems = (items: ItemWithContext[], translation: XYCoord): ItemWithContext[] => {
+	return items.map(item => translateItem(item, translation));
+}
 
 // console.log(JSON.stringify(mapWithRooms, null, '\t'));
 // console.log('breakme');
