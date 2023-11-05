@@ -13,7 +13,7 @@ import '@babylonjs/core/Helpers/sceneHelpers';
 import '@babylonjs/loaders/glTF/2.0/glTFLoader';
 import '@babylonjs/core/Rendering/outlineRenderer';
 
-import {LevelBuilder, type Furnishing, type Room } from './LevelBuilder';
+import { LevelBuilder, type Furnishing, type Room } from './LevelBuilder';
 import { makeRoomsWithSeed } from './levelGenerator';
 import { initCandySpawner } from './CandySpawner';
 

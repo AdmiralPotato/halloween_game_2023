@@ -1,10 +1,10 @@
-import { Furnishing } from "./LevelBuilder";
-import { XYCoord, XYRange, randomFromRange } from "./utilities";
+import { Furnishing } from './LevelBuilder';
+import { XYCoord, XYRange, randomFromRange } from './utilities';
 
 export interface RoomInfo {
-	name: string,
-	exteriorWalls: string[],
-	defaultSize: XYRange,
+	name: string;
+	exteriorWalls: string[];
+	defaultSize: XYRange;
 }
 export interface RoomWorkingData {
 	width: number;
@@ -24,39 +24,39 @@ const normalRoomSize: XYRange = {
 	y: { min: 3, max: 4 },
 };
 export const ROOMS: Record<string, RoomInfo> = {
-	'a': {
-		name: "livingRoom",
+	a: {
+		name: 'livingRoom',
 		exteriorWalls: ['w', 'e'],
 		defaultSize: {
 			x: { min: 6, max: 9 },
 			y: { min: 4, max: 6 },
 		},
 	},
-	'b': {
-		name: "hallway",
+	b: {
+		name: 'hallway',
 		exteriorWalls: [],
 		defaultSize: {
 			x: { min: 2, max: 2 },
 			y: { min: NaN, max: NaN },
 		},
 	},
-	'c': {
-		name: "RANDOM",
+	c: {
+		name: 'RANDOM',
 		exteriorWalls: ['e'],
 		defaultSize: normalRoomSize,
 	},
-	'd': {
-		name: "RANDOM",
+	d: {
+		name: 'RANDOM',
 		exteriorWalls: ['w'],
 		defaultSize: normalRoomSize,
 	},
-	'e': {
-		name: "RANDOM",
+	e: {
+		name: 'RANDOM',
 		exteriorWalls: ['w', 'n'],
 		defaultSize: normalRoomSize,
 	},
-	'f': {
-		name: "RANDOM",
+	f: {
+		name: 'RANDOM',
 		exteriorWalls: ['e', 'n'],
 		defaultSize: normalRoomSize,
 	},

@@ -27,7 +27,7 @@ export interface XYRange {
 }
 
 export const getWidthFromItemsWithContext = (items: ItemWithContext[]) => {
-	return items.map(item => item.dimensions.width).reduce((ac, v) => ac + v, 0);
+	return items.map((item) => item.dimensions.width).reduce((ac, v) => ac + v, 0);
 };
 export const getXYRangeFromXYCoords = (coords: XYCoord[]) => {
 	return coords

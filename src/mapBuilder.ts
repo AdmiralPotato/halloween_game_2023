@@ -9,14 +9,9 @@ import {
 	translateXY,
 	compareXY,
 	getCenterForXYRange,
-	getNFromDir
+	getNFromDir,
 } from './utilities';
-import {
-	ROOMS,
-	buildRoom,
-	RoomWorkingData,
-	Tile,
-} from './rooms';
+import { ROOMS, buildRoom, RoomWorkingData, Tile } from './rooms';
 
 ////---------------------------------------------------------//
 ///---------------------- THE OWL???? ----------------------///
@@ -29,7 +24,7 @@ export const buildMapFromSeed = (seed: string) => {
 
 	const roomWorkingData: Record<string, RoomWorkingData> = {};
 
-	Object.keys(ROOMS).forEach(roomID => {
+	Object.keys(ROOMS).forEach((roomID) => {
 		roomWorkingData[roomID] = buildRoom(roomID);
 	});
 
@@ -77,7 +72,7 @@ export const buildMapFromSeed = (seed: string) => {
 
 	['e', 'f'].forEach((roomID, index, arr) => {
 		const line = roomLineMap[roomID];
-		const roomInfo = roomWorkingData[roomID]
+		const roomInfo = roomWorkingData[roomID];
 		const maxSize = Math.max(roomInfo.depth, roomWorkingData[arr[(index + 1) % 2]].depth);
 		const ret: string[] = [];
 		for (let i = 0; i < maxSize; i++) {
@@ -118,16 +113,12 @@ export const buildMapFromSeed = (seed: string) => {
 	const mapASCII: string[] = [];
 
 	for (let i = 0; i < roomLinesArrayMap.e.length; i++) {
-		mapASCII.push(
-			roomLinesArrayMap.e[i] + roomLineMap.b + roomLinesArrayMap.f[i],
-		);
+		mapASCII.push(roomLinesArrayMap.e[i] + roomLineMap.b + roomLinesArrayMap.f[i]);
 	}
 
 	for (let i = 0; i < (roomLinesArrayMap.d || []).length; i++) {
 		mapASCII.push(
-			(roomLinesArrayMap.d || [])[i] +
-			roomLineMap.b +
-			(roomLinesArrayMap.c || [])[i],
+			(roomLinesArrayMap.d || [])[i] + roomLineMap.b + (roomLinesArrayMap.c || [])[i],
 		);
 	}
 	// quickie: make a door between hallway and living room (entrance)
@@ -192,25 +183,37 @@ export const buildMapFromSeed = (seed: string) => {
 			if (!firstDoorIndex) {
 				throw new Error('firstDoorIndex failed to be a valid value!');
 			}
-			mapASCII[firstDoorIndex] = mapASCII[firstDoorIndex].replace(left + 'b', left.toUpperCase() + 'B');
+			mapASCII[firstDoorIndex] = mapASCII[firstDoorIndex].replace(
+				left + 'b',
+				left.toUpperCase() + 'B',
+			);
 			indicesR = indicesR.filter((n) => n !== firstDoorIndex);
 			let secondDoorIndex = indicesR.length > 0 ? randomFromArray(indicesR) : firstDoorIndex;
 			if (!secondDoorIndex) {
 				throw new Error('secondDoorIndex failed to be a valid value!');
 			}
-			mapASCII[secondDoorIndex] = mapASCII[secondDoorIndex].replace('b' + right, 'B' + right.toUpperCase());
+			mapASCII[secondDoorIndex] = mapASCII[secondDoorIndex].replace(
+				'b' + right,
+				'B' + right.toUpperCase(),
+			);
 		} else {
 			let firstDoorIndex = randomFromArray(indicesR);
 			if (!firstDoorIndex) {
 				throw new Error('firstDoorIndex failed to be a valid value!');
 			}
-			mapASCII[firstDoorIndex] = mapASCII[firstDoorIndex].replace('b' + right, 'B' + right.toUpperCase());
+			mapASCII[firstDoorIndex] = mapASCII[firstDoorIndex].replace(
+				'b' + right,
+				'B' + right.toUpperCase(),
+			);
 			indicesL = indicesL.filter((n) => n !== firstDoorIndex);
 			let secondDoorIndex = indicesL.length > 0 ? randomFromArray(indicesL) : firstDoorIndex;
 			if (!secondDoorIndex) {
 				throw new Error('secondDoorIndex failed to be a valid value!');
 			}
-			mapASCII[secondDoorIndex] = mapASCII[secondDoorIndex].replace(left + 'b', left.toUpperCase() + 'B');
+			mapASCII[secondDoorIndex] = mapASCII[secondDoorIndex].replace(
+				left + 'b',
+				left.toUpperCase() + 'B',
+			);
 		}
 	});
 
@@ -223,13 +226,15 @@ export const buildMapFromSeed = (seed: string) => {
 	}
 
 	// Get hallway depth
-	roomWorkingData.b.depth = mapASCII.filter((line) => line.includes('b') || line.includes('B')).length;
+	roomWorkingData.b.depth = mapASCII.filter(
+		(line) => line.includes('b') || line.includes('B'),
+	).length;
 
 	/* -------------- CONVERT ROOMS TO REAL COORDINATE SPACE -------------- */
 
 	// get corners of each room
 	const roomCorners: Record<string, XYRange> = {};
-	Object.keys(ROOMS).forEach(roomID => {
+	Object.keys(ROOMS).forEach((roomID) => {
 		// only works for square rooms
 		let topLeft: XYCoord = { x: NaN, y: NaN };
 		let bottomRight: XYCoord = { x: NaN, y: NaN };
@@ -252,30 +257,30 @@ export const buildMapFromSeed = (seed: string) => {
 		roomCorners[roomID] = {
 			x: { min: topLeft.x, max: bottomRight.x },
 			y: { min: topLeft.y, max: bottomRight.y },
-		}
+		};
 	});
 
 	// wall vs floor information
 
 	interface Edge {
-		roomID: string,
-		pos: XYCoord,
-		wallDirs: string[],
-		isDoor: boolean,
-		compositeInfo: string,
+		roomID: string;
+		pos: XYCoord;
+		wallDirs: string[];
+		isDoor: boolean;
+		compositeInfo: string;
 	}
 	const compositeInfoMap: Record<string, string> = {
-		'nw': 'q',
-		'w': 'a',
-		'sw': 'z',
-		's': 'x',
-		'es': 'c',
-		'e': 'd',
-		'en': 'e',
-		'n': 'w',
-	}
+		nw: 'q',
+		w: 'a',
+		sw: 'z',
+		s: 'x',
+		es: 'c',
+		e: 'd',
+		en: 'e',
+		n: 'w',
+	};
 	let roomTileEdges: Edge[] = []; // non doubled! not offset!
-	Object.keys(roomCorners).forEach(roomID => {
+	Object.keys(roomCorners).forEach((roomID) => {
 		let tiles: Edge[] = [];
 		let range = roomCorners[roomID];
 		for (let y = range.y.min; y <= range.y.max; y++) {
@@ -286,8 +291,8 @@ export const buildMapFromSeed = (seed: string) => {
 					pos: { x, y },
 					wallDirs: [],
 					isDoor: isDoor,
-					compositeInfo: 's'
-				}
+					compositeInfo: 's',
+				};
 				if (x === range.x.min) {
 					edge.wallDirs.push('w');
 				} else if (x === range.x.max) {
@@ -308,16 +313,16 @@ export const buildMapFromSeed = (seed: string) => {
 
 	const SCALE = 2;
 	// doubling the coordinates now
-	roomTileEdges = roomTileEdges.map(tile => {
+	roomTileEdges = roomTileEdges.map((tile) => {
 		tile.pos.x *= SCALE;
 		tile.pos.y *= SCALE;
 		return tile;
-	})
+	});
 	Object.keys(roomWorkingData).forEach((roomID) => {
 		roomWorkingData[roomID].width *= SCALE;
 		roomWorkingData[roomID].depth *= SCALE;
 	});
-	Object.keys(roomCorners).forEach(roomID => {
+	Object.keys(roomCorners).forEach((roomID) => {
 		roomCorners[roomID].x.min *= SCALE;
 		roomCorners[roomID].y.min *= SCALE;
 		roomCorners[roomID].x.max *= SCALE;
@@ -327,35 +332,35 @@ export const buildMapFromSeed = (seed: string) => {
 	// getting the door info
 	const roomDoors: DoorInfo[] = [];
 	interface DoorInfo {
-		roomID: string,
-		pos: XYCoord,
-		doorDir: string,
-		wallDirs: string[],
-		destination: string,
-		compositeInfo: string,
+		roomID: string;
+		pos: XYCoord;
+		doorDir: string;
+		wallDirs: string[];
+		destination: string;
+		compositeInfo: string;
 	}
-	const mysteryDoors = roomTileEdges.filter(entry => entry.isDoor);
+	const mysteryDoors = roomTileEdges.filter((entry) => entry.isDoor);
 	mysteryDoors.forEach((mysteryDoor) => {
 		let possibleCounterparts = roomTileEdges
-			.filter(testTile => testTile.isDoor)
-			.filter(testTile => testTile.roomID !== mysteryDoor.roomID);
+			.filter((testTile) => testTile.isDoor)
+			.filter((testTile) => testTile.roomID !== mysteryDoor.roomID);
 		let translationMap: Record<string, XYCoord> = {
 			n: { x: 0, y: -SCALE },
 			e: { x: SCALE, y: 0 },
 			s: { x: 0, y: SCALE },
 			w: { x: -SCALE, y: 0 },
-		}
-		Object.keys(translationMap).forEach(dir => {
+		};
+		Object.keys(translationMap).forEach((dir) => {
 			let translation = translationMap[dir];
 			let testCoords = translateXY(mysteryDoor.pos, translation);
 			for (let i = 0; i < possibleCounterparts.length; i++) {
 				if (compareXY(testCoords, possibleCounterparts[i].pos)) {
 					let remainingWallDirs: string[] = [];
 					mysteryDoor.wallDirs
-						.filter(wallDir => wallDir !== dir)
-						.forEach(remainingDir => {
+						.filter((wallDir) => wallDir !== dir)
+						.forEach((remainingDir) => {
 							remainingWallDirs.push(remainingDir);
-						})
+						});
 					roomDoors.push({
 						roomID: mysteryDoor.roomID,
 						pos: mysteryDoor.pos,
@@ -375,38 +380,55 @@ export const buildMapFromSeed = (seed: string) => {
 		door: 'doorway',
 		wall: 'wall',
 		floor: 'floor',
-	}
+	};
 	Object.keys(roomWorkingData).forEach((roomID) => {
-		let workingRoomTileEdges = roomTileEdges
-			.filter(tile => tile.roomID === roomID);
+		let workingRoomTileEdges = roomTileEdges.filter((tile) => tile.roomID === roomID);
 		let floorTiles: Tile[] = [];
 		let doorTiles: Tile[] = [];
 		const calculateWallDir = (string: string) => {
 			return getNFromDir(string);
 		};
 		//floors
-		workingRoomTileEdges
-			.forEach((tileInfo: Edge) => {
-				let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':floor' + '(' + tileInfo.compositeInfo + ')'
-				floorTiles.push({
-					name,
-					type: 'floor',
-					asset: tileAssets.floor,
-					x: tileInfo.pos.x,
-					y: tileInfo.pos.y,
-					rot: 0,
-					destination: '',
-					wallDir: '',
-					compositeInfo: tileInfo.compositeInfo,
-					roomID,
-				});
+		workingRoomTileEdges.forEach((tileInfo: Edge) => {
+			let name =
+				roomID +
+				':' +
+				tileInfo.pos.x +
+				',' +
+				tileInfo.pos.y +
+				':floor' +
+				'(' +
+				tileInfo.compositeInfo +
+				')';
+			floorTiles.push({
+				name,
+				type: 'floor',
+				asset: tileAssets.floor,
+				x: tileInfo.pos.x,
+				y: tileInfo.pos.y,
+				rot: 0,
+				destination: '',
+				wallDir: '',
+				compositeInfo: tileInfo.compositeInfo,
+				roomID,
 			});
+		});
 		// walls
 		workingRoomTileEdges
-			.filter(tile => !tile.isDoor)
+			.filter((tile) => !tile.isDoor)
 			.forEach((tileInfo: Edge) => {
-				tileInfo.wallDirs.forEach(dir => {
-					let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':wall-' + dir + '(' + tileInfo.compositeInfo + ')'
+				tileInfo.wallDirs.forEach((dir) => {
+					let name =
+						roomID +
+						':' +
+						tileInfo.pos.x +
+						',' +
+						tileInfo.pos.y +
+						':wall-' +
+						dir +
+						'(' +
+						tileInfo.compositeInfo +
+						')';
 					floorTiles.push({
 						name,
 						type: 'wall',
@@ -423,9 +445,18 @@ export const buildMapFromSeed = (seed: string) => {
 			});
 		//doors
 		roomDoors
-			.filter(tile => tile.roomID === roomID)
-			.forEach(tileInfo => {
-				let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':door' + '(' + tileInfo.compositeInfo + ')'
+			.filter((tile) => tile.roomID === roomID)
+			.forEach((tileInfo) => {
+				let name =
+					roomID +
+					':' +
+					tileInfo.pos.x +
+					',' +
+					tileInfo.pos.y +
+					':door' +
+					'(' +
+					tileInfo.compositeInfo +
+					')';
 				doorTiles.push({
 					name,
 					asset: '',
@@ -438,8 +469,17 @@ export const buildMapFromSeed = (seed: string) => {
 					compositeInfo: tileInfo.compositeInfo,
 					roomID,
 				});
-				tileInfo.wallDirs.forEach(dir => {
-					let name = roomID + ':' + tileInfo.pos.x + ',' + tileInfo.pos.y + ':wallForCornerDoor' + '(' + tileInfo.compositeInfo + ')'
+				tileInfo.wallDirs.forEach((dir) => {
+					let name =
+						roomID +
+						':' +
+						tileInfo.pos.x +
+						',' +
+						tileInfo.pos.y +
+						':wallForCornerDoor' +
+						'(' +
+						tileInfo.compositeInfo +
+						')';
 					floorTiles.push({
 						name,
 						type: 'wall',
@@ -478,19 +518,22 @@ export const buildMapFromSeed = (seed: string) => {
 		let roomCenter = getCenterForXYRange(roomCorners[roomID]);
 		room.x = roomCenter.x;
 		room.y = roomCenter.y;
-		room.floors = room.floors.map((item) => {
-			item.x -= room.x;
-			item.y -= room.y;
-			// item.name = `${item.x},${item.y}:${item.name}`;
-			return item;
-		}).filter(item => !(item.rot === 2));
-		room.doors = room.doors.map((item) => {
-			item.x -= room.x;
-			item.y -= room.y;
-			// item.name = `${item.x},${item.y}:${item.name}`;
-			return item;
-		}).filter(item => !(item.rot === 2));
-
+		room.floors = room.floors
+			.map((item) => {
+				item.x -= room.x;
+				item.y -= room.y;
+				// item.name = `${item.x},${item.y}:${item.name}`;
+				return item;
+			})
+			.filter((item) => !(item.rot === 2));
+		room.doors = room.doors
+			.map((item) => {
+				item.x -= room.x;
+				item.y -= room.y;
+				// item.name = `${item.x},${item.y}:${item.name}`;
+				return item;
+			})
+			.filter((item) => !(item.rot === 2));
 	});
 
 	/* -------------- ASSIGN ROOMS THEIR PURPOSES -------------- */

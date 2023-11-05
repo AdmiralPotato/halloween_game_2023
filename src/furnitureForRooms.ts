@@ -1,16 +1,23 @@
 import { Tile } from './rooms';
-import { rand, getRandomWithWeight, getXYRangeFromXYCoords, translateXY, XYCoord, getOppositeDir, DIRECTIONS, averageXYCoords, scaleXY, compareXY, XYRange, getCenterForXYRange, getNFromDir, getScrambledDirs } from './utilities';
+import {
+	getXYRangeFromXYCoords,
+	translateXY,
+	XYCoord,
+	averageXYCoords,
+	compareXY,
+	XYRange,
+} from './utilities';
 
 const cNeighborMap: Record<string, Record<string, string>> = {
-	q: { nw: 'q', ne: 'w', sw: 'a', se: 's', },
-	w: { nw: 'w', ne: 'w', sw: 's', se: 's', },
-	e: { nw: 'w', ne: 'e', sw: 's', se: 'd', },
-	a: { nw: 'a', ne: 's', sw: 'a', se: 's', },
-	s: { nw: 's', ne: 's', sw: 's', se: 's', },
-	d: { nw: 's', ne: 'd', sw: 's', se: 'd', },
-	z: { nw: 'a', ne: 's', sw: 'a', se: 's', },
-	x: { nw: 's', ne: 's', sw: 's', se: 's', },
-	c: { nw: 's', ne: 'd', sw: 's', se: 'd', },
+	q: { nw: 'q', ne: 'w', sw: 'a', se: 's' },
+	w: { nw: 'w', ne: 'w', sw: 's', se: 's' },
+	e: { nw: 'w', ne: 'e', sw: 's', se: 'd' },
+	a: { nw: 'a', ne: 's', sw: 'a', se: 's' },
+	s: { nw: 's', ne: 's', sw: 's', se: 's' },
+	d: { nw: 's', ne: 'd', sw: 's', se: 'd' },
+	z: { nw: 'a', ne: 's', sw: 'a', se: 's' },
+	x: { nw: 's', ne: 's', sw: 's', se: 's' },
+	c: { nw: 's', ne: 'd', sw: 's', se: 'd' },
 };
 const transformations: Record<string, XYCoord> = {
 	nw: { x: -0.5, y: -0.5 },
@@ -21,13 +28,10 @@ const transformations: Record<string, XYCoord> = {
 
 export const padRoom = (tiles: Tile[]): Tile[] => {
 	let ret: Tile[] = [];
-	tiles.forEach(tile => {
+	tiles.forEach((tile) => {
 		Object.keys(transformations).forEach((dir: string) => {
 			let clone: Tile = JSON.parse(JSON.stringify(tile));
-			let newCoords = translateXY(
-				{ x: clone.x, y: clone.y },
-				transformations[dir]
-			)
+			let newCoords = translateXY({ x: clone.x, y: clone.y }, transformations[dir]);
 			clone.x = newCoords.x;
 			clone.y = newCoords.y;
 			let capital = /[A-Z]/.test(clone.compositeInfo);
@@ -35,29 +39,35 @@ export const padRoom = (tiles: Tile[]): Tile[] => {
 			let newC = cNeighborMap[compositeLookup][dir];
 			clone.compositeInfo = capital ? newC.toUpperCase() : newC;
 			ret.push(clone);
-		})
-	})
+		});
+	});
 	return ret;
 };
 
 export const printRoom = (tiles: Tile[], stuff: ItemWithContext[]): string => {
-	let hitBoxed = (stuff || []).map(item => item.collisionOffsetsCoords).flat();
+	let hitBoxed = (stuff || []).map((item) => item.collisionOffsetsCoords).flat();
 
-	let modifiedTiles = padRoom(tiles.filter(item => item.type === 'floor'));
+	let modifiedTiles = padRoom(tiles.filter((item) => item.type === 'floor'));
 	let drawRange: XYRange = getXYRangeFromXYCoords(modifiedTiles);
 	let print = [];
-	let roomCorners = getXYRangeFromXYCoords(tiles.map(tile => { return { x: tile.x, y: tile.y } }));
+	let roomCorners = getXYRangeFromXYCoords(
+		tiles.map((tile) => {
+			return { x: tile.x, y: tile.y };
+		}),
+	);
 	for (let y = drawRange.y.min; y <= drawRange.y.max; y++) {
 		let line = '';
 		for (let x = drawRange.x.min; x <= drawRange.x.max; x++) {
-			let thisSpot = modifiedTiles.filter(tile => tile.x === x && tile.y === y);
+			let thisSpot = modifiedTiles.filter((tile) => tile.x === x && tile.y === y);
 			let value = '';
-			if (thisSpot.length === 1) { value = thisSpot[0].compositeInfo; }
-			else if (thisSpot.length < 1) { value = ' '; }
-			else {
+			if (thisSpot.length === 1) {
+				value = thisSpot[0].compositeInfo;
+			} else if (thisSpot.length < 1) {
+				value = ' ';
+			} else {
 				value = '!';
 			}
-			let hit = hitBoxed.some(coord => compareXY(coord, { x, y, }));
+			let hit = hitBoxed.some((coord) => compareXY(coord, { x, y }));
 			if (hit) {
 				value = '\u001B[31m' + value + '\u001B[0m';
 			}
@@ -70,150 +80,177 @@ export const printRoom = (tiles: Tile[], stuff: ItemWithContext[]): string => {
 };
 
 export interface Dimensions {
-	width: number,
-	depth: number,
-	height: number,
+	width: number;
+	depth: number;
+	height: number;
 }
 export interface FurnishingInfo {
-	placement: string,
-	placementContext: string,
-	asset: string,
-	dimensions: Dimensions,
+	placement: string;
+	placementContext: string;
+	asset: string;
+	dimensions: Dimensions;
 }
 // TODO: weigh candy likelihood per item; e.g. treasure chests = 100% chance
 export const FURNISHINGS: Record<string, FurnishingInfo> = {
 	EMPTY: {
-		placement: 'free', placementContext: '',
+		placement: 'free',
+		placementContext: '',
 		asset: '',
 		dimensions: { width: 1, depth: 1, height: 2 },
 	},
 	curtains: {
-		placement: 'wall', placementContext: 'exteriorWall',
+		placement: 'wall',
+		placementContext: 'exteriorWall',
 		asset: 'curtain',
 		dimensions: { width: 2, depth: 1, height: 2 },
 	},
 	painting: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall',
+		placementContext: '',
 		asset: 'paintingSml',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	couchWall: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall',
+		placementContext: '',
 		asset: 'couch',
 		dimensions: { width: 2, depth: 1, height: 1 },
 	},
 	armChair: {
-		placement: 'free', placementContext: '',
+		placement: 'free',
+		placementContext: '',
 		asset: 'armchair',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	chair: {
-		placement: 'free', placementContext: '',
+		placement: 'free',
+		placementContext: '',
 		asset: 'chair',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	bed: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall',
+		placementContext: '',
 		asset: 'bed',
 		dimensions: { width: 2, depth: 2, height: 2 },
 	},
 	endTable: {
-		placement: 'free', placementContext: 'corner',
+		placement: 'free',
+		placementContext: 'corner',
 		asset: 'endtable',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	candelabra: {
-		placement: 'free', placementContext: '',
+		placement: 'free',
+		placementContext: '',
 		asset: 'candelabra',
 		dimensions: { width: 1, depth: 1, height: 2 },
 	},
 	wardrobe: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall',
+		placementContext: '',
 		asset: 'wardrobe',
 		dimensions: { width: 2, depth: 1, height: 2 },
 	},
 	fireplace: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall',
+		placementContext: '',
 		asset: 'fireplace',
 		dimensions: { width: 2, depth: 1, height: 2 },
 	},
 	pottedPlant: {
-		placement: 'free', placementContext: 'corner',
+		placement: 'free',
+		placementContext: 'corner',
 		asset: 'pottedPlant',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	gargoyle: {
-		placement: 'wall', placementContext: 'corner',
+		placement: 'wall',
+		placementContext: 'corner',
 		asset: 'gargoyle',
 		dimensions: { width: 1, depth: 1, height: 2 },
 	},
 	roundTable: {
-		placement: 'center', placementContext: '',
+		placement: 'center',
+		placementContext: '',
 		asset: 'tableRound',
 		dimensions: { width: 2, depth: 2, height: 2 },
 	},
 	dresser: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall',
+		placementContext: '',
 		asset: 'dresser',
 		dimensions: { width: 2, depth: 1, height: 1 },
 	},
 	chest: {
-		placement: 'wall', placementContext: 'corner',
+		placement: 'wall',
+		placementContext: 'corner',
 		asset: 'chest',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	cobwebEdge: {
-		placement: 'wall', placementContext: 'corner',
+		placement: 'wall',
+		placementContext: 'corner',
 		asset: 'cobwebEdge',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	cobwebCorner: {
-		placement: 'wall', placementContext: 'corner',
+		placement: 'wall',
+		placementContext: 'corner',
 		asset: 'cobwebCrnr',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	bookcaseTallWide: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall',
+		placementContext: '',
 		asset: 'bookcaseWide',
 		dimensions: { width: 2, depth: 1, height: 2 },
 	},
 	bookcaseTallNarrow: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall',
+		placementContext: '',
 		asset: 'bookcaseNarr',
 		dimensions: { width: 1, depth: 1, height: 2 },
 	},
 	bookcaseShortWide: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall',
+		placementContext: '',
 		asset: 'bookcaseShor',
 		dimensions: { width: 2, depth: 1, height: 1 },
 	},
 	bookcaseShortNarrow: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall',
+		placementContext: '',
 		asset: 'bookcaseShNr',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	doorframe: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall',
+		placementContext: '',
 		asset: 'doorframe',
 		dimensions: { width: 2, depth: 2, height: 2 },
 	},
 	diningTableHalf: {
-		placement: 'center', placementContext: '',
+		placement: 'center',
+		placementContext: '',
 		asset: 'tableLongEnd',
 		dimensions: { width: 2, depth: 2, height: 1 },
 	},
 	diningTableMid: {
-		placement: 'center', placementContext: '',
+		placement: 'center',
+		placementContext: '',
 		asset: 'tableLongMid',
 		dimensions: { width: 2, depth: 2, height: 1 },
 	},
 	paintingTall: {
-		placement: 'wall', placementContext: '',
+		placement: 'wall',
+		placementContext: '',
 		asset: 'paintingBig',
 		dimensions: { width: 1, depth: 1, height: 2 },
 	},
 	doorFrame: {
-		placement: 'special', placementContext: '',
+		placement: 'special',
+		placementContext: '',
 		asset: 'doorframe',
 		dimensions: { width: 2, depth: 1, height: 2 },
 	},
@@ -237,7 +274,7 @@ const commonStuff: FurnitureWeight[] = [
 	{ item: 'EMPTY', weight: 1, count: NaN },
 	{ item: 'gargoyle', weight: 3, count: NaN },
 	{ item: 'painting', weight: 1, count: NaN },
-]
+];
 
 export const ROOM_CONTENTS: Record<string, FurnitureWeight[]> = {
 	livingRoom: [
@@ -283,23 +320,23 @@ export const ROOM_CONTENTS: Record<string, FurnitureWeight[]> = {
 		{ item: 'bookcaseShortNarrow', weight: 3, count: NaN },
 		{ item: 'candelabra', weight: 8, count: NaN }, // also in common stuff
 		...commonStuff,
-	]
+	],
 };
 
-export const spreadItemsOnAxis = (items: ItemWithContext[], axis: string, itemSize: number): ItemWithContext[] => {
+export const spreadItemsOnAxis = (
+	items: ItemWithContext[],
+	axis: string,
+	itemSize: number,
+): ItemWithContext[] => {
 	if (items.length < 1) {
 		return items;
 	}
 	let ret: ItemWithContext[] = JSON.parse(JSON.stringify(items));
-	let centerCoord = averageXYCoords(items.map(item => item.centerCoord));
+	let centerCoord = averageXYCoords(items.map((item) => item.centerCoord));
 	let rawTranslation: XYCoord = { x: 0, y: 0 };
-	let initial = (-itemSize * (items.length - 1)) / 2
+	let initial = (-itemSize * (items.length - 1)) / 2;
 	let translationSeries: XYCoord[] = [];
-	for (
-		let i = initial;
-		i < items.length;
-		i += itemSize
-	) {
+	for (let i = initial; i < items.length; i += itemSize) {
 		let thisTranslation = JSON.parse(JSON.stringify(rawTranslation));
 		thisTranslation[axis] = i;
 		translationSeries.push(thisTranslation);
@@ -311,8 +348,13 @@ export const spreadItemsOnAxis = (items: ItemWithContext[], axis: string, itemSi
 		let y: number = centerCoord.y + translation.y;
 		if (splitCollisions) {
 			let splitAmt = (itemSize - 1) / 2;
-			let collisionOffsetsCoords: XYCoord[] = [{ x: x, y: y }, { x: x, y: y }];
-			if (axis !== 'x' && axis !== 'y') { throw new Error("ASSERT LOL"); }
+			let collisionOffsetsCoords: XYCoord[] = [
+				{ x: x, y: y },
+				{ x: x, y: y },
+			];
+			if (axis !== 'x' && axis !== 'y') {
+				throw new Error('ASSERT LOL');
+			}
 			collisionOffsetsCoords[0][axis] += splitAmt;
 			collisionOffsetsCoords[1][axis] -= splitAmt;
 			item.collisionOffsetsCoords = collisionOffsetsCoords;
@@ -332,16 +374,21 @@ export interface ItemWithContext {
 	centerCoord: XYCoord;
 	name: string;
 	rot: number;
-};
+}
 
 const translateItem = (item: ItemWithContext, translation: XYCoord): ItemWithContext => {
 	item.centerCoord = translateXY(item.centerCoord, translation);
-	item.collisionOffsetsCoords = item.collisionOffsetsCoords.map(inner => translateXY(inner, translation));
+	item.collisionOffsetsCoords = item.collisionOffsetsCoords.map((inner) =>
+		translateXY(inner, translation),
+	);
 	return item;
-}
-export const translateItems = (items: ItemWithContext[], translation: XYCoord): ItemWithContext[] => {
-	return items.map(item => translateItem(item, translation));
-}
+};
+export const translateItems = (
+	items: ItemWithContext[],
+	translation: XYCoord,
+): ItemWithContext[] => {
+	return items.map((item) => translateItem(item, translation));
+};
 
 // console.log(JSON.stringify(mapWithRooms, null, '\t'));
 // console.log('breakme');

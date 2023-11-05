@@ -1,6 +1,26 @@
-import { FurnitureWeight, ItemWithContext, ROOM_CONTENTS, FURNISHINGS, padRoom, spreadItemsOnAxis, translateItems } from './furnitureForRooms';
+import {
+	FurnitureWeight,
+	ItemWithContext,
+	ROOM_CONTENTS,
+	FURNISHINGS,
+	padRoom,
+	spreadItemsOnAxis,
+	translateItems,
+} from './furnitureForRooms';
 import { RoomWorkingData, Tile } from './rooms';
-import { getXYRangeFromXYCoords, XYCoord, XYRange, rand, getScrambledDirs, scrambleArray, averageXYCoords, scaleXY, getNFromDir, getRandomWithWeight, getWidthFromItemsWithContext } from './utilities';
+import {
+	getXYRangeFromXYCoords,
+	XYCoord,
+	XYRange,
+	rand,
+	getScrambledDirs,
+	scrambleArray,
+	averageXYCoords,
+	scaleXY,
+	getNFromDir,
+	getRandomWithWeight,
+	getWidthFromItemsWithContext,
+} from './utilities';
 
 export const furnishCenter = (roomData: RoomWorkingData, roomName: string): ItemWithContext[] => {
 	// previously called `populateRoomCenter3`
@@ -11,8 +31,9 @@ export const furnishCenter = (roomData: RoomWorkingData, roomName: string): Item
 		})
 		.map((tile: Tile) => {
 			return {
-				x: tile.x, y: tile.y,
-			}
+				x: tile.x,
+				y: tile.y,
+			};
 		});
 	let floorRange: XYRange = getXYRangeFromXYCoords(floorCoords);
 	// let floorCenterCoord: XYCoord = getCenterForXYRange(floorRange);
@@ -22,22 +43,20 @@ export const furnishCenter = (roomData: RoomWorkingData, roomName: string): Item
 		y: floorRange.y.max - floorRange.y.min - paddingBetweenCenterAndWall,
 	};
 	let ret = getCenterFurniture[roomName](floorSize);
-	ret = ret.filter((item: ItemWithContext) => (item.name !== "EMPTY"))
+	ret = ret.filter((item: ItemWithContext) => item.name !== 'EMPTY');
 	return ret;
 };
 
 export const furnishCorners = (roomData: RoomWorkingData, roomName: string): ItemWithContext[] => {
 	let floors: Tile[] = roomData.floors;
 	let corners = ['q', 'e'];
-	let floorTiles = padRoom(floors)
-		.filter((tile: Tile) => {
-			return corners.includes(tile.compositeInfo) && tile.asset.includes('floor');
-		});
+	let floorTiles = padRoom(floors).filter((tile: Tile) => {
+		return corners.includes(tile.compositeInfo) && tile.asset.includes('floor');
+	});
 
-	let possibleFurniture: FurnitureWeight[] = ROOM_CONTENTS[roomName]
-		.filter(item => {
-			return FURNISHINGS[item.item].placementContext.includes('corner');
-		});
+	let possibleFurniture: FurnitureWeight[] = ROOM_CONTENTS[roomName].filter((item) => {
+		return FURNISHINGS[item.item].placementContext.includes('corner');
+	});
 	let ret: ItemWithContext[] = floorTiles.map((tile: Tile) => {
 		let furnitureName = getRandomWithWeight(possibleFurniture);
 		return {
@@ -51,9 +70,15 @@ export const furnishCorners = (roomData: RoomWorkingData, roomName: string): Ite
 	return ret;
 };
 
-export const padImmediate = (baseItems: ItemWithContext[], padItems: ItemWithContext[], padUntil: number) => {
+export const padImmediate = (
+	baseItems: ItemWithContext[],
+	padItems: ItemWithContext[],
+	padUntil: number,
+) => {
 	let currentWidth = getWidthFromItemsWithContext(baseItems);
-	if (padUntil < currentWidth) { return []; }
+	if (padUntil < currentWidth) {
+		return [];
+	}
 	let ret = JSON.parse(JSON.stringify(baseItems));
 	const childrenSize = 1;
 	let roll = rand();
@@ -66,14 +91,22 @@ export const padImmediate = (baseItems: ItemWithContext[], padItems: ItemWithCon
 		ret[antiMethod](padItems[1]);
 	}
 	return ret;
-}
-export const padToFill = (baseItems: ItemWithContext[], weights: FurnitureWeight[], padUntil: number) => {
+};
+export const padToFill = (
+	baseItems: ItemWithContext[],
+	weights: FurnitureWeight[],
+	padUntil: number,
+) => {
 	let ret = JSON.parse(JSON.stringify(baseItems));
 	let currentWidth = getWidthFromItemsWithContext(ret);
-	if (padUntil < currentWidth) { return []; }
-	if (padUntil === currentWidth) { return baseItems; }
+	if (padUntil < currentWidth) {
+		return [];
+	}
+	if (padUntil === currentWidth) {
+		return baseItems;
+	}
 	do {
-		let furnitureName = getRandomWithWeight(weights)
+		let furnitureName = getRandomWithWeight(weights);
 		ret[rand() ? 'push' : 'unshift']({
 			collisionOffsetsCoords: [{ x: 0, y: 0 }],
 			centerCoord: { x: 0, y: 0 },
@@ -81,10 +114,10 @@ export const padToFill = (baseItems: ItemWithContext[], weights: FurnitureWeight
 			name: furnitureName,
 			rot: 0,
 		});
-		ret = spreadItemsOnAxis(ret, 'x', 1) // TEMP item size should be done automatically!
-	} while (getWidthFromItemsWithContext(ret) < padUntil)
+		ret = spreadItemsOnAxis(ret, 'x', 1); // TEMP item size should be done automatically!
+	} while (getWidthFromItemsWithContext(ret) < padUntil);
 	return ret;
-}
+};
 
 const getTileLinearDiffOnAxis = (t1: Tile, t2: Tile) => {
 	if (t2.y === t1.y) {
@@ -97,98 +130,114 @@ const getTileLinearDiffOnAxis = (t1: Tile, t2: Tile) => {
 
 const splitByDoor = (array: Tile[]): Tile[][] => {
 	let ret: Tile[][] = [];
-	let working = JSON.parse(JSON.stringify(array))
-		.sort((a: Tile, b: Tile) => {
-			if (a.x === b.x) { return a.y - b.y; }
-			return a.x - a.y;
-		});
+	let working = JSON.parse(JSON.stringify(array)).sort((a: Tile, b: Tile) => {
+		if (a.x === b.x) {
+			return a.y - b.y;
+		}
+		return a.x - a.y;
+	});
 	let first = working.shift();
-	if (!first) { throw new Error("ASSERT"); }
+	if (!first) {
+		throw new Error('ASSERT');
+	}
 	let insert = [first];
 	while (working.length) {
 		let diff = getTileLinearDiffOnAxis(working[0], insert[insert.length - 1]);
 		if (diff > 1) {
 			ret.push(insert);
 			let last = working.shift();
-			if (!last) { throw new Error("ASSERT"); }
+			if (!last) {
+				throw new Error('ASSERT');
+			}
 			insert = [last];
 		} else {
 			let last = working.shift();
-			if (!last) { throw new Error("ASSERT"); }
+			if (!last) {
+				throw new Error('ASSERT');
+			}
 			insert.push(last);
 		}
 	}
 	ret.push(insert);
 	return ret;
-}
+};
 
 export const furnishEdges = (roomData: RoomWorkingData, roomName: string): ItemWithContext[] => {
 	let ret: ItemWithContext[] = [];
 	// get wall tile segments
 	let floors: Tile[] = roomData.floors;
 	let edgeIDs = ['a', 'w', 'd'];
-	let wallTiles = padRoom(floors)
-		.filter((tile: Tile) => {
-			return edgeIDs.includes(tile.compositeInfo) && tile.asset.includes('wall');
-		});
-	let wallSegments = edgeIDs.map(wallID => {
+	let wallTiles = padRoom(floors).filter((tile: Tile) => {
+		return edgeIDs.includes(tile.compositeInfo) && tile.asset.includes('wall');
+	});
+	let wallSegments = edgeIDs.map((wallID) => {
 		// separate segments by wall: end up with [[1,2,3,4],[5,6,7,8],[9,10]] type situation
-		return wallTiles.filter(tile => tile.compositeInfo === wallID);
-	})
+		return wallTiles.filter((tile) => tile.compositeInfo === wallID);
+	});
 	// split it by where the door was (using the margins between them to judge this)
 	let splitVersions: Tile[][] = [];
 	wallSegments.forEach((segment: Tile[]) => {
-		let splitVersion = splitByDoor(segment)
+		let splitVersion = splitByDoor(segment);
 		splitVersions = splitVersions.concat(splitVersion);
-	})
+	});
 	wallSegments = splitVersions;
 	// best way to get rid of the corners
-	wallSegments = wallSegments.map(item => {
-		item.pop();
-		item.shift();
-		return item;
-	})
-		.filter(item => item.length > 0) // kill empty walls (it can happen)
-		.sort((a, b) => b.length - a.length) // put the longest first; deal with largest to smallest
+	wallSegments = wallSegments
+		.map((item) => {
+			item.pop();
+			item.shift();
+			return item;
+		})
+		.filter((item) => item.length > 0) // kill empty walls (it can happen)
+		.sort((a, b) => b.length - a.length); // put the longest first; deal with largest to smallest
 	// todo: split very long segments (8+) into pieces
 
 	// find required furniture
 	let requiredFurniture: string[] = [];
 	ROOM_CONTENTS[roomName]
-		.filter(item => !Number.isNaN(item.count))
-		.forEach(item => {
+		.filter((item) => !Number.isNaN(item.count))
+		.forEach((item) => {
 			for (let i = 0; i < item.count; i++) {
-				requiredFurniture.push(item.item)
+				requiredFurniture.push(item.item);
 			}
 		});
 	// find large furniture
-	let largeFurnitureWeights = ROOM_CONTENTS[roomName].filter(item => {
+	let largeFurnitureWeights = ROOM_CONTENTS[roomName].filter((item) => {
 		return FURNISHINGS[item.item].dimensions.width > 1;
 	});
 	// find little furniture
-	let smallFurnitureWeights = ROOM_CONTENTS[roomName].filter(item => {
-		return FURNISHINGS[item.item].dimensions.width === 1;
-	}).filter(item => FURNISHINGS[item.item].placementContext !== 'corner');
+	let smallFurnitureWeights = ROOM_CONTENTS[roomName]
+		.filter((item) => {
+			return FURNISHINGS[item.item].dimensions.width === 1;
+		})
+		.filter((item) => FURNISHINGS[item.item].placementContext !== 'corner');
 
 	// while there is space on the walls
 	while (wallSegments.length) {
 		let bigInsertName = requiredFurniture.length // either grab a required cluster or a large piece of furniture
-			? (requiredFurniture.shift() || '')
+			? requiredFurniture.shift() || ''
 			: getRandomWithWeight(largeFurnitureWeights);
 		let wall = wallSegments.shift() || []; // taking the wall off; we'll fill it completely
-		let wallCenter = averageXYCoords(wall.map(tile => { return { x: tile.x, y: tile.y } }));
+		let wallCenter = averageXYCoords(
+			wall.map((tile) => {
+				return { x: tile.x, y: tile.y };
+			}),
+		);
 		let currentWallID = wall[0].compositeInfo;
 		let itemsWIP: ItemWithContext[] = getWallCluster[bigInsertName]
 			? getWallCluster[bigInsertName](wall.length)
-			: [{
-				collisionOffsetsCoords: FURNISHINGS[bigInsertName].dimensions.depth === 1
-					? twoByOneCoords
-					: twoByTwoCoords,
-				centerCoord: { x: 0, y: 0 },
-				dimensions: FURNISHINGS[bigInsertName].dimensions,
-				name: bigInsertName,
-				rot: 0,
-			}];
+			: [
+					{
+						collisionOffsetsCoords:
+							FURNISHINGS[bigInsertName].dimensions.depth === 1
+								? twoByOneCoords
+								: twoByTwoCoords,
+						centerCoord: { x: 0, y: 0 },
+						dimensions: FURNISHINGS[bigInsertName].dimensions,
+						name: bigInsertName,
+						rot: 0,
+					},
+			  ];
 		itemsWIP = padToFill(itemsWIP, smallFurnitureWeights, wall.length);
 		// todo: spread items
 
@@ -204,9 +253,15 @@ export const furnishEdges = (roomData: RoomWorkingData, roomName: string): ItemW
 		}
 		itemsWIP = translateItems(itemsWIP, wallCenter);
 		if (currentWallID === 'a') {
-			itemsWIP = itemsWIP.map(item => { item.rot = 3; return item; })
+			itemsWIP = itemsWIP.map((item) => {
+				item.rot = 3;
+				return item;
+			});
 		} else if (currentWallID === 'd') {
-			itemsWIP = itemsWIP.map(item => { item.rot = 1; return item; })
+			itemsWIP = itemsWIP.map((item) => {
+				item.rot = 1;
+				return item;
+			});
 		}
 		ret = ret.concat(itemsWIP);
 	}
@@ -223,24 +278,25 @@ const twoByOneCoords = [
 	{ x: 0, y: 0 },
 	{ x: 1, y: 0 },
 ];
-const oneByOneCoords = [
-	{ x: 0, y: 0 },
-];
+const oneByOneCoords = [{ x: 0, y: 0 }];
 
 const spawnDiningTable = (placementBounds: XYCoord): ItemWithContext[] => {
 	let tables: ItemWithContext[] = [];
 	let chairsN: ItemWithContext[] = [];
 	let chairsS: ItemWithContext[] = [];
-	if (placementBounds.y < 2 || placementBounds.x < 4) { return []; }
+	if (placementBounds.y < 2 || placementBounds.x < 4) {
+		return [];
+	}
 	let tableCount = Math.floor(placementBounds.x / 2) - 1;
 	for (let i = 1; i <= tableCount; i++) {
-		let furnitureName = "diningTableMid";
-		let rot = 0; i === 1 ? 0 : 2;
+		let furnitureName = 'diningTableMid';
+		let rot = 0;
+		i === 1 ? 0 : 2;
 		if (i === 1) {
 			rot = 2;
-			furnitureName = "diningTableHalf";
+			furnitureName = 'diningTableHalf';
 		} else if (i === tableCount) {
-			furnitureName = "diningTableHalf";
+			furnitureName = 'diningTableHalf';
 		}
 		tables.push({
 			collisionOffsetsCoords: twoByOneCoords,
@@ -248,27 +304,26 @@ const spawnDiningTable = (placementBounds: XYCoord): ItemWithContext[] => {
 			dimensions: FURNISHINGS[furnitureName].dimensions,
 			name: furnitureName,
 			rot,
-		})
-
+		});
 	}
 	const chairRate = 0.95;
 	for (let i = 1; i <= tableCount * 2; i++) {
-		let furnitureName = rand() < chairRate ? 'chair' : 'EMPTY'
+		let furnitureName = rand() < chairRate ? 'chair' : 'EMPTY';
 		chairsN.push({
-			collisionOffsetsCoords: [{ x: 0, y: -.5 }],
-			centerCoord: { x: 0, y: -.5 },
+			collisionOffsetsCoords: [{ x: 0, y: -0.5 }],
+			centerCoord: { x: 0, y: -0.5 },
 			dimensions: FURNISHINGS[furnitureName].dimensions,
 			name: furnitureName,
 			rot: 0,
-		})
-		furnitureName = rand() < chairRate ? 'chair' : 'EMPTY'
+		});
+		furnitureName = rand() < chairRate ? 'chair' : 'EMPTY';
 		chairsS.push({
-			collisionOffsetsCoords: [{ x: 0, y: .5 }],
-			centerCoord: { x: 0, y: .5 },
+			collisionOffsetsCoords: [{ x: 0, y: 0.5 }],
+			centerCoord: { x: 0, y: 0.5 },
 			dimensions: FURNISHINGS[furnitureName].dimensions,
 			name: rand() < chairRate ? 'chair' : 'EMPTY',
 			rot: 2,
-		})
+		});
 	}
 	tables = spreadItemsOnAxis(tables, 'x', 2);
 	chairsN = spreadItemsOnAxis(chairsN, 'x', 1);
@@ -290,15 +345,17 @@ const spawnRoundTable = (): ItemWithContext[] => {
 			rot: 0,
 		},
 	];
-	const dist = 0.6
+	const dist = 0.6;
 	const diagSpread = [
 		{ x: -dist, y: -dist },
 		{ x: dist, y: -dist },
 		{ x: dist, y: dist },
 		{ x: -dist, y: dist },
-	]
+	];
 	let scrambledDirs = getScrambledDirs();
-	if (scrambledDirs.length < 4) { throw new Error("ASSERT LOL") }
+	if (scrambledDirs.length < 4) {
+		throw new Error('ASSERT LOL');
+	}
 
 	// always at least one chair
 	let furnitureName = 'chair';
@@ -309,7 +366,7 @@ const spawnRoundTable = (): ItemWithContext[] => {
 		dimensions: FURNISHINGS[furnitureName].dimensions,
 		name: furnitureName,
 		rot: getNFromDir(dir1) - 0.5,
-	})
+	});
 	// but up to four chairs:
 	for (let i = 1; i < scrambledDirs.length; i++) {
 		if (rand() < 0.6) {
@@ -331,38 +388,40 @@ const getBookcasesSizes = (length: number) => {
 	const wideCount = Math.floor(length / 2);
 	const bookcaseSizes = new Array(wideCount);
 	bookcaseSizes.fill(2);
-	if (remainder) { bookcaseSizes.push(1); }
+	if (remainder) {
+		bookcaseSizes.push(1);
+	}
 	return scrambleArray(bookcaseSizes);
-}
+};
 const getLineOfBookcases = (length: number, axis: string): ItemWithContext[] => {
 	const sizes = getBookcasesSizes(length);
 	let ret = [];
-	let dummyItems = new Array(length) // to get occupied coords
+	let dummyItems = new Array(length); // to get occupied coords
 	dummyItems.fill({
 		collisionOffsetsCoords: { x: 0, y: 0 },
 		centerCoord: { x: 0, y: 0 },
 		dimensions: { height: NaN, width: NaN, depth: NaN },
 		name: '',
 		rot: 0,
-	})
+	});
 	let spreadItems: ItemWithContext[] = spreadItemsOnAxis(dummyItems, axis, 1);
-	ret = sizes.map(size => {
+	ret = sizes.map((size) => {
 		let dummies = spreadItems.splice(0, size);
-		let collisionOffsetsCoords = dummies.map(item => item.centerCoord);
-		let furnitureName = size === 1 ? 'bookcaseTallNarrow' : 'bookcaseTallWide'
+		let collisionOffsetsCoords = dummies.map((item) => item.centerCoord);
+		let furnitureName = size === 1 ? 'bookcaseTallNarrow' : 'bookcaseTallWide';
 		return {
 			collisionOffsetsCoords,
 			centerCoord: averageXYCoords(collisionOffsetsCoords),
 			name: furnitureName,
 			dimensions: FURNISHINGS[furnitureName].dimensions,
 			rot: axis === 'x' ? 0 : 3,
-		}
-	})
+		};
+	});
 	return ret;
-}
+};
 const spawnBookcaseIsland = (length: number, axis: string) => {
 	let bookcases1: ItemWithContext[] = getLineOfBookcases(length, axis);
-	let bookcases2: ItemWithContext[] = getLineOfBookcases(length, axis)
+	let bookcases2: ItemWithContext[] = getLineOfBookcases(length, axis);
 	let translation: XYCoord = { x: 0, y: 0 };
 	if (axis === 'x') {
 		translation.y += 0.25;
@@ -371,11 +430,10 @@ const spawnBookcaseIsland = (length: number, axis: string) => {
 	}
 	bookcases1 = translateItems(bookcases1, translation);
 	translation = scaleXY(translation, -1);
-	bookcases2 = translateItems(bookcases2, translation)
-		.map(item => {
-			item.rot = (item.rot + 2) % 4
-			return item;
-		});
+	bookcases2 = translateItems(bookcases2, translation).map((item) => {
+		item.rot = (item.rot + 2) % 4;
+		return item;
+	});
 	return bookcases1.concat(bookcases2);
 };
 
@@ -390,7 +448,7 @@ const getCenterFurniture: Record<string, Function> = {
 		let centers: XYCoord[] = [
 			{ x: -width / 4, y: 0 },
 			{ x: width / 4, y: 0 },
-		]
+		];
 		for (let i = 0; i < blocksCount; i++) {
 			let axis = rand() < 0.5 ? 'x' : 'y';
 			let length = axis === 'x' ? Math.floor(width / 2) : depth;
@@ -400,39 +458,47 @@ const getCenterFurniture: Record<string, Function> = {
 		}
 		return ret;
 	},
-	hallway: () => { return []; },
-	bedroom: () => { return []; },
+	hallway: () => {
+		return [];
+	},
+	bedroom: () => {
+		return [];
+	},
 	livingRoom: (): ItemWithContext[] => {
-		let translations = [ // offset for the pair of round tables in the center
+		let translations = [
+			// offset for the pair of round tables in the center
 			{ x: 3, y: 0 },
 			{ x: -3, y: 0 },
-		]
+		];
 		let roundTable1 = translateItems(spawnRoundTable(), translations[0]);
 		let roundTable2 = translateItems(spawnRoundTable(), translations[1]);
 		return roundTable1.concat(roundTable2);
 	},
-}
+};
 
 const getEndTablePadding = (
 	furnitureName: string,
 	rootCollisionOffsetsCoords: XYCoord[],
-	padUntil: number
+	padUntil: number,
 ) => {
 	let weight = [
 		{ item: 'endTable', weight: 5 },
 		{ item: 'candelabra', weight: 1 },
 		{ item: 'pottedPlant', weight: 2 },
-		{ item: 'EMPTY', weight: 3 }
+		{ item: 'EMPTY', weight: 3 },
 	];
-	let randos = [0, 1].map(_ => getRandomWithWeight(weight));
+	let randos = [0, 1].map((_) => getRandomWithWeight(weight));
 	return padImmediate(
-		[{ // baseItems
-			collisionOffsetsCoords: rootCollisionOffsetsCoords,
-			centerCoord: averageXYCoords(rootCollisionOffsetsCoords),
-			dimensions: FURNISHINGS[furnitureName].dimensions,
-			name: furnitureName,
-			rot: 0,
-		}], // padItems
+		[
+			{
+				// baseItems
+				collisionOffsetsCoords: rootCollisionOffsetsCoords,
+				centerCoord: averageXYCoords(rootCollisionOffsetsCoords),
+				dimensions: FURNISHINGS[furnitureName].dimensions,
+				name: furnitureName,
+				rot: 0,
+			},
+		], // padItems
 		[
 			{
 				collisionOffsetsCoords: oneByOneCoords,
@@ -447,7 +513,7 @@ const getEndTablePadding = (
 				dimensions: FURNISHINGS[randos[1]].dimensions,
 				name: randos[1],
 				rot: 0,
-			}
+			},
 		],
 		padUntil,
 	);
@@ -463,14 +529,18 @@ const getWallCluster: Record<string, Function> = {
 		// 100% of the time, end table on W or E; 30% of the time, another end table on the other side (empty space otherwise)
 		let alternate = rand() < 0.3 ? 'endTable' : 'EMPTY';
 		return padImmediate(
-			[{ // baseItems
-				collisionOffsetsCoords: twoByTwoCoords,
-				centerCoord: averageXYCoords(twoByTwoCoords),
-				dimensions: FURNISHINGS['bed'].dimensions,
-				name: 'bed',
-				rot: 0,
-			}],
-			[ // padItems
+			[
+				{
+					// baseItems
+					collisionOffsetsCoords: twoByTwoCoords,
+					centerCoord: averageXYCoords(twoByTwoCoords),
+					dimensions: FURNISHINGS['bed'].dimensions,
+					name: 'bed',
+					rot: 0,
+				},
+			],
+			[
+				// padItems
 				{
 					collisionOffsetsCoords: oneByOneCoords,
 					centerCoord: averageXYCoords(oneByOneCoords),
@@ -484,12 +554,12 @@ const getWallCluster: Record<string, Function> = {
 					dimensions: FURNISHINGS[alternate].dimensions,
 					name: alternate,
 					rot: 0,
-				}
+				},
 			],
 			padUntil,
-		)
+		);
 	},
-}
+};
 
 // let test2 = populateRoomCenter3(testRoom, "diningRoom")
 

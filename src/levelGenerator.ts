@@ -19,9 +19,10 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 		const roomType = rooms[roomID].name;
 
 		// BODGE FOR NEW STUFF + TURNING IT INTO OLD STUFF
-		const convertNewThingToOld = (thing: ItemWithContext): Furnishing => { // BODGE
+		const convertNewThingToOld = (thing: ItemWithContext): Furnishing => {
+			// BODGE
 			if (!FURNISHINGS[thing.name]) {
-				throw new Error("Could not find furniture called " + thing.name)
+				throw new Error('Could not find furniture called ' + thing.name);
 			}
 			return {
 				label: '',
@@ -44,16 +45,15 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 		// put the edge objects in
 		let edgeFurniture: ItemWithContext[] = furnishEdges(rooms[roomID], roomType);
 		// Add doorframes
-		let doorFrames: ItemWithContext[] = rooms[roomID].doors
-			.map((tile: Tile) => {
-				return {
-					collisionOffsetsCoords: [{ x: tile.x, y: tile.y }],
-					centerCoord: { x: tile.x, y: tile.y },
-					name: 'doorFrame',
-					dimensions: FURNISHINGS['doorframe'].dimensions,
-					rot: (tile.rot % 2 === 0) ? tile.rot : getOppositeDirN(tile.rot),
-				}
-			});
+		let doorFrames: ItemWithContext[] = rooms[roomID].doors.map((tile: Tile) => {
+			return {
+				collisionOffsetsCoords: [{ x: tile.x, y: tile.y }],
+				centerCoord: { x: tile.x, y: tile.y },
+				name: 'doorFrame',
+				dimensions: FURNISHINGS['doorframe'].dimensions,
+				rot: tile.rot % 2 === 0 ? tile.rot : getOppositeDirN(tile.rot),
+			};
+		});
 		// combine the above
 		newThings = newThings
 			.concat(centerFurniture)
@@ -61,7 +61,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 			.concat(edgeFurniture)
 			.concat(doorFrames);
 		// get rid of null furniture
-		newThings = newThings.filter((item: ItemWithContext) => item.name !== "EMPTY");
+		newThings = newThings.filter((item: ItemWithContext) => item.name !== 'EMPTY');
 		// convert furniture to the old shape
 		let converted = newThings.map((item: ItemWithContext) => {
 			return convertNewThingToOld(item);
