@@ -27,12 +27,7 @@ export interface XYRange {
 }
 
 export const getWidthFromItemsWithContext = (items: ItemWithContext[]) => {
-	const range = getRangeFromItemsWithContext(items);
-	return range.x.max - range.x.min + 1;
-};
-const getRangeFromItemsWithContext = (items: ItemWithContext[]): XYRange => {
-	const coords = items.map((item) => item.collisionOffsetsCoords).flat();
-	return getXYRangeFromXYCoords(coords);
+	return items.map(item => item.dimensions.width).reduce((ac, v) => ac + v, 0);
 };
 export const getXYRangeFromXYCoords = (coords: XYCoord[]) => {
 	return coords

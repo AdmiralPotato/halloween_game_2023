@@ -81,7 +81,7 @@ export interface FurnishingInfo {
 	dimensions: Dimensions,
 }
 // TODO: weigh candy likelihood per item; e.g. treasure chests = 100% chance
-export const FURNISHINGS2: Record<string, FurnishingInfo> = {
+export const FURNISHINGS: Record<string, FurnishingInfo> = {
 	EMPTY: {
 		placement: 'free', placementContext: '',
 		asset: '',
@@ -239,7 +239,7 @@ const commonStuff: FurnitureWeight[] = [
 	{ item: 'painting', weight: 1, count: NaN },
 ]
 
-export const ROOM_CONTENTS2: Record<string, FurnitureWeight[]> = {
+export const ROOM_CONTENTS: Record<string, FurnitureWeight[]> = {
 	livingRoom: [
 		{ item: 'fireplace', weight: 0, count: 1 },
 		{ item: 'curtains', weight: 1, count: NaN },
@@ -328,6 +328,7 @@ export const spreadItemsOnAxis = (items: ItemWithContext[], axis: string, itemSi
 
 export interface ItemWithContext {
 	collisionOffsetsCoords: XYCoord[];
+	dimensions: Dimensions;
 	centerCoord: XYCoord;
 	name: string;
 	rot: number;

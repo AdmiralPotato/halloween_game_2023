@@ -4,7 +4,7 @@ import { Furnishing } from './LevelBuilder';
 import { rand, getOppositeDirN } from './utilities';
 import { Room } from './LevelBuilder';
 import { furnishCenter, furnishCorners, furnishEdges } from './roomFurnishing';
-import { FURNISHINGS2, ItemWithContext } from './furnitureForRooms';
+import { FURNISHINGS, ItemWithContext } from './furnitureForRooms';
 
 export const makeRoomsWithSeed = (seed: string): Room[] => {
 	const mapInfo = buildMapFromSeed(seed);
@@ -20,18 +20,18 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 
 		// BODGE FOR NEW STUFF + TURNING IT INTO OLD STUFF
 		const convertNewThingToOld = (thing: ItemWithContext): Furnishing => { // BODGE
-			if (!FURNISHINGS2[thing.name]) {
+			if (!FURNISHINGS[thing.name]) {
 				throw new Error("Could not find furniture called " + thing.name)
 			}
 			return {
 				label: '',
 				asset: thing.name,
-				name: FURNISHINGS2[thing.name].asset,
+				name: FURNISHINGS[thing.name].asset,
 				x: thing.centerCoord.x,
 				y: thing.centerCoord.y,
-				w: FURNISHINGS2[thing.name].dimensions.width,
-				d: FURNISHINGS2[thing.name].dimensions.depth,
-				h: FURNISHINGS2[thing.name].dimensions.height,
+				w: FURNISHINGS[thing.name].dimensions.width,
+				d: FURNISHINGS[thing.name].dimensions.depth,
+				h: FURNISHINGS[thing.name].dimensions.height,
 				rot: thing.rot,
 				hasCandy: rand() < 0.3,
 			};
@@ -50,7 +50,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 					collisionOffsetsCoords: [{ x: tile.x, y: tile.y }],
 					centerCoord: { x: tile.x, y: tile.y },
 					name: 'doorFrame',
-					children: [],
+					dimensions: FURNISHINGS['doorframe'].dimensions,
 					rot: (tile.rot % 2 === 0) ? tile.rot : getOppositeDirN(tile.rot),
 				}
 			});
