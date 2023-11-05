@@ -26,7 +26,7 @@ import { setupUserInput } from './userInputState';
 import {
 	// angleLerp,
 	// mapRange,
-	PI
+	PI,
 } from './utilities';
 
 const COLOR_HIGHLIGHTED = new Color3(0, 1, 0);
@@ -45,7 +45,8 @@ class App {
 		// initialize babylon scene and engine
 		const engine = new Engine(canvas, true);
 		const scene = new Scene(engine);
-		scene.clearColor.set(0.2, 0.0, 0.3, 1.0);
+		// scene.clearColor.set(0.2, 0.0, 0.3, 1.0);
+		scene.clearColor.set(0.0, 0.0, 0.0, 1.0);
 		const material = scene.defaultMaterial as StandardMaterial;
 		material.diffuseColor.set(0.2, 0.2, 0.2);
 		material.specularColor.set(0, 0, 0);
@@ -131,7 +132,7 @@ class App {
 				await scene.debugLayer.show();
 			}
 		};
-
+		let mageHeadTransformNode: TransformNode | null = null;
 		let characterAnimations: Record<string, AnimationGroup> | null = null;
 		const magePromise = SceneLoader.ImportMeshAsync(null, './assets/', 'mage.glb', scene).then(
 			(imported) => {
@@ -159,10 +160,13 @@ class App {
 				};
 				characterAnimations.idle.start(true);
 				characterAnimations.run.start(true);
+				// characterAnimations.idle.pause();
+				// characterAnimations.run.pause();
 				characterAnimations.run.weight = 0;
 				// animations.run.loopAnimation = true;
 				console.log('What is animations?', characterAnimations);
 				const mageTransformNode = scene.getTransformNodeById('mage_bones');
+				mageHeadTransformNode = scene.getTransformNodeById('head');
 				const mageHandTransformNode = scene.getTransformNodeById('handItem_R');
 				candyBucketTransformNode.parent = mageHandTransformNode;
 				// move to the center of the pumpkin below the hand
@@ -185,7 +189,9 @@ class App {
 				level.dispose();
 			}
 			currentRoom = rooms[0];
-			playerCharacterHolder.position.set(currentRoom.x, 0, currentRoom.y);
+			playerCharacterHolder.position.set(currentRoom.x + 1.5, 0, currentRoom.y);
+			// pointing toward the camera
+			playerCharacterHolder.rotation.set(0, -PI / 2, 0);
 			level = LevelBuilder.build(rooms, meshMap, scene, shadowGenerator);
 			scene.addMesh(level);
 		};
@@ -297,7 +303,8 @@ class App {
 					} = distancesAndDifferences[0];
 					snapTargetMesh.position = absolutePosition;
 					// const influence = mapRange(distance, snapDistanceMax, snapDistanceMin, 0, 1);
-					const differenceAngle = Math.atan2(-difference.z, difference.x);
+					const differenceAngle =
+						Math.atan2(-difference.z, difference.x) - playerCharacterHolder.rotation.y;
 					// const targetAngle = angleLerp(influence, motionVectorAngle, differenceAngle);
 					// console.log('distancesAndDifferences', {
 					// 	currentAngle: rotation.y,
@@ -310,7 +317,14 @@ class App {
 					if (!snapTargetMesh.isEnabled()) {
 						snapTargetMesh.setEnabled(true);
 					}
-					playerCharacterHolder.rotation.set(0, differenceAngle, 0);
+					if (mageHeadTransformNode?.rotationQuaternion) {
+						// quaternion.rotate(), which is additive, only works here because:
+						// 1: at the beginning of the tick, the bones control/reset the animation
+						// 2: then this comes in and stacks on top of that
+						// Without step 1, mage's head would just spin
+						mageHeadTransformNode.rotate(Vector3.Up(), -differenceAngle);
+						// mageSpineTransformNode.computeWorldMatrix();
+					}
 				}
 			}
 		};
