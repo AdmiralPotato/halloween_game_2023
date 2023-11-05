@@ -24,8 +24,9 @@ import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { setupUserInput } from './userInputState';
 import {
-	// angleLerp,
-	// mapRange,
+	// clamp,
+	angleLerp,
+	mapRange,
 	PI,
 } from './utilities';
 
@@ -264,7 +265,7 @@ class App {
 			absolutePosition: Vector3;
 		}
 		const snapDistanceMax = 2;
-		// const snapDistanceMin = 1;
+		const snapDistanceMin = 1;
 		const snapPlayerTargetToNearestAvailableObject = () => {
 			// const motionVectorAngle = Math.atan2(-motionVector.z, motionVector.x);
 			// const rotation = playerCharacterHolder.rotation;
@@ -296,16 +297,12 @@ class App {
 				});
 				distancesAndDifferences.sort((a, b) => a.distance - b.distance);
 				if (distancesAndDifferences.length) {
-					const {
-						// distance,
-						difference,
-						absolutePosition,
-					} = distancesAndDifferences[0];
+					const { distance, difference, absolutePosition } = distancesAndDifferences[0];
 					snapTargetMesh.position = absolutePosition;
-					// const influence = mapRange(distance, snapDistanceMax, snapDistanceMin, 0, 1);
+					const influence = mapRange(distance, snapDistanceMax, snapDistanceMin, 0, 1);
 					const differenceAngle =
 						Math.atan2(-difference.z, difference.x) - playerCharacterHolder.rotation.y;
-					// const targetAngle = angleLerp(influence, motionVectorAngle, differenceAngle);
+					const targetAngle = angleLerp(0, differenceAngle, influence);
 					// console.log('distancesAndDifferences', {
 					// 	currentAngle: rotation.y,
 					// 	distance,
@@ -322,7 +319,7 @@ class App {
 						// 1: at the beginning of the tick, the bones control/reset the animation
 						// 2: then this comes in and stacks on top of that
 						// Without step 1, mage's head would just spin
-						mageHeadTransformNode.rotate(Vector3.Up(), -differenceAngle);
+						mageHeadTransformNode.rotate(Vector3.Up(), -targetAngle);
 						// mageSpineTransformNode.computeWorldMatrix();
 					}
 				}
