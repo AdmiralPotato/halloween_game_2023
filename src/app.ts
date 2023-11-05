@@ -378,7 +378,10 @@ class App {
 			const delta = (now - lastLogicTick) / 1000;
 			let didAction = false;
 			// console.log('buttonStateMap', buttonStateMap);
-			const movementSpeed = delta * 0.8;
+			let movementSpeed = delta * 0.8;
+			if (buttonStateMap.shift) {
+				movementSpeed *= 0.5;
+			}
 			if (buttonStateMap.up) {
 				motionVector.z -= movementSpeed;
 			}

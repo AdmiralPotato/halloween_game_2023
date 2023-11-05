@@ -5,21 +5,23 @@ const keyButtonMap: Record<string, string | undefined> = {
 	w: 'up',
 	s: 'down',
 	d: 'right',
-	ArrowLeft: 'left',
-	ArrowUp: 'up',
-	ArrowDown: 'down',
-	ArrowRight: 'right',
+	arrowleft: 'left',
+	arrowup: 'up',
+	arrowdown: 'down',
+	arrowright: 'right',
 	' ': 'action',
-	Enter: 'action',
+	enter: 'action',
 	'`': 'camera',
 	'~': 'camera',
-	Escape: 'seed',
+	escape: 'seed',
+	shift: 'shift',
 };
 const buttonStateMap: Record<string, boolean | undefined> = {
 	left: false,
 	up: false,
 	down: false,
 	right: false,
+	shift: false,
 	action: false,
 	camera: false,
 	seed: false,
@@ -38,7 +40,7 @@ const buttonStateOff = (buttonName: string) => {
 };
 
 window.addEventListener('keydown', async (keydownEvent) => {
-	let buttonName = keyButtonMap[keydownEvent.key];
+	let buttonName = keyButtonMap[keydownEvent.key.toLocaleLowerCase()];
 	// hide/show the Inspector
 	// Shift+Ctrl+Alt+I
 	if (
@@ -56,7 +58,7 @@ window.addEventListener('keydown', async (keydownEvent) => {
 });
 window.addEventListener('keyup', (keydownEvent) => {
 	// console.log('keydownEvent', keydownEvent);
-	const buttonName = keyButtonMap[keydownEvent.key];
+	const buttonName = keyButtonMap[keydownEvent.key.toLocaleLowerCase()];
 	if (buttonName) {
 		buttonStateOff(buttonName);
 	}
