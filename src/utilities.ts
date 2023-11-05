@@ -30,8 +30,8 @@ export const getWidthFromItemsWithContext = (items: ItemWithContext[]) => {
 	const range = getRangeFromItemsWithContext(items);
 	return range.x.max - range.x.min + 1;
 };
-export const getRangeFromItemsWithContext = (items: ItemWithContext[]): XYRange => {
-	const coords = items.map((item) => item.occupiedCoords).flat();
+const getRangeFromItemsWithContext = (items: ItemWithContext[]): XYRange => {
+	const coords = items.map((item) => item.collisionOffsetsCoords).flat();
 	return getXYRangeFromXYCoords(coords);
 };
 export const getXYRangeFromXYCoords = (coords: XYCoord[]) => {

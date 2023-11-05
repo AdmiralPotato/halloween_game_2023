@@ -27,8 +27,8 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 				label: '',
 				asset: thing.name,
 				name: FURNISHINGS2[thing.name].asset,
-				x: thing.itemCenterCoord.x,
-				y: thing.itemCenterCoord.y,
+				x: thing.centerCoord.x,
+				y: thing.centerCoord.y,
 				w: FURNISHINGS2[thing.name].dimensions.width,
 				d: FURNISHINGS2[thing.name].dimensions.depth,
 				h: FURNISHINGS2[thing.name].dimensions.height,
@@ -47,8 +47,8 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 		let doorFrames: ItemWithContext[] = rooms[roomID].doors
 			.map((tile: Tile) => {
 				return {
-					occupiedCoords: [{ x: tile.x, y: tile.y }],
-					itemCenterCoord: { x: tile.x, y: tile.y },
+					collisionOffsetsCoords: [{ x: tile.x, y: tile.y }],
+					centerCoord: { x: tile.x, y: tile.y },
 					name: 'doorFrame',
 					children: [],
 					rot: (tile.rot % 2 === 0) ? tile.rot : getOppositeDirN(tile.rot),

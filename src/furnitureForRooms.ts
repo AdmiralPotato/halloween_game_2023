@@ -41,7 +41,7 @@ export const padRoom = (tiles: Tile[]): Tile[] => {
 };
 
 export const printRoom = (tiles: Tile[], stuff: ItemWithContext[]): string => {
-	let hitBoxed = (stuff || []).map(item => item.occupiedCoords).flat();
+	let hitBoxed = (stuff || []).map(item => item.collisionOffsetsCoords).flat();
 
 	let modifiedTiles = padRoom(tiles.filter(item => item.type === 'floor'));
 	let drawRange: XYRange = getXYRangeFromXYCoords(modifiedTiles);
@@ -291,7 +291,7 @@ export const spreadItemsOnAxis = (items: ItemWithContext[], axis: string, itemSi
 		return items;
 	}
 	let ret: ItemWithContext[] = JSON.parse(JSON.stringify(items));
-	let centerCoord = averageXYCoords(items.map(item => item.itemCenterCoord));
+	let centerCoord = averageXYCoords(items.map(item => item.centerCoord));
 	let rawTranslation: XYCoord = { x: 0, y: 0 };
 	let initial = (-itemSize * (items.length - 1)) / 2
 	let translationSeries: XYCoord[] = [];
@@ -311,31 +311,31 @@ export const spreadItemsOnAxis = (items: ItemWithContext[], axis: string, itemSi
 		let y: number = centerCoord.y + translation.y;
 		if (splitCollisions) {
 			let splitAmt = (itemSize - 1) / 2;
-			let occupiedCoords: XYCoord[] = [{ x: x, y: y }, { x: x, y: y }];
+			let collisionOffsetsCoords: XYCoord[] = [{ x: x, y: y }, { x: x, y: y }];
 			if (axis !== 'x' && axis !== 'y') { throw new Error("ASSERT LOL"); }
-			occupiedCoords[0][axis] += splitAmt;
-			occupiedCoords[1][axis] -= splitAmt;
-			item.occupiedCoords = occupiedCoords;
+			collisionOffsetsCoords[0][axis] += splitAmt;
+			collisionOffsetsCoords[1][axis] -= splitAmt;
+			item.collisionOffsetsCoords = collisionOffsetsCoords;
 		} else {
-			let occupiedCoords: XYCoord[] = [{ x: x, y: y }];
-			item.occupiedCoords = occupiedCoords;
+			let collisionOffsetsCoords: XYCoord[] = [{ x: x, y: y }];
+			item.collisionOffsetsCoords = collisionOffsetsCoords;
 		}
-		item.itemCenterCoord.x = x;
-		item.itemCenterCoord.y = y;
+		item.centerCoord.x = x;
+		item.centerCoord.y = y;
 		return item;
 	});
 };
 
 export interface ItemWithContext {
-	occupiedCoords: XYCoord[];
-	itemCenterCoord: XYCoord;
+	collisionOffsetsCoords: XYCoord[];
+	centerCoord: XYCoord;
 	name: string;
 	rot: number;
 };
 
 const translateItem = (item: ItemWithContext, translation: XYCoord): ItemWithContext => {
-	item.itemCenterCoord = translateXY(item.itemCenterCoord, translation);
-	item.occupiedCoords = item.occupiedCoords.map(inner => translateXY(inner, translation));
+	item.centerCoord = translateXY(item.centerCoord, translation);
+	item.collisionOffsetsCoords = item.collisionOffsetsCoords.map(inner => translateXY(inner, translation));
 	return item;
 }
 export const translateItems = (items: ItemWithContext[], translation: XYCoord): ItemWithContext[] => {
