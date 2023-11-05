@@ -13,7 +13,7 @@ import '@babylonjs/core/Helpers/sceneHelpers';
 import '@babylonjs/loaders/glTF/2.0/glTFLoader';
 import '@babylonjs/core/Rendering/outlineRenderer';
 
-import { Room, LevelBuilder } from './LevelBuilder';
+import {LevelBuilder, type Furnishing, type Room } from './LevelBuilder';
 import { makeRoomsWithSeed } from './levelGenerator';
 import { initCandySpawner } from './CandySpawner';
 
@@ -55,7 +55,6 @@ class App {
 		let currentRoom: Room | null = null;
 		const playerCharacterHolder = new Mesh('playerCharacterHolder', scene);
 		const cameraTarget = new Mesh('cameraTarget', scene);
-		const actionIntersectMeshParent = new Mesh('actionIntersectMeshParent');
 		const actionIntersectMesh = CreatePlane('actionIntersectMesh', {
 			size: 0.5,
 			sideOrientation: Mesh.DOUBLESIDE,
@@ -67,8 +66,8 @@ class App {
 		let playerCharacterMesh: Mesh | null = null;
 		let playerCharacterMaterial: StandardMaterial | null = null;
 		const candyBucketTransformNode = new TransformNode('candyBucketTransformNode');
-		actionIntersectMeshParent.addChild(actionIntersectMesh);
 		actionIntersectMesh.billboardMode = 3;
+		actionIntersectMesh.renderingGroupId = 1;
 		snapTargetMesh.billboardMode = 3;
 		snapTargetMesh.renderingGroupId = 1;
 		const actionTargetMaterial = new StandardMaterial('actionIntersectMeshMaterial');
@@ -83,7 +82,6 @@ class App {
 		snapTargetMaterial.alphaMode = Engine.ALPHA_ADD;
 		snapTargetMaterial.opacityTexture = sparkTexture;
 		snapTargetMesh.material = snapTargetMaterial;
-		actionIntersectMeshParent.position.set(0, 0.5, 0.75);
 
 		const camera = new FollowCamera('Camera', Vector3.Zero(), scene, cameraTarget);
 		let currentCameraStateIndex = 0;
@@ -173,7 +171,6 @@ class App {
 				// move to the center of the pumpkin below the hand
 				candyBucketTransformNode.position.z -= 0.25;
 				console.log('What is a MAGE?!?', mageTransformNode);
-				playerCharacterMesh.addChild(actionIntersectMeshParent);
 				mageTransformNode?.position.set(0, 0, 0);
 				mageTransformNode?.addRotation(0, -PI / 2, 0); // character was designed facing -y, but 0 deg is +x
 				// mageTransformNode?.scaling.set(4, 4, 4);
@@ -251,6 +248,8 @@ class App {
 					} else if (isPlayerInRoom) {
 						if (!isEnabled) {
 							mesh.setEnabled(true);
+							snapTargetMesh.setEnabled(false);
+							actionIntersectMesh.setEnabled(false);
 						}
 						currentRoom = room;
 						// console.log('currentRoom: ', currentRoom);
@@ -259,14 +258,18 @@ class App {
 			}
 		};
 
+		const { spawnCandy, tickCandies } = initCandySpawner(scene);
+
 		interface DistanceAndDifference {
+			furnishing: Furnishing;
+			doodad: Mesh;
 			distance: number;
 			difference: Vector3;
 			absolutePosition: Vector3;
 		}
 		const snapDistanceMax = 2;
 		const snapDistanceMin = 1;
-		const snapPlayerTargetToNearestAvailableObject = () => {
+		const snapPlayerTargetToNearestAvailableObject = (didAction: boolean) => {
 			// const motionVectorAngle = Math.atan2(-motionVector.z, motionVector.x);
 			// const rotation = playerCharacterHolder.rotation;
 			const interactVector = playerCharacterHolder
@@ -289,16 +292,22 @@ class App {
 					const distance = difference.length();
 					if (distance < snapDistanceMax) {
 						distancesAndDifferences.push({
+							furnishing,
+							doodad,
 							distance,
 							difference,
 							absolutePosition: absoluteFurniturePosition,
 						});
+					} else {
+						doodad.renderOutline = false;
 					}
 				});
 				distancesAndDifferences.sort((a, b) => a.distance - b.distance);
 				if (distancesAndDifferences.length) {
-					const { distance, difference, absolutePosition } = distancesAndDifferences[0];
+					const { distance, difference, absolutePosition, doodad, furnishing } =
+						distancesAndDifferences[0];
 					snapTargetMesh.position = absolutePosition;
+					actionIntersectMesh.position = absolutePosition;
 					const influence = mapRange(distance, snapDistanceMax, snapDistanceMin, 0, 1);
 					const differenceAngle =
 						Math.atan2(-difference.z, difference.x) - playerCharacterHolder.rotation.y;
@@ -313,6 +322,7 @@ class App {
 					// });
 					if (!snapTargetMesh.isEnabled()) {
 						snapTargetMesh.setEnabled(true);
+						actionIntersectMesh.setEnabled(true);
 					}
 					if (mageHeadTransformNode?.rotationQuaternion) {
 						// quaternion.rotate(), which is additive, only works here because:
@@ -322,46 +332,22 @@ class App {
 						mageHeadTransformNode.rotate(Vector3.Up(), -targetAngle);
 						// mageSpineTransformNode.computeWorldMatrix();
 					}
+					// console.log('doodad intersects!', doodad);
+					doodad.renderOutline = true;
+					doodad.outlineWidth = 0.05;
+					doodad.outlineColor = COLOR_HIGHLIGHTED;
+					if (didAction) {
+						furnishing.checked = true;
+						doodad.outlineColor = furnishing.hasCandy
+							? COLOR_YES_CANDY
+							: COLOR_NO_CANDY;
+						snapTargetMesh.setEnabled(false);
+						actionIntersectMesh.setEnabled(false);
+						if (furnishing.hasCandy) {
+							spawnCandy(doodad, candyBucketTransformNode);
+						}
+					}
 				}
-			}
-		};
-
-		const { spawnCandy, tickCandies } = initCandySpawner(scene);
-
-		const doActionIntersect = (didAction: boolean) => {
-			const interactVector = actionIntersectMesh
-				.getWorldMatrix()
-				.getTranslationToRef(Vector3.Zero());
-			if (currentRoom?.furnishingMeshes) {
-				currentRoom?.furnishingMeshes.forEach((doodad, index) => {
-					const furnishing = currentRoom?.furnishings[index];
-					if (!furnishing) {
-						throw new Error('Somehow we dont have furnishing???');
-					}
-					const intersects = isVectorInsideMesh(interactVector, doodad);
-					if (intersects) {
-						// console.log('doodad intersects!', doodad);
-						doodad.renderOutline = true;
-						doodad.outlineWidth = 0.05;
-						if (!furnishing.checked) {
-							doodad.outlineColor = COLOR_HIGHLIGHTED;
-							if (didAction) {
-								furnishing.checked = true;
-								doodad.outlineColor = furnishing.hasCandy
-									? COLOR_YES_CANDY
-									: COLOR_NO_CANDY;
-								snapTargetMesh.setEnabled(false);
-								if (furnishing.hasCandy) {
-									spawnCandy(doodad, candyBucketTransformNode);
-								}
-							}
-						}
-					} else {
-						if (!furnishing.checked) {
-							doodad.renderOutline = false;
-						}
-					}
-				});
 			}
 		};
 
@@ -439,11 +425,10 @@ class App {
 			hideRoomsPlayerIsNotInside();
 			actionIntersectMesh.rotate(new Vector3(0, 0, 1), delta * 5);
 
-			snapPlayerTargetToNearestAvailableObject();
+			snapPlayerTargetToNearestAvailableObject(didAction);
 
 			tickCandies(now);
 
-			doActionIntersect(didAction);
 			lastLogicTick = now;
 		};
 		engine.runRenderLoop(() => {
