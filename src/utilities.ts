@@ -16,6 +16,22 @@ export const randomFromRange = (range: Range): number => {
 	return randomIndex(range.max - range.min + 1) + range.min;
 };
 
+// getting randoms with a bias toward the center
+export const randomAverageWithBellCurve = (rollCount: number): number => {
+	// ≈ roll multiple dice and get the average
+	let numbers = [];
+	for (let i = 0; i < rollCount; i++) {
+		numbers.push(rand());
+	}
+	return numbers.reduce((ac, v)=>ac+v,0) / numbers.length;
+};
+export const randomIndexWithBellCurve = (max: number, rollCount: number): number => {
+	return Math.floor(randomAverageWithBellCurve(rollCount) * max);
+};
+export const randomWithBellCurveFromRange = (range: Range, rollCount: number): number => {
+	return randomIndexWithBellCurve(range.max - range.min + 1, rollCount) + range.min;
+};
+
 export interface Range {
 	min: number;
 	max: number;

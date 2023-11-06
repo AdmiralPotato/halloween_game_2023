@@ -10,6 +10,7 @@ import {
 	compareXY,
 	getCenterForXYRange,
 	getNFromDir,
+	randomWithBellCurveFromRange,
 } from './utilities';
 import { ROOMS, buildRoom, RoomWorkingData, Tile } from './rooms';
 
@@ -216,6 +217,15 @@ export const buildMapFromSeed = (seed: string) => {
 			);
 		}
 	});
+	// put a door on the bottom of the A row also
+	let bottomRow = mapASCII[mapASCII.length - 1].split('');
+	let frontDoorIndexRange = {
+		min: bottomRow.indexOf('a')-1,
+		max: bottomRow.lastIndexOf('a')-1,
+	}
+	let frontDoorIndex = randomWithBellCurveFromRange(frontDoorIndexRange, 4);
+	bottomRow[frontDoorIndex] = 'A';
+	mapASCII[mapASCII.length - 1] = bottomRow.join('');
 
 	/* -------------- HALLWAY CLEANUP -------------- */
 
@@ -350,6 +360,17 @@ export const buildMapFromSeed = (seed: string) => {
 			s: { x: 0, y: SCALE },
 			w: { x: -SCALE, y: 0 },
 		};
+		// TODO: turn `nesw` into `north` `east` `west` `south` => because `w` could mean west OR top-center!
+		let result: DoorInfo = {
+			// "default" door is an exit to the outside
+			// (overridden if a matching door was found inside the house)
+			roomID: mysteryDoor.roomID,
+			pos: mysteryDoor.pos,
+			doorDir: 's', // manual override: only the front door uses this object (I HOPE) (TODO make it better)
+			wallDirs: [],
+			destination: 'EXIT',
+			compositeInfo: mysteryDoor.compositeInfo,
+		};
 		Object.keys(translationMap).forEach((dir) => {
 			let translation = translationMap[dir];
 			let testCoords = translateXY(mysteryDoor.pos, translation);
@@ -361,18 +382,19 @@ export const buildMapFromSeed = (seed: string) => {
 						.forEach((remainingDir) => {
 							remainingWallDirs.push(remainingDir);
 						});
-					roomDoors.push({
+					result = {
 						roomID: mysteryDoor.roomID,
 						pos: mysteryDoor.pos,
 						doorDir: dir,
 						wallDirs: remainingWallDirs,
 						destination: possibleCounterparts[i].roomID,
 						compositeInfo: mysteryDoor.compositeInfo,
-					});
+					};
 					break;
 				}
 			}
 		});
+		roomDoors.push(result);
 	});
 
 	// getting it ready to hand off
