@@ -93,7 +93,7 @@ export interface FurnishingInfo {
 	candyRate: number;
 }
 const defaultCandyRate = 0.3;
-const highCandyRate = 0.6;
+const highCandyRate = 0.7;
 export const FURNISHINGS: Record<string, FurnishingInfo> = {
 	EMPTY: {
 		placement: 'free',
@@ -226,14 +226,14 @@ export const FURNISHINGS: Record<string, FurnishingInfo> = {
 		placementContext: '',
 		asset: 'bookcaseWide',
 		dimensions: { width: 2, depth: 1, height: 2 },
-		candyRate: defaultCandyRate,
+		candyRate: highCandyRate,
 	},
 	bookcaseTallNarrow: {
 		placement: 'wall',
 		placementContext: '',
 		asset: 'bookcaseNarr',
 		dimensions: { width: 1, depth: 1, height: 2 },
-		candyRate: defaultCandyRate,
+		candyRate: highCandyRate,
 	},
 	bookcaseShortWide: {
 		placement: 'wall',

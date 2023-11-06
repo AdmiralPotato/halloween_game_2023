@@ -34,7 +34,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 				d: FURNISHINGS[thing.name].dimensions.depth,
 				h: FURNISHINGS[thing.name].dimensions.height,
 				rot: thing.rot,
-				hasCandy: rand() < 0.3,
+				hasCandy: rand() < FURNISHINGS[thing.name].candyRate,
 			};
 		};
 		let newThings: ItemWithContext[] = [];
