@@ -60,7 +60,7 @@ export const furnishCorners = (roomData: RoomWorkingData, roomName: string): Ite
 	let ret: ItemWithContext[] = floorTiles.map((tile: Tile) => {
 		let furnitureName = getRandomWithWeight(possibleFurniture);
 		return {
-			collisionOffsetsCoords: [{ x: tile.x, y: tile.y }],
+			collisionOffsetsCoords: oneByOneCollisionCoords,
 			centerCoord: { x: tile.x, y: tile.y },
 			dimensions: FURNISHINGS[furnitureName].dimensions,
 			name: furnitureName,
@@ -108,13 +108,12 @@ export const padToFill = (
 	do {
 		let furnitureName = getRandomWithWeight(weights);
 		ret[rand() ? 'push' : 'unshift']({
-			collisionOffsetsCoords: [{ x: 0, y: 0 }],
-			centerCoord: { x: 0, y: 0 },
+			collisionOffsetsCoords: oneByOneCollisionCoords,
+			centerCoord: zeroCoord(),
 			dimensions: FURNISHINGS[furnitureName].dimensions,
 			name: furnitureName,
 			rot: 0,
 		});
-		ret = spreadItemsOnAxis(ret, 'x', 1); // TEMP item size should be done automatically!
 	} while (getWidthFromItemsWithContext(ret) < padUntil);
 	return ret;
 };
@@ -227,31 +226,32 @@ export const furnishEdges = (roomData: RoomWorkingData, roomName: string): ItemW
 		let itemsWIP: ItemWithContext[] = getWallCluster[bigInsertName]
 			? getWallCluster[bigInsertName](wall.length)
 			: [
-					{
-						collisionOffsetsCoords:
-							FURNISHINGS[bigInsertName].dimensions.depth === 1
-								? twoByOneCoords
-								: twoByTwoCoords,
-						centerCoord: { x: 0, y: 0 },
-						dimensions: FURNISHINGS[bigInsertName].dimensions,
-						name: bigInsertName,
-						rot: 0,
-					},
-			  ];
+				{
+					collisionOffsetsCoords:
+						FURNISHINGS[bigInsertName].dimensions.depth === 1
+							? twoByOneCollisionCoords
+							: twoByTwoCollisionCoords,
+					centerCoord: zeroCoord(),
+					dimensions: FURNISHINGS[bigInsertName].dimensions,
+					name: bigInsertName,
+					rot: 0,
+				},
+			];
 		itemsWIP = padToFill(itemsWIP, smallFurnitureWeights, wall.length);
 		// todo: spread items
 
-		// let normalizedTransforms: Record<string, XYCoord> = {
-		// 	a: { x: -1, y: 0 },
-		// 	w: { x: 0, y: -1 },
-		// 	d: { x: 1, y: 0 },
-		// }
-		if (currentWallID === 'w') {
-			itemsWIP = spreadItemsOnAxis(itemsWIP, 'x', 1); // spread along x
-		} else {
-			itemsWIP = spreadItemsOnAxis(itemsWIP, 'y', 1); // spread along y
+		let normalizedTransforms: Record<string, XYCoord> = {
+			a: { x: (wallCenter.x), y: (wallCenter.y) },
+			w: { x: (wallCenter.x), y: (wallCenter.y) },
+			d: { x: (wallCenter.x), y: (wallCenter.y) },
 		}
-		itemsWIP = translateItems(itemsWIP, wallCenter);
+		console.log("\troom: " + roomName);
+		if (currentWallID === 'w') {
+			itemsWIP = spreadItemsOnAxis(itemsWIP, 'x');
+		} else {
+			itemsWIP = spreadItemsOnAxis(itemsWIP, 'y');
+		}
+		itemsWIP = translateItems(itemsWIP, normalizedTransforms[currentWallID]);
 		if (currentWallID === 'a') {
 			itemsWIP = itemsWIP.map((item) => {
 				item.rot = 3;
@@ -268,17 +268,18 @@ export const furnishEdges = (roomData: RoomWorkingData, roomName: string): ItemW
 	return ret;
 };
 
-const twoByTwoCoords = [
-	{ x: 0, y: 0 },
-	{ x: 1, y: 0 },
-	{ x: 0, y: 1 },
-	{ x: 1, y: 1 },
+const twoByTwoCollisionCoords = [
+	{ x: -0.5, y: -0.5 },
+	{ x: 0.5, y: -0.5 },
+	{ x: -0.5, y: 0.5 },
+	{ x: 0.5, y: 0.5 },
 ];
-const twoByOneCoords = [
-	{ x: 0, y: 0 },
-	{ x: 1, y: 0 },
+const twoByOneCollisionCoords = [
+	{ x: -0.5, y: 0 },
+	{ x: 0.5, y: 0 },
 ];
-const oneByOneCoords = [{ x: 0, y: 0 }];
+const zeroCoord = () => JSON.parse(JSON.stringify({ x: 0, y: 0 }));
+const oneByOneCollisionCoords = [zeroCoord()];
 
 const spawnDiningTable = (placementBounds: XYCoord): ItemWithContext[] => {
 	let tables: ItemWithContext[] = [];
@@ -299,8 +300,8 @@ const spawnDiningTable = (placementBounds: XYCoord): ItemWithContext[] => {
 			furnitureName = 'diningTableHalf';
 		}
 		tables.push({
-			collisionOffsetsCoords: twoByOneCoords,
-			centerCoord: { x: 0, y: 0 },
+			collisionOffsetsCoords: twoByOneCollisionCoords,
+			centerCoord: zeroCoord(),
 			dimensions: FURNISHINGS[furnitureName].dimensions,
 			name: furnitureName,
 			rot,
@@ -310,7 +311,7 @@ const spawnDiningTable = (placementBounds: XYCoord): ItemWithContext[] => {
 	for (let i = 1; i <= tableCount * 2; i++) {
 		let furnitureName = rand() < chairRate ? 'chair' : 'EMPTY';
 		chairsN.push({
-			collisionOffsetsCoords: [{ x: 0, y: -0.5 }],
+			collisionOffsetsCoords: oneByOneCollisionCoords,
 			centerCoord: { x: 0, y: -0.5 },
 			dimensions: FURNISHINGS[furnitureName].dimensions,
 			name: furnitureName,
@@ -318,16 +319,16 @@ const spawnDiningTable = (placementBounds: XYCoord): ItemWithContext[] => {
 		});
 		furnitureName = rand() < chairRate ? 'chair' : 'EMPTY';
 		chairsS.push({
-			collisionOffsetsCoords: [{ x: 0, y: 0.5 }],
+			collisionOffsetsCoords: oneByOneCollisionCoords,
 			centerCoord: { x: 0, y: 0.5 },
 			dimensions: FURNISHINGS[furnitureName].dimensions,
 			name: rand() < chairRate ? 'chair' : 'EMPTY',
 			rot: 2,
 		});
 	}
-	tables = spreadItemsOnAxis(tables, 'x', 2);
-	chairsN = spreadItemsOnAxis(chairsN, 'x', 1);
-	chairsS = spreadItemsOnAxis(chairsS, 'x', 1);
+	tables = spreadItemsOnAxis(tables, 'x');
+	chairsN = spreadItemsOnAxis(chairsN, 'x');
+	chairsS = spreadItemsOnAxis(chairsS, 'x');
 	let ret = tables.concat(chairsN);
 	if (placementBounds.x > 2) {
 		ret = ret.concat(chairsS);
@@ -338,8 +339,8 @@ const spawnDiningTable = (placementBounds: XYCoord): ItemWithContext[] => {
 const spawnRoundTable = (): ItemWithContext[] => {
 	let ret: ItemWithContext[] = [
 		{
-			collisionOffsetsCoords: twoByTwoCoords,
-			centerCoord: { x: 0, y: 0 },
+			collisionOffsetsCoords: twoByTwoCollisionCoords,
+			centerCoord: zeroCoord(),
 			dimensions: FURNISHINGS['roundTable'].dimensions,
 			name: 'roundTable',
 			rot: 0,
@@ -361,7 +362,7 @@ const spawnRoundTable = (): ItemWithContext[] => {
 	let furnitureName = 'chair';
 	let dir1 = scrambledDirs[0];
 	ret.push({
-		collisionOffsetsCoords: [], // covered by the table itself, since the chairs are scooted
+		collisionOffsetsCoords: oneByOneCollisionCoords, // covered by the table itself, since the chairs are scooted
 		centerCoord: diagSpread[getNFromDir(dir1)],
 		dimensions: FURNISHINGS[furnitureName].dimensions,
 		name: furnitureName,
@@ -372,7 +373,7 @@ const spawnRoundTable = (): ItemWithContext[] => {
 		if (rand() < 0.6) {
 			let dir = scrambledDirs[i];
 			ret.push({
-				collisionOffsetsCoords: [],
+				collisionOffsetsCoords: oneByOneCollisionCoords,
 				centerCoord: diagSpread[getNFromDir(dir)],
 				dimensions: FURNISHINGS[furnitureName].dimensions,
 				name: furnitureName,
@@ -398,20 +399,19 @@ const getLineOfBookcases = (length: number, axis: string): ItemWithContext[] => 
 	let ret = [];
 	let dummyItems = new Array(length); // to get occupied coords
 	dummyItems.fill({
-		collisionOffsetsCoords: { x: 0, y: 0 },
-		centerCoord: { x: 0, y: 0 },
+		collisionOffsetsCoords: [zeroCoord()],
+		centerCoord: zeroCoord(),
 		dimensions: { height: NaN, width: NaN, depth: NaN },
 		name: '',
 		rot: 0,
 	});
-	let spreadItems: ItemWithContext[] = spreadItemsOnAxis(dummyItems, axis, 1);
+	let spreadItems: ItemWithContext[] = spreadItemsOnAxis(dummyItems, axis);
 	ret = sizes.map((size) => {
 		let dummies = spreadItems.splice(0, size);
-		let collisionOffsetsCoords = dummies.map((item) => item.centerCoord);
 		let furnitureName = size === 1 ? 'bookcaseTallNarrow' : 'bookcaseTallWide';
 		return {
-			collisionOffsetsCoords,
-			centerCoord: averageXYCoords(collisionOffsetsCoords),
+			collisionOffsetsCoords: size === 1 ? oneByOneCollisionCoords : twoByOneCollisionCoords,
+			centerCoord: zeroCoord(),
 			name: furnitureName,
 			dimensions: FURNISHINGS[furnitureName].dimensions,
 			rot: axis === 'x' ? 0 : 3,
@@ -422,7 +422,7 @@ const getLineOfBookcases = (length: number, axis: string): ItemWithContext[] => 
 const spawnBookcaseIsland = (length: number, axis: string) => {
 	let bookcases1: ItemWithContext[] = getLineOfBookcases(length, axis);
 	let bookcases2: ItemWithContext[] = getLineOfBookcases(length, axis);
-	let translation: XYCoord = { x: 0, y: 0 };
+	let translation = zeroCoord();
 	if (axis === 'x') {
 		translation.y += 0.25;
 	} else {
@@ -501,15 +501,15 @@ const getEndTablePadding = (
 		], // padItems
 		[
 			{
-				collisionOffsetsCoords: oneByOneCoords,
-				centerCoord: averageXYCoords(oneByOneCoords),
+				collisionOffsetsCoords: oneByOneCollisionCoords,
+				centerCoord: averageXYCoords(oneByOneCollisionCoords),
 				dimensions: FURNISHINGS[randos[0]].dimensions,
 				name: randos[0],
 				rot: 0,
 			},
 			{
-				collisionOffsetsCoords: oneByOneCoords,
-				centerCoord: averageXYCoords(oneByOneCoords),
+				collisionOffsetsCoords: oneByOneCollisionCoords,
+				centerCoord: averageXYCoords(oneByOneCollisionCoords),
 				dimensions: FURNISHINGS[randos[1]].dimensions,
 				name: randos[1],
 				rot: 0,
@@ -520,10 +520,10 @@ const getEndTablePadding = (
 };
 const getWallCluster: Record<string, Function> = {
 	couch: (padUntil: number) => {
-		return getEndTablePadding('couch', twoByOneCoords, padUntil);
+		return getEndTablePadding('couch', twoByOneCollisionCoords, padUntil);
 	},
 	armChair: (padUntil: number) => {
-		return getEndTablePadding('armChair', oneByOneCoords, padUntil);
+		return getEndTablePadding('armChair', oneByOneCollisionCoords, padUntil);
 	},
 	bed: (padUntil: number) => {
 		// 100% of the time, end table on W or E; 30% of the time, another end table on the other side (empty space otherwise)
@@ -532,8 +532,8 @@ const getWallCluster: Record<string, Function> = {
 			[
 				{
 					// baseItems
-					collisionOffsetsCoords: twoByTwoCoords,
-					centerCoord: averageXYCoords(twoByTwoCoords),
+					collisionOffsetsCoords: twoByTwoCollisionCoords,
+					centerCoord: { x: 0, y: 0.5 },
 					dimensions: FURNISHINGS['bed'].dimensions,
 					name: 'bed',
 					rot: 0,
@@ -542,15 +542,15 @@ const getWallCluster: Record<string, Function> = {
 			[
 				// padItems
 				{
-					collisionOffsetsCoords: oneByOneCoords,
-					centerCoord: averageXYCoords(oneByOneCoords),
+					collisionOffsetsCoords: oneByOneCollisionCoords,
+					centerCoord: averageXYCoords(oneByOneCollisionCoords),
 					dimensions: FURNISHINGS['endTable'].dimensions,
 					name: 'endTable',
 					rot: 0,
 				},
 				{
-					collisionOffsetsCoords: oneByOneCoords,
-					centerCoord: averageXYCoords(oneByOneCoords),
+					collisionOffsetsCoords: oneByOneCollisionCoords,
+					centerCoord: averageXYCoords(oneByOneCollisionCoords),
 					dimensions: FURNISHINGS[alternate].dimensions,
 					name: alternate,
 					rot: 0,

@@ -6,6 +6,8 @@ import {
 	averageXYCoords,
 	compareXY,
 	XYRange,
+	getWidthFromItemsWithContext,
+	getCenterForXYRange,
 } from './utilities';
 
 const cNeighborMap: Record<string, Record<string, string>> = {
@@ -326,46 +328,51 @@ export const ROOM_CONTENTS: Record<string, FurnitureWeight[]> = {
 export const spreadItemsOnAxis = (
 	items: ItemWithContext[],
 	axis: string,
-	itemSize: number,
 ): ItemWithContext[] => {
+	if (axis !== 'x' && axis !== 'y') {
+		throw new Error("ASSERT")
+	}
 	if (items.length < 1) {
 		return items;
 	}
-	let ret: ItemWithContext[] = JSON.parse(JSON.stringify(items));
-	let centerCoord = averageXYCoords(items.map((item) => item.centerCoord));
-	let rawTranslation: XYCoord = { x: 0, y: 0 };
-	let initial = (-itemSize * (items.length - 1)) / 2;
-	let translationSeries: XYCoord[] = [];
-	for (let i = initial; i < items.length; i += itemSize) {
-		let thisTranslation = JSON.parse(JSON.stringify(rawTranslation));
-		thisTranslation[axis] = i;
-		translationSeries.push(thisTranslation);
-	}
-	let splitCollisions = items.length % 2 !== 0;
-	return ret.map((item: ItemWithContext, i: number) => {
-		let translation = translationSeries[i] || rawTranslation;
-		let x: number = centerCoord.x + translation.x;
-		let y: number = centerCoord.y + translation.y;
-		if (splitCollisions) {
-			let splitAmt = (itemSize - 1) / 2;
-			let collisionOffsetsCoords: XYCoord[] = [
-				{ x: x, y: y },
-				{ x: x, y: y },
-			];
-			if (axis !== 'x' && axis !== 'y') {
-				throw new Error('ASSERT LOL');
-			}
-			collisionOffsetsCoords[0][axis] += splitAmt;
-			collisionOffsetsCoords[1][axis] -= splitAmt;
-			item.collisionOffsetsCoords = collisionOffsetsCoords;
+	let spreadingItems: ItemWithContext[] = JSON.parse(JSON.stringify(items));
+	let centerAtCoord = getCenterForXYRange(getXYRangeFromXYCoords(spreadingItems.map(item => item.centerCoord))); // NOTE This will mess things up for 2x wide things; TODO FIX
+	spreadingItems = spreadingItems.map((item, i, array) => {
+		if (i === 0) {
+			item.centerCoord[axis] = centerAtCoord[axis];
 		} else {
-			let collisionOffsetsCoords: XYCoord[] = [{ x: x, y: y }];
-			item.collisionOffsetsCoords = collisionOffsetsCoords;
+			// note: we're always using the width because we're only spacing on the item's local width (x) anyway
+			item.centerCoord[axis] = array[i - 1].centerCoord[axis]
+				+ item.dimensions.width / 2
+				+ array[i - 1].dimensions.width / 2;
 		}
-		item.centerCoord.x = x;
-		item.centerCoord.y = y;
 		return item;
-	});
+	})
+	// let itemSizesTotal =
+	// 	getWidthFromItemsWithContext(spreadingItems)
+	// 	- spreadingItems[0].dimensions.width / 2
+	// 	- spreadingItems[spreadingItems.length - 1].dimensions.width / 2;
+	// let translation = { x: 0, y: 0 };
+	// if (axis === 'x' || axis === 'y') {
+	// 	translation[axis] = -itemSizesTotal / 2;
+	// }
+	// centering items
+	let firstX = spreadingItems[0].centerCoord[axis];
+	let lastX = spreadingItems[spreadingItems.length - 1].centerCoord[axis];
+	let spaceByHalf = (lastX - firstX) / 2;
+	let translation = JSON.parse(JSON.stringify(centerAtCoord));
+	translation[axis] -= spaceByHalf;
+	spreadingItems = translateItems(spreadingItems, translation);
+	// making adjustments based on the offsets
+	spreadingItems = spreadingItems.map(item => {
+		let actualCenter = averageXYCoords(item.collisionOffsetsCoords);
+		item.centerCoord = translateXY(item.centerCoord, actualCenter);
+		return item;
+	})
+	// spreadingItems.forEach(item => {
+	// 	console.log(`${item.centerCoord.x}, ${item.centerCoord.y}: ${item.name}`)
+	// })
+	return spreadingItems;
 };
 
 export interface ItemWithContext {
@@ -378,9 +385,9 @@ export interface ItemWithContext {
 
 const translateItem = (item: ItemWithContext, translation: XYCoord): ItemWithContext => {
 	item.centerCoord = translateXY(item.centerCoord, translation);
-	item.collisionOffsetsCoords = item.collisionOffsetsCoords.map((inner) =>
-		translateXY(inner, translation),
-	);
+	// item.collisionOffsetsCoords = item.collisionOffsetsCoords.map((inner) =>
+	// 	translateXY(inner, translation),
+	// );
 	return item;
 };
 export const translateItems = (

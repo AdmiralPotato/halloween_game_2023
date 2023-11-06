@@ -4,7 +4,10 @@ import { ItemWithContext } from './furnitureForRooms';
 
 let randomizer = seedrandom('');
 
-export const setSeed = (seed: string) => (randomizer = seedrandom(seed));
+export const setSeed = (seed: string) => {
+	(randomizer = seedrandom(seed));
+	console.log("setting seed to " + seed);
+};
 export const rand = (): number => randomizer();
 export const randomIndex = (max: number): number => {
 	return Math.floor(rand() * max);

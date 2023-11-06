@@ -47,7 +47,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 		// Add doorframes
 		let doorFrames: ItemWithContext[] = rooms[roomID].doors.map((tile: Tile) => {
 			return {
-				collisionOffsetsCoords: [{ x: tile.x, y: tile.y }],
+				collisionOffsetsCoords: [],
 				centerCoord: { x: tile.x, y: tile.y },
 				name: 'doorFrame',
 				dimensions: FURNISHINGS['doorframe'].dimensions,
@@ -72,7 +72,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 	return Object.values(rooms);
 };
 
-let seed = '1111';
+let seed = 'bob';
 const mapWithRooms = makeRoomsWithSeed(seed);
 
 // console.log(JSON.stringify(mapWithRooms, null, '\t'));
