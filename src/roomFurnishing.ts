@@ -7,7 +7,7 @@ import {
 	spreadItemsOnAxis,
 	translateItems,
 } from './furnitureForRooms';
-import { RoomWorkingData, Tile } from './rooms';
+import { ROOMS, RoomWorkingData, Tile } from './rooms';
 import {
 	getXYRangeFromXYCoords,
 	XYCoord,
@@ -213,9 +213,6 @@ export const furnishEdges = (roomData: RoomWorkingData, roomName: string): ItemW
 
 	// while there is space on the walls
 	while (wallSegments.length) {
-		let bigInsertName = requiredFurniture.length // either grab a required cluster or a large piece of furniture
-			? requiredFurniture.shift() || ''
-			: getRandomWithWeight(largeFurnitureWeights);
 		let wall = wallSegments.shift() || []; // taking the wall off; we'll fill it completely
 		let wallCenter = averageXYCoords(
 			wall.map((tile) => {
@@ -223,6 +220,19 @@ export const furnishEdges = (roomData: RoomWorkingData, roomName: string): ItemW
 			}),
 		);
 		let currentWallID = wall[0].compositeInfo;
+		let exteriorWalls = ROOMS[roomData.roomID].exteriorWalls;
+		let filteredLargeFurnitureWeights = exteriorWalls.includes(currentWallID)
+			? largeFurnitureWeights
+			: largeFurnitureWeights.filter(item => {
+				return !FURNISHINGS[item.item].placementContext.includes('exteriorWall')
+			})
+		!ROOMS[roomData.roomID].exteriorWalls.includes(currentWallID)
+		if (!ROOMS[roomData.roomID].exteriorWalls.includes(currentWallID)) {
+
+		}
+		let bigInsertName = requiredFurniture.length // either grab a required cluster or a large piece of furniture
+			? requiredFurniture.shift() || ''
+			: getRandomWithWeight(filteredLargeFurnitureWeights);
 		let itemsWIP: ItemWithContext[] = getWallCluster[bigInsertName]
 			? getWallCluster[bigInsertName](wall.length)
 			: [

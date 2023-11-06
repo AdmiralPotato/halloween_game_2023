@@ -273,7 +273,6 @@ const commonStuff: FurnitureWeight[] = [
 	{ item: 'cobwebCorner', weight: 4, count: NaN },
 	{ item: 'candelabra', weight: 2, count: NaN },
 	{ item: 'endTable', weight: 2, count: NaN },
-	{ item: 'gargoyle', weight: 3, count: NaN },
 	{ item: 'painting', weight: 1, count: NaN },
 	{ item: 'EMPTY', weight: 1, count: NaN },
 ];
@@ -281,22 +280,27 @@ const commonStuff: FurnitureWeight[] = [
 export const ROOM_CONTENTS: Record<string, FurnitureWeight[]> = {
 	livingRoom: [
 		{ item: 'fireplace', weight: 0, count: 1 },
-		{ item: 'curtains', weight: 1, count: NaN },
+		{ item: 'curtains', weight: 2, count: NaN },
 		{ item: 'couchWall', weight: 1, count: NaN },
 		{ item: 'armChair', weight: 2, count: NaN },
 		{ item: 'bookcaseTallWide', weight: 1, count: NaN },
 		{ item: 'bookcaseTallNarrow', weight: 2, count: NaN },
+		{ item: 'gargoyle', weight: 2, count: NaN },
 		...commonStuff,
 	],
 	hallway: [
 		{ item: 'couchWall', weight: 1, count: NaN },
 		{ item: 'bookcaseShortWide', weight: 3, count: NaN },
 		{ item: 'bookcaseShortNarrow', weight: 1, count: NaN },
+		{ item: 'gargoyle', weight: 3, count: NaN },
 		...commonStuff,
 	],
 	diningRoom: [
 		{ item: 'curtains', weight: 1, count: NaN },
 		{ item: 'armChair', weight: 4, count: NaN },
+		{ item: 'couchWall', weight: 1, count: NaN },
+		{ item: 'endTable', weight: 4, count: NaN },
+		{ item: 'gargoyle', weight: 1, count: NaN },
 		...commonStuff,
 	],
 	bedroom: [
@@ -305,7 +309,7 @@ export const ROOM_CONTENTS: Record<string, FurnitureWeight[]> = {
 		{ item: 'dresser', weight: 0, count: 1 },
 		{ item: 'fireplace', weight: 0, count: 1 },
 		{ item: 'curtains', weight: 1, count: NaN },
-		{ item: 'chest', weight: 3, count: NaN },
+		{ item: 'chest', weight: 5, count: NaN },
 		{ item: 'chair', weight: 2, count: NaN },
 		{ item: 'bookcaseShortWide', weight: 1, count: NaN },
 		{ item: 'bookcaseShortNarrow', weight: 1, count: NaN },
@@ -320,6 +324,7 @@ export const ROOM_CONTENTS: Record<string, FurnitureWeight[]> = {
 		{ item: 'bookcaseTallNarrow', weight: 8, count: NaN },
 		{ item: 'bookcaseShortWide', weight: 3, count: NaN },
 		{ item: 'bookcaseShortNarrow', weight: 3, count: NaN },
+		{ item: 'gargoyle', weight: 3, count: NaN },
 		{ item: 'candelabra', weight: 8, count: NaN }, // also in common stuff
 		...commonStuff,
 	],
