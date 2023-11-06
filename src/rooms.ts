@@ -26,7 +26,7 @@ const normalRoomSize: XYRange = {
 export const ROOMS: Record<string, RoomInfo> = {
 	a: {
 		name: 'livingRoom',
-		exteriorWalls: ['w', 'e'],
+		exteriorWalls: ['a', 'd'],
 		defaultSize: {
 			x: { min: 6, max: 9 },
 			y: { min: 4, max: 6 },
@@ -34,7 +34,7 @@ export const ROOMS: Record<string, RoomInfo> = {
 	},
 	b: {
 		name: 'hallway',
-		exteriorWalls: [],
+		exteriorWalls: ['w'],
 		defaultSize: {
 			x: { min: 2, max: 2 },
 			y: { min: NaN, max: NaN },
@@ -42,22 +42,22 @@ export const ROOMS: Record<string, RoomInfo> = {
 	},
 	c: {
 		name: 'RANDOM',
-		exteriorWalls: ['e'],
+		exteriorWalls: ['d'],
 		defaultSize: normalRoomSize,
 	},
 	d: {
 		name: 'RANDOM',
-		exteriorWalls: ['w'],
+		exteriorWalls: ['a'],
 		defaultSize: normalRoomSize,
 	},
 	e: {
 		name: 'RANDOM',
-		exteriorWalls: ['w', 'n'],
+		exteriorWalls: ['a', 'w'],
 		defaultSize: normalRoomSize,
 	},
 	f: {
 		name: 'RANDOM',
-		exteriorWalls: ['e', 'n'],
+		exteriorWalls: ['d', 'w'],
 		defaultSize: normalRoomSize,
 	},
 };

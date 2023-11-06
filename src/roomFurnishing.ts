@@ -250,10 +250,6 @@ export const furnishEdges = (roomData: RoomWorkingData, roomName: string): ItemW
 			: largeFurnitureWeights.filter(item => {
 				return !FURNISHINGS[item.item].placementContext.includes('exteriorWall')
 			})
-		!ROOMS[roomData.roomID].exteriorWalls.includes(currentWallID)
-		if (!ROOMS[roomData.roomID].exteriorWalls.includes(currentWallID)) {
-
-		}
 		let bigInsertName = requiredFurniture.length // either grab a required cluster or a large piece of furniture
 			? requiredFurniture.shift() || ''
 			: getRandomWithWeight(filteredLargeFurnitureWeights);

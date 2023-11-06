@@ -90,164 +90,192 @@ export interface FurnishingInfo {
 	placementContext: string;
 	asset: string;
 	dimensions: Dimensions;
+	candyRate: number;
 }
-// TODO: weigh candy likelihood per item; e.g. treasure chests = 100% chance
+const defaultCandyRate = 0.3;
+const highCandyRate = 0.6;
 export const FURNISHINGS: Record<string, FurnishingInfo> = {
 	EMPTY: {
 		placement: 'free',
 		placementContext: '',
 		asset: '',
 		dimensions: { width: 1, depth: 1, height: 2 },
+		candyRate: 0,
 	},
 	curtains: {
 		placement: 'wall',
 		placementContext: 'exteriorWall',
 		asset: 'curtain',
 		dimensions: { width: 2, depth: 1, height: 2 },
+		candyRate: defaultCandyRate,
 	},
 	painting: {
 		placement: 'wall',
 		placementContext: '',
 		asset: 'paintingSml',
 		dimensions: { width: 1, depth: 1, height: 1 },
+		candyRate: 0,
 	},
 	couchWall: {
 		placement: 'wall',
 		placementContext: '',
 		asset: 'couch',
 		dimensions: { width: 2, depth: 1, height: 1 },
+		candyRate: highCandyRate,
 	},
 	armChair: {
 		placement: 'free',
 		placementContext: '',
 		asset: 'armchair',
 		dimensions: { width: 1, depth: 1, height: 1 },
+		candyRate: highCandyRate,
 	},
 	chair: {
 		placement: 'free',
 		placementContext: '',
 		asset: 'chair',
 		dimensions: { width: 1, depth: 1, height: 1 },
+		candyRate: defaultCandyRate,
 	},
 	bed: {
 		placement: 'wall',
 		placementContext: '',
 		asset: 'bed',
 		dimensions: { width: 2, depth: 2, height: 2 },
+		candyRate: highCandyRate,
 	},
 	endTable: {
 		placement: 'free',
 		placementContext: 'corner',
 		asset: 'endtable',
 		dimensions: { width: 1, depth: 1, height: 1 },
+		candyRate: defaultCandyRate,
 	},
 	candelabra: {
 		placement: 'free',
 		placementContext: '',
 		asset: 'candelabra',
 		dimensions: { width: 1, depth: 1, height: 2 },
+		candyRate: defaultCandyRate,
 	},
 	wardrobe: {
 		placement: 'wall',
 		placementContext: '',
 		asset: 'wardrobe',
 		dimensions: { width: 2, depth: 1, height: 2 },
+		candyRate: highCandyRate,
 	},
 	fireplace: {
 		placement: 'wall',
 		placementContext: '',
 		asset: 'fireplace',
 		dimensions: { width: 2, depth: 1, height: 2 },
+		candyRate: defaultCandyRate,
 	},
 	pottedPlant: {
 		placement: 'free',
 		placementContext: 'corner',
 		asset: 'pottedPlant',
 		dimensions: { width: 1, depth: 1, height: 1 },
+		candyRate: highCandyRate,
 	},
 	gargoyle: {
 		placement: 'wall',
 		placementContext: '',
 		asset: 'gargoyle',
 		dimensions: { width: 1, depth: 1, height: 2 },
+		candyRate: defaultCandyRate,
 	},
 	roundTable: {
 		placement: 'center',
 		placementContext: '',
 		asset: 'tableRound',
 		dimensions: { width: 2, depth: 2, height: 2 },
+		candyRate: 0,
 	},
 	dresser: {
 		placement: 'wall',
 		placementContext: '',
 		asset: 'dresser',
 		dimensions: { width: 2, depth: 1, height: 1 },
+		candyRate: highCandyRate,
 	},
 	chest: {
 		placement: 'wall',
 		placementContext: '',
 		asset: 'chest',
 		dimensions: { width: 1, depth: 1, height: 1 },
+		candyRate: 1,
 	},
 	cobwebEdge: {
 		placement: 'wall',
 		placementContext: 'corner',
 		asset: 'cobwebEdge',
 		dimensions: { width: 1, depth: 1, height: 1 },
+		candyRate: 0,
 	},
 	cobwebCorner: {
 		placement: 'corner',
 		placementContext: 'corner',
 		asset: 'cobwebCrnr',
 		dimensions: { width: 1, depth: 1, height: 1 },
+		candyRate: 0,
 	},
 	bookcaseTallWide: {
 		placement: 'wall',
 		placementContext: '',
 		asset: 'bookcaseWide',
 		dimensions: { width: 2, depth: 1, height: 2 },
+		candyRate: defaultCandyRate,
 	},
 	bookcaseTallNarrow: {
 		placement: 'wall',
 		placementContext: '',
 		asset: 'bookcaseNarr',
 		dimensions: { width: 1, depth: 1, height: 2 },
+		candyRate: defaultCandyRate,
 	},
 	bookcaseShortWide: {
 		placement: 'wall',
 		placementContext: '',
 		asset: 'bookcaseShor',
 		dimensions: { width: 2, depth: 1, height: 1 },
+		candyRate: defaultCandyRate,
 	},
 	bookcaseShortNarrow: {
 		placement: 'wall',
 		placementContext: '',
 		asset: 'bookcaseShNr',
 		dimensions: { width: 1, depth: 1, height: 1 },
+		candyRate: defaultCandyRate,
 	},
 	doorframe: {
 		placement: 'wall',
 		placementContext: '',
 		asset: 'doorframe',
 		dimensions: { width: 2, depth: 2, height: 2 },
+		candyRate: 0,
 	},
 	diningTableHalf: {
 		placement: 'center',
 		placementContext: '',
 		asset: 'tableLongEnd',
 		dimensions: { width: 2, depth: 2, height: 1 },
+		candyRate: 0,
 	},
 	diningTableMid: {
 		placement: 'center',
 		placementContext: '',
 		asset: 'tableLongMid',
 		dimensions: { width: 2, depth: 2, height: 1 },
+		candyRate: 0,
 	},
-	paintingTall: {
+	paintingWide: {
 		placement: 'wall',
 		placementContext: '',
 		asset: 'paintingBig',
-		dimensions: { width: 1, depth: 1, height: 2 },
+		dimensions: { width: 2, depth: 1, height: 1 },
+		candyRate: 0,
 	},
 };
 /* WISHLIST
@@ -261,12 +289,12 @@ export interface FurnitureWeight {
 
 const commonStuff: FurnitureWeight[] = [
 	{ item: 'pottedPlant', weight: 2, count: NaN },
-	{ item: 'paintingTall', weight: 1, count: NaN },
+	{ item: 'painting', weight: 1, count: NaN },
+	{ item: 'paintingWide', weight: 1, count: NaN },
 	{ item: 'cobwebEdge', weight: 4, count: NaN },
 	{ item: 'cobwebCorner', weight: 4, count: NaN },
 	{ item: 'candelabra', weight: 2, count: NaN },
 	{ item: 'endTable', weight: 1, count: NaN },
-	{ item: 'painting', weight: 1, count: NaN },
 	{ item: 'EMPTY', weight: 1, count: NaN },
 ];
 
@@ -284,6 +312,7 @@ export const ROOM_CONTENTS: Record<string, FurnitureWeight[]> = {
 	hallway: [
 		{ item: 'couchWall', weight: 1, count: NaN },
 		{ item: 'bookcaseShortWide', weight: 3, count: NaN },
+		{ item: 'curtains', weight: 2, count: NaN },
 		{ item: 'bookcaseShortNarrow', weight: 1, count: NaN },
 		{ item: 'gargoyle', weight: 3, count: NaN },
 		...commonStuff,
