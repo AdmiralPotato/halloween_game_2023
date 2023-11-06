@@ -19,7 +19,14 @@ import { initCandySpawner } from './CandySpawner';
 
 import './styles.css';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import { type AnimationGroup, ShadowGenerator, Texture, TransformNode } from '@babylonjs/core';
+import {
+	type AnimationGroup,
+	type Nullable,
+	type PBRMaterial,
+	ShadowGenerator,
+	Texture,
+	TransformNode,
+} from '@babylonjs/core';
 import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { setupUserInput } from './userInputState';
@@ -187,7 +194,7 @@ class App {
 				level.dispose();
 			}
 			currentRoom = rooms[0];
-			playerCharacterHolder.position.set(currentRoom.x + 1.5, 0, currentRoom.y);
+			playerCharacterHolder.position.set(currentRoom.x, 0, currentRoom.y);
 			// pointing toward the camera
 			playerCharacterHolder.rotation.set(0, -PI / 2, 0);
 			level = LevelBuilder.build(rooms, meshMap, scene, shadowGenerator);
@@ -438,6 +445,16 @@ class App {
 
 		Promise.all(assetLoadingPromises).then(() => {
 			console.log('What is meshMap after all is loaded?', meshMap);
+
+			const doorwayGlowMaterial: Nullable<PBRMaterial> = meshMap.doorwayGlow
+				.material as Nullable<PBRMaterial>;
+			if (doorwayGlowMaterial) {
+				doorwayGlowMaterial.alpha = 0.99999999999999;
+				doorwayGlowMaterial.alphaMode = 1;
+				doorwayGlowMaterial.unlit = true;
+				console.log('What is doorwayGlow.material?', doorwayGlowMaterial);
+			}
+
 			initLevelFromSeed('bob');
 			// Let's separate out a game state loop even if rendering is hitching.
 			scene.registerBeforeRender(gameLogicLoop);

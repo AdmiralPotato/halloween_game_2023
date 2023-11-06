@@ -2,7 +2,7 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { type Scene } from '@babylonjs/core/scene';
 import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder';
 import { Axis } from '@babylonjs/core/Maths/math.axis';
-import { type ShadowGenerator } from '@babylonjs/core';
+import { type AbstractMesh, type ShadowGenerator } from '@babylonjs/core';
 const RIGHT_ANGLE = Math.PI / 2;
 
 interface Door {
@@ -75,26 +75,38 @@ export class LevelBuilder {
 			// floor.outlineWidth = 0.01;
 			room.roomMesh = floor;
 			base.addChild(floor);
-			room.furnishingMeshes = room.furnishings.map((furnishing, index) => {
-				const doodad = meshMap[furnishing.name].clone(
-					`${room.name}-furnishing-${index}-${furnishing.name}`,
-				);
+			const doTheDoodadShuffle = (
+				furnishing: Furnishing | Door | Floor,
+				doodad: AbstractMesh,
+			) => {
 				floor.addChild(doodad);
 				doodad.position.x = furnishing.x;
 				doodad.position.z = furnishing.y;
 				doodad.rotate(Axis.Y, furnishing.rot * RIGHT_ANGLE);
 				doodad.receiveShadows = true;
 				shadowGenerator.addShadowCaster(doodad);
+			};
+			const furnishingMeshes: Mesh[] = [];
+			room.furnishings.forEach((furnishing, index) => {
+				const doodad = meshMap[furnishing.name].clone(
+					`${room.name}-furnishing-${index}-${furnishing.name}`,
+				);
+				doTheDoodadShuffle(furnishing, doodad);
+				if (furnishing.asset === 'doorframe') {
+					const glow = meshMap['doorwayGlow'].clone(
+						`${room.name}-furnishing-${index}-${furnishing.name}-doorwayGlow`,
+					);
+					doTheDoodadShuffle(furnishing, glow);
+				} else {
+					furnishingMeshes.push(doodad);
+				}
 				return doodad;
 			});
+			room.furnishingMeshes = furnishingMeshes;
 			room.doors.forEach((door) => {
 				const doodad = meshMap['doorway'].createInstance(door.name);
 				floor.addChild(doodad);
-				doodad.position.x = door.x;
-				doodad.position.z = door.y;
-				doodad.rotate(Axis.Y, door.rot * RIGHT_ANGLE);
-				doodad.receiveShadows = true;
-				shadowGenerator.addShadowCaster(doodad);
+				doTheDoodadShuffle(door, doodad);
 			});
 			room.floors.forEach((floorOrWallConfig) => {
 				if (!floorOrWallConfig.asset) {
@@ -107,11 +119,7 @@ export class LevelBuilder {
 					floorOrWallConfig.name || Math.random().toString(),
 				);
 				floor.addChild(doodad);
-				doodad.position.x = floorOrWallConfig.x;
-				doodad.position.z = floorOrWallConfig.y;
-				doodad.rotate(Axis.Y, floorOrWallConfig.rot * RIGHT_ANGLE);
-				doodad.renderOutline = true;
-				doodad.receiveShadows = true;
+				doTheDoodadShuffle(floorOrWallConfig, doodad);
 				shadowGenerator.addShadowCaster(doodad);
 			});
 		});
