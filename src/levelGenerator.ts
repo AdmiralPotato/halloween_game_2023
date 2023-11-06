@@ -74,7 +74,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 	return Object.values(rooms);
 };
 
-let seed = 'bob';
+let seed = '4';
 const mapWithRooms = makeRoomsWithSeed(seed);
 
 // console.log(JSON.stringify(mapWithRooms, null, '\t'));

@@ -294,6 +294,13 @@ export const furnishEdges = (roomData: RoomWorkingData, roomName: string): ItemW
 		itemsWIP = translateItems(itemsWIP, normalizedTransforms[currentWallID]);
 		ret = ret.concat(itemsWIP);
 	}
+	// temporary bodge for curtains, which lack window panes: for now, instead, there's a big painting underneath
+	ret.filter((item: ItemWithContext) => item.name === 'curtains')
+		.forEach((item: ItemWithContext) => {
+			let painting = JSON.parse(JSON.stringify(item));
+			painting.name = 'paintingWide';
+			ret.push(painting);
+		})
 	return ret;
 };
 
@@ -421,69 +428,88 @@ const getBookcasesSizes = (length: number) => {
 	if (remainder) {
 		bookcaseSizes.push(1);
 	}
-	return scrambleArray(bookcaseSizes);
+	return bookcaseSizes.reverse(); // quick way of biasing the bookshelves toward the bottom
+	// TODO: bug in spreadItem thingie? Why would the sizes on the end change the absolute position?
 };
 const getLineOfBookcases = (length: number, axis: string): ItemWithContext[] => {
 	const sizes = getBookcasesSizes(length);
-	let ret = [];
-	let dummyItems = new Array(length); // to get occupied coords
-	dummyItems.fill({
-		collisionOffsetsCoords: [zeroCoord()],
-		centerCoord: zeroCoord(),
-		dimensions: { height: NaN, width: NaN, depth: NaN },
-		name: '',
-		rot: 0,
-	});
-	let spreadItems: ItemWithContext[] = spreadItemsOnAxis(dummyItems, axis);
-	ret = sizes.map((size) => {
-		let dummies = spreadItems.splice(0, size);
-		let furnitureName = size === 1 ? 'bookcaseTallNarrow' : 'bookcaseTallWide';
+	let bookcases = sizes.map(n => {
+		let name = n === 1 ? 'bookcaseTallNarrow' : 'bookcaseTallWide';
 		return {
-			collisionOffsetsCoords: size === 1 ? oneByOneCollisionCoords : twoByOneCollisionCoords,
+			collisionOffsetsCoords: n === 1 ? oneByOneCollisionCoords : twoByOneCollisionCoords,
 			centerCoord: zeroCoord(),
-			name: furnitureName,
-			dimensions: FURNISHINGS[furnitureName].dimensions,
-			rot: axis === 'x' ? 0 : 3,
+			name,
+			dimensions: FURNISHINGS[name].dimensions,
+			rot: axis === 'x' ? 0 : 1,
 		};
-	});
-	return ret;
-};
-const spawnBookcaseIsland = (length: number, axis: string) => {
-	let bookcases1: ItemWithContext[] = getLineOfBookcases(length, axis);
-	let bookcases2: ItemWithContext[] = getLineOfBookcases(length, axis);
-	let translation = zeroCoord();
-	if (axis === 'x') {
-		translation.y += 0.25;
-	} else {
-		translation.x += 0.25;
-	}
-	bookcases1 = translateItems(bookcases1, translation);
-	translation = scaleXY(translation, -1);
-	bookcases2 = translateItems(bookcases2, translation).map((item) => {
-		item.rot = (item.rot + 2) % 4;
-		return item;
-	});
-	return bookcases1.concat(bookcases2);
+	})
+	return spreadItemsOnAxis(bookcases, axis);
 };
 
 const getCenterFurniture: Record<string, Function> = {
 	diningRoom: spawnDiningTable,
 	library: (placementBounds: XYCoord): ItemWithContext[] => {
 		let ret: ItemWithContext[] = [];
-		let depth = placementBounds.y - 2;
-		let width = placementBounds.x - 3;
-		// let blocksCount = Math.floor(width / depth);
-		let blocksCount = 2; // temp bodge (TODO: make it actually spaced smartly)
-		let centers: XYCoord[] = [
-			{ x: -width / 4, y: 0 },
-			{ x: width / 4, y: 0 },
-		];
-		for (let i = 0; i < blocksCount; i++) {
+		// tiles available for us to place something:
+		let depth = (placementBounds.y - 1) * 2;
+		let width = (placementBounds.x - 4) * 2;
+		let blocksCount = Math.floor(width / 4); // four tiles is an okayish block width (favor width splits, since camera is northfacing)
+		let blockWidth = Math.floor(width / blocksCount);
+		let centers: XYCoord[] = [];
+		for (let i = -(blockWidth * (blocksCount - 1)) / 2; i < blockWidth * (blocksCount - 1); i += blockWidth) {
+			centers.push({ x: i, y: 0.5 });
+		}
+		if (!centers.length) {
+			ret.push({
+				collisionOffsetsCoords: twoByOneCollisionCoords,
+				centerCoord: { x: -0.5, y: 0.5 },
+				name: 'couchWall',
+				dimensions: FURNISHINGS['couchWall'].dimensions,
+				rot: 0,
+			});
+			ret.push({
+				collisionOffsetsCoords: twoByOneCollisionCoords,
+				centerCoord: { x: -0.5, y: -0.5 },
+				name: 'bookcaseShortWide',
+				dimensions: FURNISHINGS['bookcaseShortWide'].dimensions,
+				rot: 2,
+			});
+			ret.push({
+				collisionOffsetsCoords: twoByOneCollisionCoords,
+				centerCoord: { x: 1, y: 0.5 },
+				name: 'endTable',
+				dimensions: FURNISHINGS['endTable'].dimensions,
+				rot: 2,
+			});
+			if (rand() < 0.5) {
+				ret.push({
+					collisionOffsetsCoords: twoByOneCollisionCoords,
+					centerCoord: { x: 1, y: -0.5 },
+					name: 'pottedPlant',
+					dimensions: FURNISHINGS['pottedPlant'].dimensions,
+					rot: 2,
+				});
+			}
+		}
+		for (let i = 0; i < centers.length; i++) {
 			let axis = rand() < 0.5 ? 'x' : 'y';
-			let length = axis === 'x' ? Math.floor(width / 2) : depth;
-			let working: ItemWithContext[] = spawnBookcaseIsland(length, axis);
-			let translated: ItemWithContext[] = translateItems(working, centers[i]);
-			ret = ret.concat(translated);
+			if (axis === 'x') {
+				let length = blockWidth - 1;
+				let working: ItemWithContext[] = getLineOfBookcases(length, axis);
+				let translated: ItemWithContext[] = translateItems(working, centers[i]);
+				ret = ret.concat(translated);
+			} else if (axis === 'y') {
+				let length = Math.min(depth - 2, 5);
+				let ySpacing = blockWidth * 0.5;
+				let working1: ItemWithContext[] = getLineOfBookcases(length, axis);
+				let working2: ItemWithContext[] = getLineOfBookcases(length, axis);
+				let translation = JSON.parse(JSON.stringify(centers[i]));
+				translation.x += ySpacing / 2;
+				let translated1: ItemWithContext[] = translateItems(working1, translation);
+				translation.x -= ySpacing;
+				let translated2: ItemWithContext[] = translateItems(working2, translation);
+				ret = ret.concat(translated1).concat(translated2);
+			}
 		}
 		return ret;
 	},
