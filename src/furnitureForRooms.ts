@@ -249,12 +249,6 @@ export const FURNISHINGS: Record<string, FurnishingInfo> = {
 		asset: 'paintingBig',
 		dimensions: { width: 1, depth: 1, height: 2 },
 	},
-	doorFrame: {
-		placement: 'special',
-		placementContext: '',
-		asset: 'doorframe',
-		dimensions: { width: 2, depth: 1, height: 2 },
-	},
 };
 /* WISHLIST
 Grandfather clock

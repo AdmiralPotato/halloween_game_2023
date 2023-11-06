@@ -45,11 +45,11 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 		// put the edge objects in
 		let edgeFurniture: ItemWithContext[] = furnishEdges(rooms[roomID], roomType);
 		// Add doorframes
-		let doorFrames: ItemWithContext[] = rooms[roomID].doors.map((tile: Tile) => {
+		let doorframes: ItemWithContext[] = rooms[roomID].doors.map((tile: Tile) => {
 			return {
 				collisionOffsetsCoords: [],
 				centerCoord: { x: tile.x, y: tile.y },
-				name: 'doorFrame',
+				name: 'doorframe',
 				dimensions: FURNISHINGS['doorframe'].dimensions,
 				rot: tile.rot % 2 === 0 ? tile.rot : getOppositeDirN(tile.rot),
 			};
@@ -59,7 +59,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 			.concat(centerFurniture)
 			.concat(cornerFurniture)
 			.concat(edgeFurniture)
-			.concat(doorFrames);
+			.concat(doorframes);
 		// get rid of null furniture
 		newThings = newThings.filter((item: ItemWithContext) => item.name !== 'EMPTY');
 		// convert furniture to the old shape
