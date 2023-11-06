@@ -154,6 +154,16 @@ export const clamp = (input: number, min: number, max: number): number => {
 	return input < min ? min : input > max ? max : input;
 };
 
+export const rotateCoordsAroundZero = (coord: XYCoord, turns: number) => {
+	let ret = JSON.parse(JSON.stringify(coord));
+	for (let i = 0; i < turns; i++) {
+		let capture = ret.x;
+		ret.x = ret.y
+		ret.y = -capture;
+	}
+	return ret;
+}
+
 export const mapRange = (
 	current: number,
 	in_min: number,

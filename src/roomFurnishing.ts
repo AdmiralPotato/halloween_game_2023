@@ -20,6 +20,8 @@ import {
 	getNFromDir,
 	getRandomWithWeight,
 	getWidthFromItemsWithContext,
+	rotateCoordsAroundZero,
+	translateXY,
 } from './utilities';
 
 export const furnishCenter = (roomData: RoomWorkingData, roomName: string): ItemWithContext[] => {
@@ -83,7 +85,7 @@ export const padImmediate = (
 	const childrenSize = 1;
 	let roll = rand();
 	let method = roll < 0.5 ? 'push' : 'unshift';
-	let antiMethod = roll >= 0.5 ? 'unshift' : 'push';
+	let antiMethod = method === 'push' ? 'unshift' : 'push';
 	if (padUntil >= currentWidth + childrenSize) {
 		ret[method](padItems[0]);
 	}
@@ -105,6 +107,28 @@ export const padToFill = (
 	if (padUntil === currentWidth) {
 		return baseItems;
 	}
+	let pad1 = getRandomWithWeight(weights);
+	let pad2 = getRandomWithWeight(weights);
+	ret = padImmediate( // first definitely fill either side
+		ret,
+		[
+			{
+				collisionOffsetsCoords: oneByOneCollisionCoords,
+				centerCoord: zeroCoord(),
+				dimensions: FURNISHINGS[pad1].dimensions,
+				name: pad1,
+				rot: 0,
+			},
+			{
+				collisionOffsetsCoords: oneByOneCollisionCoords,
+				centerCoord: zeroCoord(),
+				dimensions: FURNISHINGS[pad2].dimensions,
+				name: pad2,
+				rot: 0,
+			}
+		],
+		padUntil,
+	)
 	do {
 		let furnitureName = getRandomWithWeight(weights);
 		ret[rand() ? 'push' : 'unshift']({
@@ -245,34 +269,34 @@ export const furnishEdges = (roomData: RoomWorkingData, roomName: string): ItemW
 					dimensions: FURNISHINGS[bigInsertName].dimensions,
 					name: bigInsertName,
 					rot: 0,
-				},
-			];
+				}];
 		itemsWIP = padToFill(itemsWIP, smallFurnitureWeights, wall.length);
-		// todo: spread items
-
 		let normalizedTransforms: Record<string, XYCoord> = {
 			a: { x: (wallCenter.x), y: (wallCenter.y) },
 			w: { x: (wallCenter.x), y: (wallCenter.y) },
 			d: { x: (wallCenter.x), y: (wallCenter.y) },
 		}
-		console.log("\troom: " + roomName);
+		if (currentWallID === 'a') {
+			itemsWIP = itemsWIP.map(item => {
+				let transform = rotateCoordsAroundZero(averageXYCoords(item.collisionOffsetsCoords), 1)
+				item.centerCoord = translateXY(item.centerCoord, transform);
+				item.rot = 3;
+				return item;
+			})
+		} else if (currentWallID === 'd') {
+			itemsWIP = itemsWIP.map(item => {
+				let transform = rotateCoordsAroundZero(averageXYCoords(item.collisionOffsetsCoords), 1)
+				item.centerCoord = translateXY(item.centerCoord, transform);
+				item.rot = 1;
+				return item;
+			})
+		}
 		if (currentWallID === 'w') {
 			itemsWIP = spreadItemsOnAxis(itemsWIP, 'x');
 		} else {
 			itemsWIP = spreadItemsOnAxis(itemsWIP, 'y');
 		}
 		itemsWIP = translateItems(itemsWIP, normalizedTransforms[currentWallID]);
-		if (currentWallID === 'a') {
-			itemsWIP = itemsWIP.map((item) => {
-				item.rot = 3;
-				return item;
-			});
-		} else if (currentWallID === 'd') {
-			itemsWIP = itemsWIP.map((item) => {
-				item.rot = 1;
-				return item;
-			});
-		}
 		ret = ret.concat(itemsWIP);
 	}
 	return ret;
@@ -542,8 +566,13 @@ const getWallCluster: Record<string, Function> = {
 			[
 				{
 					// baseItems
-					collisionOffsetsCoords: twoByTwoCollisionCoords,
-					centerCoord: { x: 0, y: 0.5 },
+					collisionOffsetsCoords: [
+						{ x: 0.5, y: 0 },
+						{ x: -0.5, y: 0 },
+						{ x: 0.5, y: 1 },
+						{ x: -0.5, y: 1 },
+					],
+					centerCoord: { x: 0, y: 0 },
 					dimensions: FURNISHINGS['bed'].dimensions,
 					name: 'bed',
 					rot: 0,
