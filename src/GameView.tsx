@@ -36,18 +36,29 @@ import {
 	mapRange,
 	PI,
 } from './utilities';
+import { Component, createRef, type ReactNode, type RefObject } from 'react';
 
 const COLOR_HIGHLIGHTED = new Color3(0, 1, 0);
 const COLOR_YES_CANDY = new Color3(1, 0, 0);
 const COLOR_NO_CANDY = new Color3(0, 0, 1);
 
-class App {
-	constructor() {
+interface AppComponentInterface {
+	children: ReactNode[];
+}
+export default class Form extends Component {
+	canvas: HTMLCanvasElement | null = null;
+	canvasHolderRef: RefObject<HTMLDivElement>;
+
+	constructor(props: AppComponentInterface) {
+		super(props);
 		// create the canvas html element and attach it to the webpage
 		const canvas = document.createElement('canvas');
 		canvas.style.width = '100%';
 		canvas.style.height = '100%';
 		canvas.id = 'gameCanvas';
+		// still doing this at startup because if ownerDocument isn't present on scene,
+		// then the babylon inspector tools explode on import
+		console.log('This is when we try to append the canvas');
 		document.body.appendChild(canvas);
 
 		// initialize babylon scene and engine
@@ -389,7 +400,6 @@ class App {
 				didAction = true;
 				if (playerCharacterMaterial) {
 					playerCharacterMaterial.alpha = 0;
-					console.log('What is playerCharacterMaterial?', playerCharacterMaterial);
 				}
 			}
 			if (buttonStateMap.seed) {
@@ -460,6 +470,26 @@ class App {
 			scene.registerBeforeRender(gameLogicLoop);
 			// scene.createDefaultCamera(true, true, true);
 		});
+		this.canvas = canvas;
+		this.canvasHolderRef = createRef();
+	}
+
+	componentDidMount() {
+		const current = this.canvasHolderRef?.current;
+		if (this.canvas && current) {
+			console.log('this is when we try to move the canvas to the react ref');
+			// guess what, this function runs multiple times
+			if (this.canvas?.parentNode === document.body) {
+				document.body.removeChild(this.canvas);
+			}
+			while (current.firstChild) {
+				current.removeChild(current.firstChild);
+			}
+			current.appendChild(this.canvas);
+		}
+	}
+
+	render() {
+		return <div ref={this.canvasHolderRef}></div>;
 	}
 }
-new App();
