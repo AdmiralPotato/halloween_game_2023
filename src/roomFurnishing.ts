@@ -209,7 +209,7 @@ export const furnishEdges = (roomData: RoomWorkingData, roomName: string): ItemW
 		.filter((item) => {
 			return FURNISHINGS[item.item].dimensions.width === 1;
 		})
-		.filter((item) => FURNISHINGS[item.item].placementContext !== 'corner');
+		.filter((item) => FURNISHINGS[item.item].placement !== 'corner');
 
 	// while there is space on the walls
 	while (wallSegments.length) {

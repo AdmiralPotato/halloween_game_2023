@@ -168,7 +168,7 @@ export const FURNISHINGS: Record<string, FurnishingInfo> = {
 	},
 	gargoyle: {
 		placement: 'wall',
-		placementContext: 'corner',
+		placementContext: '',
 		asset: 'gargoyle',
 		dimensions: { width: 1, depth: 1, height: 2 },
 	},
@@ -186,7 +186,7 @@ export const FURNISHINGS: Record<string, FurnishingInfo> = {
 	},
 	chest: {
 		placement: 'wall',
-		placementContext: 'corner',
+		placementContext: '',
 		asset: 'chest',
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
@@ -197,7 +197,7 @@ export const FURNISHINGS: Record<string, FurnishingInfo> = {
 		dimensions: { width: 1, depth: 1, height: 1 },
 	},
 	cobwebCorner: {
-		placement: 'wall',
+		placement: 'corner',
 		placementContext: 'corner',
 		asset: 'cobwebCrnr',
 		dimensions: { width: 1, depth: 1, height: 1 },
@@ -273,9 +273,9 @@ const commonStuff: FurnitureWeight[] = [
 	{ item: 'cobwebCorner', weight: 4, count: NaN },
 	{ item: 'candelabra', weight: 2, count: NaN },
 	{ item: 'endTable', weight: 2, count: NaN },
-	{ item: 'EMPTY', weight: 1, count: NaN },
 	{ item: 'gargoyle', weight: 3, count: NaN },
 	{ item: 'painting', weight: 1, count: NaN },
+	{ item: 'EMPTY', weight: 1, count: NaN },
 ];
 
 export const ROOM_CONTENTS: Record<string, FurnitureWeight[]> = {
@@ -348,14 +348,6 @@ export const spreadItemsOnAxis = (
 		}
 		return item;
 	})
-	// let itemSizesTotal =
-	// 	getWidthFromItemsWithContext(spreadingItems)
-	// 	- spreadingItems[0].dimensions.width / 2
-	// 	- spreadingItems[spreadingItems.length - 1].dimensions.width / 2;
-	// let translation = { x: 0, y: 0 };
-	// if (axis === 'x' || axis === 'y') {
-	// 	translation[axis] = -itemSizesTotal / 2;
-	// }
 	// centering items
 	let firstX = spreadingItems[0].centerCoord[axis];
 	let lastX = spreadingItems[spreadingItems.length - 1].centerCoord[axis];
@@ -369,9 +361,6 @@ export const spreadItemsOnAxis = (
 		item.centerCoord = translateXY(item.centerCoord, actualCenter);
 		return item;
 	})
-	// spreadingItems.forEach(item => {
-	// 	console.log(`${item.centerCoord.x}, ${item.centerCoord.y}: ${item.name}`)
-	// })
 	return spreadingItems;
 };
 
