@@ -38,7 +38,6 @@ export const furnishCenter = (roomData: RoomWorkingData, roomName: string): Item
 			};
 		});
 	let floorRange: XYRange = getXYRangeFromXYCoords(floorCoords);
-	// let floorCenterCoord: XYCoord = getCenterForXYRange(floorRange);
 	let paddingBetweenCenterAndWall = 1;
 	let floorSize = {
 		x: floorRange.x.max - floorRange.x.min - paddingBetweenCenterAndWall,

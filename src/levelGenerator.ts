@@ -54,6 +54,8 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 				rot: tile.rot % 2 === 0 ? tile.rot : getOppositeDirN(tile.rot),
 			};
 		});
+		// Take the doorway out of the south walls, now that we've used it to make a doorframe
+		rooms[roomID].doors = rooms[roomID].doors.filter((item) => !(item.rot === 2));
 		// combine the above
 		newThings = newThings
 			.concat(centerFurniture)

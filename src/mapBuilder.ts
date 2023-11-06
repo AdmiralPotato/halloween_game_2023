@@ -381,6 +381,12 @@ export const buildMapFromSeed = (seed: string) => {
 		wall: 'wall',
 		floor: 'floor',
 	};
+	const labelTile = (roomID: string, edgeInfo: Edge, labelGuts: string) => {
+		return `${roomID}:${edgeInfo.pos.x},${edgeInfo.pos.y}:${labelGuts}(${edgeInfo.compositeInfo})`
+	}
+	const labelDoorTile = (roomID: string, doorInfo: DoorInfo, labelGuts: string) => {
+		return `${roomID}:${doorInfo.pos.x},${doorInfo.pos.y}:${labelGuts}(${doorInfo.compositeInfo})`
+	}
 	Object.keys(roomWorkingData).forEach((roomID) => {
 		let workingRoomTileEdges = roomTileEdges.filter((tile) => tile.roomID === roomID);
 		let floorTiles: Tile[] = [];
@@ -389,56 +395,35 @@ export const buildMapFromSeed = (seed: string) => {
 			return getNFromDir(string);
 		};
 		//floors
-		workingRoomTileEdges.forEach((tileInfo: Edge) => {
-			let name =
-				roomID +
-				':' +
-				tileInfo.pos.x +
-				',' +
-				tileInfo.pos.y +
-				':floor' +
-				'(' +
-				tileInfo.compositeInfo +
-				')';
+		workingRoomTileEdges.forEach((edgeInfo: Edge) => {
 			floorTiles.push({
-				name,
+				name: labelTile(roomID, edgeInfo, 'floor'),
 				type: 'floor',
 				asset: tileAssets.floor,
-				x: tileInfo.pos.x,
-				y: tileInfo.pos.y,
+				x: edgeInfo.pos.x,
+				y: edgeInfo.pos.y,
 				rot: 0,
 				destination: '',
 				wallDir: '',
-				compositeInfo: tileInfo.compositeInfo,
+				compositeInfo: edgeInfo.compositeInfo,
 				roomID,
 			});
 		});
 		// walls
 		workingRoomTileEdges
 			.filter((tile) => !tile.isDoor)
-			.forEach((tileInfo: Edge) => {
-				tileInfo.wallDirs.forEach((dir) => {
-					let name =
-						roomID +
-						':' +
-						tileInfo.pos.x +
-						',' +
-						tileInfo.pos.y +
-						':wall-' +
-						dir +
-						'(' +
-						tileInfo.compositeInfo +
-						')';
+			.forEach((edgeInfo: Edge) => {
+				edgeInfo.wallDirs.forEach((dir) => {
 					floorTiles.push({
-						name,
+						name: labelTile(roomID, edgeInfo, `wall-${dir}`),
 						type: 'wall',
 						asset: tileAssets.wall,
-						x: tileInfo.pos.x,
-						y: tileInfo.pos.y,
+						x: edgeInfo.pos.x,
+						y: edgeInfo.pos.y,
 						rot: calculateWallDir(dir),
 						destination: '',
 						wallDir: '',
-						compositeInfo: tileInfo.compositeInfo,
+						compositeInfo: edgeInfo.compositeInfo,
 						roomID,
 					});
 				});
@@ -446,56 +431,36 @@ export const buildMapFromSeed = (seed: string) => {
 		//doors
 		roomDoors
 			.filter((tile) => tile.roomID === roomID)
-			.forEach((tileInfo) => {
-				let name =
-					roomID +
-					':' +
-					tileInfo.pos.x +
-					',' +
-					tileInfo.pos.y +
-					':door' +
-					'(' +
-					tileInfo.compositeInfo +
-					')';
+			.forEach((doorInfo) => {
 				doorTiles.push({
-					name,
+					name: labelDoorTile(roomID, doorInfo, 'door'),
 					asset: '',
 					type: 'door',
-					x: tileInfo.pos.x,
-					y: tileInfo.pos.y,
-					rot: calculateWallDir(tileInfo.doorDir),
-					destination: tileInfo.destination,
+					x: doorInfo.pos.x,
+					y: doorInfo.pos.y,
+					rot: calculateWallDir(doorInfo.doorDir),
+					destination: doorInfo.destination,
 					wallDir: '',
-					compositeInfo: tileInfo.compositeInfo,
+					compositeInfo: doorInfo.compositeInfo,
 					roomID,
 				});
-				tileInfo.wallDirs.forEach((dir) => {
-					let name =
-						roomID +
-						':' +
-						tileInfo.pos.x +
-						',' +
-						tileInfo.pos.y +
-						':wallForCornerDoor' +
-						'(' +
-						tileInfo.compositeInfo +
-						')';
+				doorInfo.wallDirs.forEach((dir) => {
 					floorTiles.push({
-						name,
+						name: labelDoorTile(roomID, doorInfo, 'wallForCornerDoor'),
 						type: 'wall',
 						asset: tileAssets.wall,
-						x: tileInfo.pos.x,
-						y: tileInfo.pos.y,
+						x: doorInfo.pos.x,
+						y: doorInfo.pos.y,
 						rot: calculateWallDir(dir),
 						destination: '',
 						wallDir: '',
-						compositeInfo: tileInfo.compositeInfo,
+						compositeInfo: doorInfo.compositeInfo,
 						roomID,
 					});
 				});
 			});
-		roomWorkingData[roomID].floors = floorTiles;
 		roomWorkingData[roomID].doors = doorTiles;
+		roomWorkingData[roomID].floors = floorTiles;
 	});
 
 	const arrayDoubler = <T>(arr: T[]): T[] => {
@@ -533,7 +498,7 @@ export const buildMapFromSeed = (seed: string) => {
 				// item.name = `${item.x},${item.y}:${item.name}`;
 				return item;
 			})
-			.filter((item) => !(item.rot === 2));
+			// .filter((item) => !(item.rot === 2));
 	});
 
 	/* -------------- ASSIGN ROOMS THEIR PURPOSES -------------- */
