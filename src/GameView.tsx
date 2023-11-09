@@ -36,30 +36,39 @@ import {
 	mapRange,
 	PI,
 } from './utilities';
-import { Component, createRef, type ReactNode, type RefObject } from 'react';
+import { Component, createRef, type ReactNode, type RefObject, useEffect, useRef } from 'react';
+import { useGameStore } from './store';
 
 const COLOR_HIGHLIGHTED = new Color3(0, 1, 0);
 const COLOR_YES_CANDY = new Color3(1, 0, 0);
 const COLOR_NO_CANDY = new Color3(0, 0, 1);
 
 interface AppComponentInterface {
-	children: ReactNode[];
+	// onRender: () => void | undefined;
+	// onSceneReady: () => void | undefined;
 }
-export default class Form extends Component {
-	canvas: HTMLCanvasElement | null = null;
-	canvasHolderRef: RefObject<HTMLDivElement>;
+export default (_props: AppComponentInterface) => {
+	const canvasRef = useRef(null);
+	const addCandy = useGameStore((state) => state.addCandy);
+	const buttonStateMap = useGameStore((state) => state.buttonStateMap);
+	const joystick: any = useGameStore((state) => state.joystick);
 
-	constructor(props: AppComponentInterface) {
-		super(props);
+	// set up basic engine and scene
+	useEffect(() => {
+		const current = canvasRef.current;
+		if (!current) {
+			return;
+		}
+
+		const canvas: HTMLCanvasElement = current;
+
 		// create the canvas html element and attach it to the webpage
-		const canvas = document.createElement('canvas');
+		// const canvas = document.createElement('canvas');
 		canvas.style.width = '100%';
 		canvas.style.height = '100%';
 		canvas.id = 'gameCanvas';
 		// still doing this at startup because if ownerDocument isn't present on scene,
 		// then the babylon inspector tools explode on import
-		console.log('This is when we try to append the canvas');
-		document.body.appendChild(canvas);
 
 		// initialize babylon scene and engine
 		const engine = new Engine(canvas, true);
@@ -246,8 +255,6 @@ export default class Form extends Component {
 		const assetLoadingPromises = [magePromise, environmentPromise, doodadsPromise];
 		let rooms: Room[] | null;
 
-		const { buttonStateMap, joystick } = setupUserInput();
-
 		const isVectorInsideMesh = (point: Vector3, room: Mesh): boolean => {
 			return room.getBoundingInfo().intersectsPoint(point);
 		};
@@ -363,6 +370,7 @@ export default class Form extends Component {
 						actionIntersectMesh.setEnabled(false);
 						if (furnishing.hasCandy) {
 							spawnCandy(doodad, candyBucketTransformNode);
+							addCandy(1);
 						}
 					}
 				}
@@ -414,9 +422,9 @@ export default class Form extends Component {
 				buttonStateMap.devTools = false;
 				toggleDevTools();
 			}
-			if (joystick.distance !== 0) {
-				motionVector.x += (-joystick.x / joystick.options.maxRange) * movementSpeed;
-				motionVector.z += (-joystick.y / joystick.options.maxRange) * movementSpeed;
+			if (joystick) {
+				motionVector.x += joystick.x * movementSpeed;
+				motionVector.z += joystick.y * movementSpeed;
 			}
 			motionVector.multiplyInPlace(motionDragVector);
 			const motionLength = motionVector.length();
@@ -470,26 +478,12 @@ export default class Form extends Component {
 			scene.registerBeforeRender(gameLogicLoop);
 			// scene.createDefaultCamera(true, true, true);
 		});
-		this.canvas = canvas;
-		this.canvasHolderRef = createRef();
-	}
+	});
 
-	componentDidMount() {
-		const current = this.canvasHolderRef?.current;
-		if (this.canvas && current) {
-			console.log('this is when we try to move the canvas to the react ref');
-			// guess what, this function runs multiple times
-			if (this.canvas?.parentNode === document.body) {
-				document.body.removeChild(this.canvas);
-			}
-			while (current.firstChild) {
-				current.removeChild(current.firstChild);
-			}
-			current.appendChild(this.canvas);
-		}
-	}
-
-	render() {
-		return <div ref={this.canvasHolderRef}></div>;
-	}
-}
+	return (
+		<canvas
+			className="gameCanvas"
+			ref={canvasRef}
+		></canvas>
+	);
+};
