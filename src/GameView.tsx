@@ -29,7 +29,6 @@ import {
 } from '@babylonjs/core';
 import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
-import { setupUserInput } from './userInputState';
 import {
 	// clamp,
 	angleLerp,
