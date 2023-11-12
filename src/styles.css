@@ -19,6 +19,10 @@ body {
 	position: relative;
 }
 
+#scene-explorer-host {
+	z-index: 1;
+}
+
 .UserInterface {
 	position: fixed;
 	top: 0;
@@ -34,7 +38,8 @@ body {
 	height: 64px;
 	color: #fff;
 	border-radius: 8px;
-	background-color: #406;
-	padding: 4px;
+	background-color: #636;
+	line-height: 64px;
+	font-size: 32px;
 	border: 2px solid #666;
 }

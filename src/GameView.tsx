@@ -35,22 +35,18 @@ import {
 	mapRange,
 	PI,
 } from './utilities';
-import { Component, createRef, type ReactNode, type RefObject, useEffect, useRef } from 'react';
 import { useGameStore } from './store';
+import React, { useEffect, useRef } from 'react';
 
 const COLOR_HIGHLIGHTED = new Color3(0, 1, 0);
 const COLOR_YES_CANDY = new Color3(1, 0, 0);
 const COLOR_NO_CANDY = new Color3(0, 0, 1);
 
-interface AppComponentInterface {
-	// onRender: () => void | undefined;
-	// onSceneReady: () => void | undefined;
-}
-export default (_props: AppComponentInterface) => {
+export default function GameView() {
 	const canvasRef = useRef(null);
 	const addCandy = useGameStore((state) => state.addCandy);
 	const buttonStateMap = useGameStore((state) => state.buttonStateMap);
-	const joystick: any = useGameStore((state) => state.joystick);
+	const joystick = useGameStore((state) => state.joystick);
 
 	// set up basic engine and scene
 	useEffect(() => {
@@ -485,4 +481,4 @@ export default (_props: AppComponentInterface) => {
 			ref={canvasRef}
 		></canvas>
 	);
-};
+}

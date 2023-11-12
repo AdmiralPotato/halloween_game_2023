@@ -1,12 +1,12 @@
+import { ItemWithContext } from './furnitureForRooms';
 // @ts-ignore
 import seedrandom from 'seedrandom';
-import { ItemWithContext } from './furnitureForRooms';
 
 let randomizer = seedrandom('');
 
 export const setSeed = (seed: string) => {
-	(randomizer = seedrandom(seed));
-	console.log("setting seed to " + seed);
+	randomizer = seedrandom(seed);
+	console.log('setting seed to ' + seed);
 };
 export const rand = (): number => randomizer();
 export const randomIndex = (max: number): number => {
@@ -19,11 +19,11 @@ export const randomFromRange = (range: Range): number => {
 // getting randoms with a bias toward the center
 export const randomAverageWithBellCurve = (rollCount: number): number => {
 	// ≈ roll multiple dice and get the average
-	let numbers = [];
+	const numbers = [];
 	for (let i = 0; i < rollCount; i++) {
 		numbers.push(rand());
 	}
-	return numbers.reduce((ac, v)=>ac+v,0) / numbers.length;
+	return numbers.reduce((ac, v) => ac + v, 0) / numbers.length;
 };
 export const randomIndexWithBellCurve = (max: number, rollCount: number): number => {
 	return Math.floor(randomAverageWithBellCurve(rollCount) * max);
@@ -171,14 +171,14 @@ export const clamp = (input: number, min: number, max: number): number => {
 };
 
 export const rotateCoordsAroundZero = (coord: XYCoord, turns: number) => {
-	let ret = JSON.parse(JSON.stringify(coord));
+	const ret = JSON.parse(JSON.stringify(coord));
 	for (let i = 0; i < turns; i++) {
-		let capture = ret.x;
-		ret.x = ret.y
+		const capture = ret.x;
+		ret.x = ret.y;
 		ret.y = -capture;
 	}
 	return ret;
-}
+};
 
 export const mapRange = (
 	current: number,

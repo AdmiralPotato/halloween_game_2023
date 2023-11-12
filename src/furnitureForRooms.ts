@@ -28,16 +28,16 @@ const transformations: Record<string, XYCoord> = {
 };
 
 export const padRoom = (tiles: Tile[]): Tile[] => {
-	let ret: Tile[] = [];
+	const ret: Tile[] = [];
 	tiles.forEach((tile) => {
 		Object.keys(transformations).forEach((dir: string) => {
-			let clone: Tile = JSON.parse(JSON.stringify(tile));
-			let newCoords = translateXY({ x: clone.x, y: clone.y }, transformations[dir]);
+			const clone: Tile = JSON.parse(JSON.stringify(tile));
+			const newCoords = translateXY({ x: clone.x, y: clone.y }, transformations[dir]);
 			clone.x = newCoords.x;
 			clone.y = newCoords.y;
-			let capital = /[A-Z]/.test(clone.compositeInfo);
-			let compositeLookup = clone.compositeInfo.toLowerCase();
-			let newC = cNeighborMap[compositeLookup][dir];
+			const capital = /[A-Z]/.test(clone.compositeInfo);
+			const compositeLookup = clone.compositeInfo.toLowerCase();
+			const newC = cNeighborMap[compositeLookup][dir];
 			clone.compositeInfo = capital ? newC.toUpperCase() : newC;
 			ret.push(clone);
 		});
@@ -46,20 +46,15 @@ export const padRoom = (tiles: Tile[]): Tile[] => {
 };
 
 export const printRoom = (tiles: Tile[], stuff: ItemWithContext[]): string => {
-	let hitBoxed = (stuff || []).map((item) => item.collisionOffsetsCoords).flat();
+	const hitBoxed = (stuff || []).map((item) => item.collisionOffsetsCoords).flat();
 
-	let modifiedTiles = padRoom(tiles.filter((item) => item.type === 'floor'));
-	let drawRange: XYRange = getXYRangeFromXYCoords(modifiedTiles);
-	let print = [];
-	let roomCorners = getXYRangeFromXYCoords(
-		tiles.map((tile) => {
-			return { x: tile.x, y: tile.y };
-		}),
-	);
+	const modifiedTiles = padRoom(tiles.filter((item) => item.type === 'floor'));
+	const drawRange: XYRange = getXYRangeFromXYCoords(modifiedTiles);
+	const print = [];
 	for (let y = drawRange.y.min; y <= drawRange.y.max; y++) {
 		let line = '';
 		for (let x = drawRange.x.min; x <= drawRange.x.max; x++) {
-			let thisSpot = modifiedTiles.filter((tile) => tile.x === x && tile.y === y);
+			const thisSpot = modifiedTiles.filter((tile) => tile.x === x && tile.y === y);
 			let value = '';
 			if (thisSpot.length === 1) {
 				value = thisSpot[0].compositeInfo;
@@ -68,7 +63,7 @@ export const printRoom = (tiles: Tile[], stuff: ItemWithContext[]): string => {
 			} else {
 				value = '!';
 			}
-			let hit = hitBoxed.some((coord) => compareXY(coord, { x, y }));
+			const hit = hitBoxed.some((coord) => compareXY(coord, { x, y }));
 			if (hit) {
 				value = '\u001B[31m' + value + '\u001B[0m';
 			}
@@ -352,42 +347,42 @@ export const ROOM_CONTENTS: Record<string, FurnitureWeight[]> = {
 	],
 };
 
-export const spreadItemsOnAxis = (
-	items: ItemWithContext[],
-	axis: string,
-): ItemWithContext[] => {
+export const spreadItemsOnAxis = (items: ItemWithContext[], axis: string): ItemWithContext[] => {
 	if (axis !== 'x' && axis !== 'y') {
-		throw new Error("ASSERT")
+		throw new Error('ASSERT');
 	}
 	if (items.length < 1) {
 		return items;
 	}
 	let spreadingItems: ItemWithContext[] = JSON.parse(JSON.stringify(items));
-	let centerAtCoord = getCenterForXYRange(getXYRangeFromXYCoords(spreadingItems.map(item => item.centerCoord))); // NOTE This will mess things up for 2x wide things; TODO FIX
+	const centerAtCoord = getCenterForXYRange(
+		getXYRangeFromXYCoords(spreadingItems.map((item) => item.centerCoord)),
+	); // NOTE This will mess things up for 2x wide things; TODO FIX
 	spreadingItems = spreadingItems.map((item, i, array) => {
 		if (i === 0) {
 			item.centerCoord[axis] = centerAtCoord[axis];
 		} else {
 			// note: we're always using the width because we're only spacing on the item's local width (x) anyway
-			item.centerCoord[axis] = array[i - 1].centerCoord[axis]
-				+ item.dimensions.width / 2
-				+ array[i - 1].dimensions.width / 2;
+			item.centerCoord[axis] =
+				array[i - 1].centerCoord[axis] +
+				item.dimensions.width / 2 +
+				array[i - 1].dimensions.width / 2;
 		}
 		return item;
-	})
+	});
 	// centering items
-	let firstX = spreadingItems[0].centerCoord[axis];
-	let lastX = spreadingItems[spreadingItems.length - 1].centerCoord[axis];
-	let spaceByHalf = (lastX - firstX) / 2;
-	let translation = JSON.parse(JSON.stringify(centerAtCoord));
+	const firstX = spreadingItems[0].centerCoord[axis];
+	const lastX = spreadingItems[spreadingItems.length - 1].centerCoord[axis];
+	const spaceByHalf = (lastX - firstX) / 2;
+	const translation = JSON.parse(JSON.stringify(centerAtCoord));
 	translation[axis] -= spaceByHalf;
 	spreadingItems = translateItems(spreadingItems, translation);
 	// making adjustments based on the offsets
-	spreadingItems = spreadingItems.map(item => {
-		let actualCenter = averageXYCoords(item.collisionOffsetsCoords);
+	spreadingItems = spreadingItems.map((item) => {
+		const actualCenter = averageXYCoords(item.collisionOffsetsCoords);
 		item.centerCoord = translateXY(item.centerCoord, actualCenter);
 		return item;
-	})
+	});
 	return spreadingItems;
 };
 

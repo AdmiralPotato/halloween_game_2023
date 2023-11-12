@@ -13,7 +13,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 	/// ------------ THE REST OF THE OWL???? ------------ ///
 	//---------------------------------------------------////
 
-	let rooms = mapInfo.rooms;
+	const rooms = mapInfo.rooms;
 	Object.keys(rooms).forEach((roomID) => {
 		// getting room info for this room
 		const roomType = rooms[roomID].name;
@@ -39,13 +39,13 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 		};
 		let newThings: ItemWithContext[] = [];
 		// put the center objects in
-		let centerFurniture: ItemWithContext[] = furnishCenter(rooms[roomID], roomType);
+		const centerFurniture: ItemWithContext[] = furnishCenter(rooms[roomID], roomType);
 		// put the corner objects in
-		let cornerFurniture: ItemWithContext[] = furnishCorners(rooms[roomID], roomType);
+		const cornerFurniture: ItemWithContext[] = furnishCorners(rooms[roomID], roomType);
 		// put the edge objects in
-		let edgeFurniture: ItemWithContext[] = furnishEdges(rooms[roomID], roomType);
+		const edgeFurniture: ItemWithContext[] = furnishEdges(rooms[roomID], roomType);
 		// Add doorframes
-		let doorframes: ItemWithContext[] = rooms[roomID].doors.map((tile: Tile) => {
+		const doorframes: ItemWithContext[] = rooms[roomID].doors.map((tile: Tile) => {
 			return {
 				collisionOffsetsCoords: [],
 				centerCoord: { x: tile.x, y: tile.y },
@@ -65,7 +65,7 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 		// get rid of null furniture
 		newThings = newThings.filter((item: ItemWithContext) => item.name !== 'EMPTY');
 		// convert furniture to the old shape
-		let converted = newThings.map((item: ItemWithContext) => {
+		const converted = newThings.map((item: ItemWithContext) => {
 			return convertNewThingToOld(item);
 		});
 		// shove them in the old place
@@ -73,9 +73,6 @@ export const makeRoomsWithSeed = (seed: string): Room[] => {
 	});
 	return Object.values(rooms);
 };
-
-let seed = '4';
-const mapWithRooms = makeRoomsWithSeed(seed);
 
 // console.log(JSON.stringify(mapWithRooms, null, '\t'));
 console.log('breakme');

@@ -41,7 +41,7 @@ export const buildMapFromSeed = (seed: string) => {
 	const padRoomToAlignOn = (leftRoomID: string, rightRoomID: string, alignmentDir: string) => {
 		const padWidth = roomLineMap[rightRoomID].length;
 		const method = alignmentDir === 'right' ? 'padStart' : 'padEnd';
-		let line = roomLineMap[leftRoomID];
+		const line = roomLineMap[leftRoomID];
 		roomLineMap[leftRoomID] = line[method](padWidth, ' ');
 	};
 	padRoomToAlignOn('e', 'd', 'right');
@@ -89,7 +89,7 @@ export const buildMapFromSeed = (seed: string) => {
 		const ret: string[] = [];
 		const blank = ' '.repeat(line.length);
 		// blank lines, equally on top or bottom (randomly)
-		let diff = maxSize - roomInfo.depth;
+		const diff = maxSize - roomInfo.depth;
 		// the actual lines
 		for (let i = 0; i < roomInfo.depth; i++) {
 			ret.push(line);
@@ -125,9 +125,9 @@ export const buildMapFromSeed = (seed: string) => {
 	// quickie: make a door between hallway and living room (entrance)
 
 	// find horiz coordinate
-	let bottommostRow = mapASCII[mapASCII.length - 1].split('');
-	let topOfLivingRoom = roomLineMap.a.split('');
-	let potentialDoorIndices: number[] = [];
+	const bottommostRow = mapASCII[mapASCII.length - 1].split('');
+	const topOfLivingRoom = roomLineMap.a.split('');
+	const potentialDoorIndices: number[] = [];
 	bottommostRow.forEach((c, i) => {
 		if (c == 'b' && topOfLivingRoom[i] !== ' ') {
 			potentialDoorIndices.push(i);
@@ -137,10 +137,10 @@ export const buildMapFromSeed = (seed: string) => {
 		potentialDoorIndices.pop();
 		potentialDoorIndices.shift();
 	}
-	let doorIndex = randomFromArray(potentialDoorIndices);
+	const doorIndex = randomFromArray(potentialDoorIndices);
 
 	// for later
-	let bottomOfHallWayIndex = mapASCII.length - 1;
+	const bottomOfHallWayIndex = mapASCII.length - 1;
 
 	// put in front room
 	for (let i = 0; i < roomLinesArrayMap.a.length; i++) {
@@ -176,11 +176,12 @@ export const buildMapFromSeed = (seed: string) => {
 		let indicesR = getRowsWithPotentialDoor('b', right);
 		[indicesL, indicesR].forEach((list) => {
 			if (list.length >= 3) {
-				list.pop(), list.shift();
+				list.pop();
+				list.shift();
 			}
 		});
 		if (indicesL.length <= indicesR.length) {
-			let firstDoorIndex = randomFromArray(indicesL);
+			const firstDoorIndex = randomFromArray(indicesL);
 			if (!firstDoorIndex) {
 				throw new Error('firstDoorIndex failed to be a valid value!');
 			}
@@ -189,7 +190,8 @@ export const buildMapFromSeed = (seed: string) => {
 				left.toUpperCase() + 'B',
 			);
 			indicesR = indicesR.filter((n) => n !== firstDoorIndex);
-			let secondDoorIndex = indicesR.length > 0 ? randomFromArray(indicesR) : firstDoorIndex;
+			const secondDoorIndex =
+				indicesR.length > 0 ? randomFromArray(indicesR) : firstDoorIndex;
 			if (!secondDoorIndex) {
 				throw new Error('secondDoorIndex failed to be a valid value!');
 			}
@@ -198,7 +200,7 @@ export const buildMapFromSeed = (seed: string) => {
 				'B' + right.toUpperCase(),
 			);
 		} else {
-			let firstDoorIndex = randomFromArray(indicesR);
+			const firstDoorIndex = randomFromArray(indicesR);
 			if (!firstDoorIndex) {
 				throw new Error('firstDoorIndex failed to be a valid value!');
 			}
@@ -207,7 +209,8 @@ export const buildMapFromSeed = (seed: string) => {
 				'B' + right.toUpperCase(),
 			);
 			indicesL = indicesL.filter((n) => n !== firstDoorIndex);
-			let secondDoorIndex = indicesL.length > 0 ? randomFromArray(indicesL) : firstDoorIndex;
+			const secondDoorIndex =
+				indicesL.length > 0 ? randomFromArray(indicesL) : firstDoorIndex;
 			if (!secondDoorIndex) {
 				throw new Error('secondDoorIndex failed to be a valid value!');
 			}
@@ -218,12 +221,12 @@ export const buildMapFromSeed = (seed: string) => {
 		}
 	});
 	// put a door on the bottom of the A row also
-	let bottomRow = mapASCII[mapASCII.length - 1].split('');
-	let frontDoorIndexRange = {
-		min: bottomRow.indexOf('a')-1,
-		max: bottomRow.lastIndexOf('a')-1,
-	}
-	let frontDoorIndex = randomWithBellCurveFromRange(frontDoorIndexRange, 4);
+	const bottomRow = mapASCII[mapASCII.length - 1].split('');
+	const frontDoorIndexRange = {
+		min: bottomRow.indexOf('a') - 1,
+		max: bottomRow.lastIndexOf('a') - 1,
+	};
+	const frontDoorIndex = randomWithBellCurveFromRange(frontDoorIndexRange, 4);
 	bottomRow[frontDoorIndex] = 'A';
 	mapASCII[mapASCII.length - 1] = bottomRow.join('');
 
@@ -291,12 +294,12 @@ export const buildMapFromSeed = (seed: string) => {
 	};
 	let roomTileEdges: Edge[] = []; // non doubled! not offset!
 	Object.keys(roomCorners).forEach((roomID) => {
-		let tiles: Edge[] = [];
-		let range = roomCorners[roomID];
+		const tiles: Edge[] = [];
+		const range = roomCorners[roomID];
 		for (let y = range.y.min; y <= range.y.max; y++) {
 			for (let x = range.x.min; x <= range.x.max; x++) {
-				let isDoor = /[A-Z]/.test(mapASCII[y][x]);
-				let edge: Edge = {
+				const isDoor = /[A-Z]/.test(mapASCII[y][x]);
+				const edge: Edge = {
 					roomID,
 					pos: { x, y },
 					wallDirs: [],
@@ -313,7 +316,7 @@ export const buildMapFromSeed = (seed: string) => {
 				} else if (y === range.y.max) {
 					edge.wallDirs.push('s');
 				}
-				let char = compositeInfoMap[edge.wallDirs.sort().join('')] || 's';
+				const char = compositeInfoMap[edge.wallDirs.sort().join('')] || 's';
 				edge.compositeInfo = isDoor ? char.toUpperCase() : char;
 				roomTileEdges.push(edge);
 			}
@@ -351,10 +354,10 @@ export const buildMapFromSeed = (seed: string) => {
 	}
 	const mysteryDoors = roomTileEdges.filter((entry) => entry.isDoor);
 	mysteryDoors.forEach((mysteryDoor) => {
-		let possibleCounterparts = roomTileEdges
+		const possibleCounterparts = roomTileEdges
 			.filter((testTile) => testTile.isDoor)
 			.filter((testTile) => testTile.roomID !== mysteryDoor.roomID);
-		let translationMap: Record<string, XYCoord> = {
+		const translationMap: Record<string, XYCoord> = {
 			n: { x: 0, y: -SCALE },
 			e: { x: SCALE, y: 0 },
 			s: { x: 0, y: SCALE },
@@ -372,11 +375,11 @@ export const buildMapFromSeed = (seed: string) => {
 			compositeInfo: mysteryDoor.compositeInfo,
 		};
 		Object.keys(translationMap).forEach((dir) => {
-			let translation = translationMap[dir];
-			let testCoords = translateXY(mysteryDoor.pos, translation);
+			const translation = translationMap[dir];
+			const testCoords = translateXY(mysteryDoor.pos, translation);
 			for (let i = 0; i < possibleCounterparts.length; i++) {
 				if (compareXY(testCoords, possibleCounterparts[i].pos)) {
-					let remainingWallDirs: string[] = [];
+					const remainingWallDirs: string[] = [];
 					mysteryDoor.wallDirs
 						.filter((wallDir) => wallDir !== dir)
 						.forEach((remainingDir) => {
@@ -404,15 +407,15 @@ export const buildMapFromSeed = (seed: string) => {
 		floor: 'floor',
 	};
 	const labelTile = (roomID: string, edgeInfo: Edge, labelGuts: string) => {
-		return `${roomID}:${edgeInfo.pos.x},${edgeInfo.pos.y}:${labelGuts}(${edgeInfo.compositeInfo})`
-	}
+		return `${roomID}:${edgeInfo.pos.x},${edgeInfo.pos.y}:${labelGuts}(${edgeInfo.compositeInfo})`;
+	};
 	const labelDoorTile = (roomID: string, doorInfo: DoorInfo, labelGuts: string) => {
-		return `${roomID}:${doorInfo.pos.x},${doorInfo.pos.y}:${labelGuts}(${doorInfo.compositeInfo})`
-	}
+		return `${roomID}:${doorInfo.pos.x},${doorInfo.pos.y}:${labelGuts}(${doorInfo.compositeInfo})`;
+	};
 	Object.keys(roomWorkingData).forEach((roomID) => {
-		let workingRoomTileEdges = roomTileEdges.filter((tile) => tile.roomID === roomID);
-		let floorTiles: Tile[] = [];
-		let doorTiles: Tile[] = [];
+		const workingRoomTileEdges = roomTileEdges.filter((tile) => tile.roomID === roomID);
+		const floorTiles: Tile[] = [];
+		const doorTiles: Tile[] = [];
 		const calculateWallDir = (string: string) => {
 			return getNFromDir(string);
 		};
@@ -486,14 +489,14 @@ export const buildMapFromSeed = (seed: string) => {
 	});
 
 	const arrayDoubler = <T>(arr: T[]): T[] => {
-		let ret: T[] = [];
+		const ret: T[] = [];
 		arr.forEach((t) => {
 			ret.push(t);
 			ret.push(t);
 		});
 		return ret;
 	};
-	let doubledMap = arrayDoubler(
+	const doubledMap = arrayDoubler(
 		mapASCII.map((line) => {
 			return arrayDoubler(line.split('')).join('');
 		}),
@@ -501,8 +504,8 @@ export const buildMapFromSeed = (seed: string) => {
 
 	// make room coordinate space local to the room
 	Object.keys(roomWorkingData).forEach((roomID) => {
-		let room = roomWorkingData[roomID];
-		let roomCenter = getCenterForXYRange(roomCorners[roomID]);
+		const room = roomWorkingData[roomID];
+		const roomCenter = getCenterForXYRange(roomCorners[roomID]);
 		room.x = roomCenter.x;
 		room.y = roomCenter.y;
 		room.floors = room.floors
@@ -513,21 +516,20 @@ export const buildMapFromSeed = (seed: string) => {
 				return item;
 			})
 			.filter((item) => !(item.rot === 2));
-		room.doors = room.doors
-			.map((item) => {
-				item.x -= room.x;
-				item.y -= room.y;
-				// item.name = `${item.x},${item.y}:${item.name}`;
-				return item;
-			})
-			// .filter((item) => !(item.rot === 2));
+		room.doors = room.doors.map((item) => {
+			item.x -= room.x;
+			item.y -= room.y;
+			// item.name = `${item.x},${item.y}:${item.name}`;
+			return item;
+		});
+		// .filter((item) => !(item.rot === 2));
 	});
 
 	/* -------------- ASSIGN ROOMS THEIR PURPOSES -------------- */
 
 	roomWorkingData.a.name = 'livingRoom';
 	roomWorkingData.b.name = 'hallway';
-	let remainder = scrambleArray(['bedroom', 'bedroom', 'library', 'diningRoom']);
+	const remainder = scrambleArray(['bedroom', 'bedroom', 'library', 'diningRoom']);
 	['c', 'd', 'e', 'f'].forEach((roomID, i) => {
 		roomWorkingData[roomID].name = remainder[i];
 	});
