@@ -540,5 +540,3 @@ export const buildMapFromSeed = (seed: string) => {
 		printMap: doubledMap.join('\n'),
 	};
 };
-
-console.log(buildMapFromSeed('bob').printMap);

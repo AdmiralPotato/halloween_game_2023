@@ -13,11 +13,11 @@ import '@babylonjs/core/Helpers/sceneHelpers';
 import '@babylonjs/loaders/glTF/2.0/glTFLoader';
 import '@babylonjs/core/Rendering/outlineRenderer';
 
-import { LevelBuilder, type Furnishing, type Room } from './LevelBuilder';
-import { makeRoomsWithSeed } from './levelGenerator';
-import { initCandySpawner } from './CandySpawner';
+import { LevelBuilder, type Furnishing, type Room } from '../modules/LevelBuilder';
+import { makeRoomsWithSeed } from '../modules/levelGenerator';
+import { initCandySpawner } from '../modules/CandySpawner';
 
-import './styles.css';
+import '../styles.css';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import {
 	type AnimationGroup,
@@ -34,8 +34,8 @@ import {
 	angleLerp,
 	mapRange,
 	PI,
-} from './utilities';
-import { useGameStore } from './store';
+} from '../modules/utilities';
+import { useGameStore } from '../store';
 import React, { useEffect, useRef } from 'react';
 
 const COLOR_HIGHLIGHTED = new Color3(0, 1, 0);

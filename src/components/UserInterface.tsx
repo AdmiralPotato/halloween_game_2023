@@ -1,5 +1,5 @@
-import { useGameStore } from './store';
-import { setupUserInput } from './userInputState';
+import { useGameStore } from '../store';
+import { setupUserInput } from '../modules/userInputState';
 import React, { useEffect } from 'react';
 // @ts-ignore
 import JoystickController from 'joystick-controller';
