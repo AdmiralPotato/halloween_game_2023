@@ -6,7 +6,7 @@ enum GameModes {
 	GAME_OVER,
 }
 
-interface Point {
+export interface Point {
 	x: number;
 	y: number;
 }
