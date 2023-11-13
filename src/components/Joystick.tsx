@@ -12,7 +12,7 @@ type JoystickOnMove = {
 	distance: number;
 };
 
-export default function UserInterface() {
+export default function Joystick() {
 	const joystick = useGameStore((state) => state.joystick);
 	useEffect(() => {
 		const joystickController = new JoystickController(
