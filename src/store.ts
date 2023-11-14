@@ -40,6 +40,7 @@ export const useGameStore = create<GameState>()((set, get) => ({
 		camera: false,
 		seed: false,
 		devTools: false,
+		physicsDebug: false,
 	},
 	joystick: { x: 0, y: 0 },
 	reset: () =>

@@ -13,6 +13,7 @@ const keyButtonMap: Record<string, string | undefined> = {
 	'~': 'camera',
 	escape: 'seed',
 	shift: 'shift',
+	'1': 'physicsDebug',
 };
 
 export const setupUserInput = (buttonStateMap: Record<string, boolean | undefined>) => {

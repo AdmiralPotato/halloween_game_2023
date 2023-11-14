@@ -74,6 +74,7 @@ export class LevelBuilder {
 			// floor.outlineColor = new Color3(0, 1, 1);
 			// floor.outlineWidth = 0.01;
 			room.roomMesh = floor;
+			floor.checkCollisions = true;
 			base.addChild(floor);
 			const doTheDoodadShuffle = (
 				furnishing: Furnishing | Door | Floor,
@@ -84,6 +85,7 @@ export class LevelBuilder {
 				doodad.position.z = furnishing.y;
 				doodad.rotate(Axis.Y, furnishing.rot * RIGHT_ANGLE);
 				doodad.receiveShadows = true;
+				doodad.checkCollisions = true;
 				shadowGenerator.addShadowCaster(doodad);
 			};
 			const furnishingMeshes: Mesh[] = [];
