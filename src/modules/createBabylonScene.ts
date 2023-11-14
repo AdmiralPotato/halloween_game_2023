@@ -13,15 +13,20 @@ import { LevelBuilder, type Furnishing, type Room } from './LevelBuilder';
 import { makeRoomsWithSeed } from './levelGenerator';
 import { initCandySpawner } from './CandySpawner';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { PhysicsViewer } from '@babylonjs/core/Debug/physicsViewer';
+import { PhysicsAggregate } from '@babylonjs/core/Physics/v2/physicsAggregate';
 import {
 	type AnimationGroup,
 	type Nullable,
 	type PBRMaterial,
+	PhysicsShapeType,
 	ShadowGenerator,
 	Texture,
 	TransformNode,
 } from '@babylonjs/core';
 import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
+import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
+import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import {
 	// clamp,
@@ -34,7 +39,12 @@ import '@babylonjs/core/Loading/loadingScreen';
 import '@babylonjs/core/Helpers/sceneHelpers';
 import '@babylonjs/loaders/glTF/2.0/glTFLoader';
 import '@babylonjs/core/Rendering/outlineRenderer';
+import '@babylonjs/core/Physics/v2/physicsEngineComponent';
 
+import { HavokPlugin } from '@babylonjs/core/Physics/v2/Plugins/havokPlugin';
+import HavokPhysics from '@babylonjs/havok';
+
+const physicsViewer = new PhysicsViewer();
 const COLOR_HIGHLIGHTED = new Color3(0, 1, 0);
 const COLOR_YES_CANDY = new Color3(1, 0, 0);
 const COLOR_NO_CANDY = new Color3(0, 0, 1);
@@ -52,6 +62,40 @@ canvas.id = 'gameCanvas';
 // initialize babylon scene and engine
 const engine = new Engine(canvas, true);
 const scene = new Scene(engine);
+
+const gravityVector = new Vector3(0, -9.81, 0);
+const havokModule = await HavokPhysics();
+const physicsPlugin = new HavokPlugin(true, havokModule);
+scene.enablePhysics(gravityVector, physicsPlugin);
+
+const sphere = CreateSphere('sphere', {diameter: 2, segments: 32}, scene);
+
+// Move the sphere upward at 4 units
+sphere.position.y = 4;
+
+// Our built-in 'ground' shape.
+const ground = CreateGround('ground', {width: 10, height: 10}, scene);
+ground.position.y = -3;
+// Create a sphere shape and the associated body. Size will be determined automatically.
+new PhysicsAggregate(sphere, PhysicsShapeType.SPHERE, { mass: 1, restitution:0.75}, scene);
+// Create a static box shape.
+new PhysicsAggregate(ground, PhysicsShapeType.BOX, { mass: 0 }, scene);
+let physicsDebugState = false;
+const togglePhysicsView = () => {
+	physicsDebugState = !physicsDebugState;
+	console.log('Setting physics debug display to', physicsDebugState);
+	for (const mesh of scene.rootNodes as TransformNode[]) {
+		if (mesh.physicsBody) {
+			console.log('Toggling physics display for', mesh);
+			if (physicsDebugState) {
+				physicsViewer.showBody(mesh.physicsBody);
+			} else {
+				physicsViewer.hideBody(mesh.physicsBody);
+			}
+		}
+	}
+};
+
 let joystick: Nullable<Point>;
 let buttonStateMap: Nullable<Record<string, boolean | undefined>>;
 let addCandy: Nullable<(candyCount: number) => void>;
@@ -185,6 +229,22 @@ const magePromise = SceneLoader.ImportMeshAsync(null, './assets/', 'mage.glb', s
 		mage.receiveShadows = true;
 		shadowGenerator.addShadowCaster(mage);
 		playerCharacterHolder.addChild(mage);
+		// Reference to use to make physics good
+		// https://doc.babylonjs.com/features/featuresDeepDive/physics/rigidBodies
+		// https://www.babylonjs-playground.com/#LYCSQ#256
+		// https://doc.babylonjs.com/features/featuresDeepDive/cameras/camera_collisions
+		// https://playground.babylonjs.com/#1M79PT#1
+		playerCharacterHolder.checkCollisions = false;
+		const magePhysicsAggregate = new PhysicsAggregate(
+			playerCharacterHolder,
+			PhysicsShapeType.SPHERE,
+			{ mass: 1, restitution: 0.95 },
+			scene,
+		);
+		console.log('What is magePhysicsAggregate?', magePhysicsAggregate);
+		const ground = CreateGround('ground', { width: 10, height: 10 }, scene);
+		ground.position.set(0, -5, 0);
+		ground.checkCollisions = true;
 		return mage;
 	},
 );
@@ -195,7 +255,7 @@ const makeLevelFromRooms = (rooms: Room[]) => {
 		level.dispose();
 	}
 	currentRoom = rooms[0];
-	playerCharacterHolder.position.set(currentRoom.x, 0, currentRoom.y);
+	playerCharacterHolder.position.set(currentRoom.x, 0.2, currentRoom.y);
 	// pointing toward the camera
 	playerCharacterHolder.rotation.set(0, -PI / 2, 0);
 	level = LevelBuilder.build(rooms, meshMap, scene, shadowGenerator);
@@ -397,6 +457,11 @@ const gameLogicLoop = () => {
 		buttonStateMap.devTools = false;
 		toggleDevTools();
 	}
+	if (buttonStateMap?.physicsDebug) {
+		buttonStateMap.physicsDebug = false;
+		console.log('Toggle physics debug?');
+		togglePhysicsView();
+	}
 	if (joystick) {
 		motionVector.x += joystick.x * movementSpeed;
 		motionVector.z += joystick.y * movementSpeed;
@@ -409,15 +474,13 @@ const gameLogicLoop = () => {
 		characterAnimations.run.weight = ratio;
 	}
 	if (motionLength > 0.005) {
-		playerCharacterHolder.position.addInPlace(motionVector);
 		const currentAngle = Math.atan2(-motionVector.z, motionVector.x);
 		// create new rotation vector each change,
 		// because if the inspector touches this,
 		// the mage stops rotating forever ¯\_(ツ)_/¯
 		playerCharacterHolder.rotation = new Vector3(0, currentAngle, 6);
-	}
-	if (playerCharacterHolder.position.y > 0.05) {
-		playerCharacterHolder.position.y *= 0.8;
+		// playerCharacterHolder.setPositionWithLocalVector(motionVector);
+		playerCharacterHolder.moveWithCollisions(motionVector);
 	}
 	if (playerCharacterMaterial && playerCharacterMaterial.alpha !== 1) {
 		playerCharacterMaterial.alpha = Math.min(playerCharacterMaterial.alpha + 0.1, 1);

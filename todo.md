@@ -1,5 +1,10 @@
 # TODO LIST
 
+- [ ] Collision Detection
+	- [ ] Prevent player from walking through invisible 4th wall
+	- [ ] Prevent player from walking through visible walls
+	- [ ] Prevent player from walking through furniture
+	- [ ] Make sure player can still walk through doors
 - [ ] Convert UI to React
 	- [x] Initial Babylon scene wrapping
 	- [x] Convert UI buttons from AdvancedDynamicTexture to React component

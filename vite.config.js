@@ -8,6 +8,11 @@ export default defineConfig({
 	build: {
 		sourcemap: true,
 	},
+	// Vite was optimizing the Havoc WASM out of the project!
+	// Congratulations! This is how to stop it. :facepalm:
+	optimizeDeps: {
+		exclude: ['@babylonjs/havok'],
+	},
 	plugins: [
 		react(),
 		visualizer({
