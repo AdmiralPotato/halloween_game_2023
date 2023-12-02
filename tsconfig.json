@@ -76,7 +76,8 @@
 		"skipLibCheck": true, // skip type-checking of .d.ts files (it speeds up transpiling)
 		"allowJs": true,
 		"allowSyntheticDefaultImports": true,
-		"outDir": "tsc_output"
+		"outDir": "tsc_output",
+		"jsx": "react-jsx"
 	},
 	"include": [
 		"src"
