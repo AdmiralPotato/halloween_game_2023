@@ -401,9 +401,6 @@ export interface ItemWithContext {
 
 const translateItem = (item: ItemWithContext, translation: XYCoord): ItemWithContext => {
 	item.centerCoord = translateXY(item.centerCoord, translation);
-	// item.collisionOffsetsCoords = item.collisionOffsetsCoords.map((inner) =>
-	// 	translateXY(inner, translation),
-	// );
 	return item;
 };
 export const translateItems = (
