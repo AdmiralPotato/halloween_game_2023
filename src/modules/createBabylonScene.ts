@@ -8,7 +8,7 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
 
-import { type Point } from '../store';
+import { type Point, useGameStore } from '../store';
 import { LevelBuilder, type Furnishing, type Room } from './LevelBuilder';
 import { makeRoomsWithSeed } from './levelGenerator';
 import { initCandySpawner } from './CandySpawner';
@@ -55,6 +55,8 @@ const scene = new Scene(engine);
 let joystick: Nullable<Point>;
 let buttonStateMap: Nullable<Record<string, boolean | undefined>>;
 let addCandy: Nullable<(candyCount: number) => void>;
+let pauseGame: Nullable<() => void>;
+let currentSeed = 'bob';
 // scene.clearColor.set(0.2, 0.0, 0.3, 1.0);
 scene.clearColor.set(0.0, 0.0, 0.0, 1.0);
 const material = scene.defaultMaterial as StandardMaterial;
@@ -202,13 +204,11 @@ const makeLevelFromRooms = (rooms: Room[]) => {
 	scene.addMesh(level);
 };
 
-const initLevelFromSeed = (seedString: string) => {
+const initLevelFromSeed = (seedString: string, previousSeed: string) => {
+	console.log({ seedString, previousSeed });
+	currentSeed = seedString;
 	rooms = makeRoomsWithSeed(seedString);
 	makeLevelFromRooms(rooms);
-};
-const respawnLevelFromStringSeed = () => {
-	const seedString = window.prompt('GIVE SEED') || '';
-	initLevelFromSeed(seedString);
 };
 const addImportedToMeshMap = (imported: ISceneLoaderAsyncResult) => {
 	imported.meshes.forEach((mesh) => {
@@ -385,9 +385,9 @@ const gameLogicLoop = () => {
 			playerCharacterMaterial.alpha = 0;
 		}
 	}
-	if (buttonStateMap?.seed) {
-		buttonStateMap.seed = false;
-		respawnLevelFromStringSeed();
+	if (buttonStateMap?.pause && pauseGame) {
+		buttonStateMap.pause = false;
+		pauseGame();
 	}
 	if (buttonStateMap?.camera) {
 		buttonStateMap.camera = false;
@@ -434,10 +434,16 @@ const gameLogicLoop = () => {
 
 	lastLogicTick = now;
 };
+let scaleMultiplier = 1;
 engine.runRenderLoop(() => {
-	engine.resize();
+	const width = document.body.clientWidth * window.devicePixelRatio * scaleMultiplier;
+	const height = document.body.clientHeight * window.devicePixelRatio * scaleMultiplier;
+	engine.setSize(width, height, true);
 	scene.render();
 });
+const setResolution = (value: number) => {
+	scaleMultiplier = value;
+};
 
 Promise.all(assetLoadingPromises).then(() => {
 	console.log('What is meshMap after all is loaded?', meshMap);
@@ -451,7 +457,7 @@ Promise.all(assetLoadingPromises).then(() => {
 		// console.log('What is doorwayGlow.material?', doorwayGlowMaterial);
 	}
 
-	initLevelFromSeed('bob');
+	initLevelFromSeed(currentSeed, '');
 	// Let's separate out a game state loop even if rendering is hitching.
 	scene.registerBeforeRender(gameLogicLoop);
 	// scene.createDefaultCamera(true, true, true);
@@ -460,6 +466,7 @@ Promise.all(assetLoadingPromises).then(() => {
 interface GameViewConfig {
 	canvasHolder: HTMLDivElement;
 	addCandy: (candyCount: number) => void;
+	pauseGame: () => void;
 	joystick: Point;
 	buttonStateMap: Record<string, boolean | undefined>;
 }
@@ -469,6 +476,24 @@ export const attachGameView = (config: GameViewConfig) => {
 	config.canvasHolder.appendChild(canvas);
 
 	addCandy = config.addCandy;
+	pauseGame = config.pauseGame;
 	buttonStateMap = config.buttonStateMap;
 	joystick = config.joystick;
 };
+
+const seedSubscriber = useGameStore.subscribe((state) => state.seed, initLevelFromSeed, {
+	fireImmediately: false,
+});
+
+const resolutionSubscriber = useGameStore.subscribe(
+	(state) => state.resolutionScale,
+	setResolution,
+	{
+		fireImmediately: true,
+	},
+);
+
+console.log('Subscribers', {
+	seedSubscriber,
+	resolutionSubscriber,
+});

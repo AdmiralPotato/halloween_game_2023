@@ -11,7 +11,7 @@ const keyButtonMap: Record<string, string | undefined> = {
 	enter: 'action',
 	'`': 'camera',
 	'~': 'camera',
-	escape: 'seed',
+	escape: 'pause',
 	shift: 'shift',
 };
 

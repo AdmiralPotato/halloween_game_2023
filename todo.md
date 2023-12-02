@@ -6,11 +6,19 @@
 	- [x] Game State -> Zustand...?
 	- [x] Display score
 	- [ ] Display countdown
+	- [ ] Make button icons SVGs instead of Emoji so they don't look absolutely repulsive on iOS
+	- [ ] Display pause button
+		- [ ] Display a resume button
+		- [ ] Display an options button
 - [ ] Display game over screen
 	- [ ] Time taken
 	- [ ] Seed
 	- [ ] Candies
 - [ ] Display main menu
+	- [ ] New Game
+	- [ ] Current Seed
+	- [ ] Credits
+- [ ] Display options screen
 	- [ ] New Game
 	- [ ] Current Seed
 	- [ ] Credits

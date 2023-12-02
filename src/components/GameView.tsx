@@ -5,6 +5,7 @@ import { attachGameView } from '../modules/createBabylonScene';
 export default function GameView() {
 	const canvasHolderRef = useRef(null);
 	const addCandy = useGameStore((state) => state.addCandy);
+	const pauseGame = useGameStore((state) => state.pauseGame);
 	const buttonStateMap = useGameStore((state) => state.buttonStateMap);
 	const joystick = useGameStore((state) => state.joystick);
 
@@ -20,6 +21,7 @@ export default function GameView() {
 		attachGameView({
 			canvasHolder,
 			addCandy,
+			pauseGame,
 			joystick,
 			buttonStateMap,
 		});
