@@ -16,7 +16,7 @@ export default function UiModeMenuMain() {
 		<div className="UiModeMenuMain menu">
 			<h1>
 				<img
-					src="./public/assets/logo_outline.svg"
+					src="./assets/logo_outline.svg"
 					alt="BLACK MAGE || TRICK OR TREAT || HIDE AND SEEK"
 					style={{
 						width: '100%',
